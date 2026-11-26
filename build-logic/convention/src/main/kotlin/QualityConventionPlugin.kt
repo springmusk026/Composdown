@@ -26,7 +26,9 @@ class QualityConventionPlugin : Plugin<Project> {
                 kotlin {
                     target("src/**/*.kt")
                     targetExclude("**/build/**")
-                    ktlint(ktlintVersion).customRuleSets(listOf(composeRules))
+                    ktlint(ktlintVersion)
+                        .setEditorConfigPath(rootProject.file(".editorconfig"))
+                        .customRuleSets(listOf(composeRules))
                 }
                 kotlinGradle {
                     target("*.gradle.kts")

@@ -37,6 +37,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `ComposdownComponents`; pluggable `ImageRenderer`; safe default link handling; text selection;
   heading, link, task and table semantics; per-block right-to-left layout.
 - Compose UI tests and light and dark screenshot tests (Roborazzi) on Desktop, verified in CI.
+- `composdown-coil`: `CoilImageRenderer`, which reserves space while images load, remembers their
+  sizes so they do not resize again, and loads only HTTPS images by default.
+- Sample app for Android, iOS and Desktop: a simulated streaming chat and a showcase of every element.
 - GitHub alerts (`> [!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]`, `[!CAUTION]`) as an opt-in
   extension.
 - Protection against hostile input: parsing runs in linear time on known pathological inputs, and

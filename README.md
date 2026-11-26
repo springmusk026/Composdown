@@ -53,7 +53,7 @@ Compose-based modules cannot support it. The pure-Kotlin `composdown-core` parse
 |---|---|
 | `composdown-core` | Markdown AST and incremental parser. Pure Kotlin, no UI dependencies. |
 | `composdown-compose` | Compose Multiplatform renderer, Material 3 theme, streaming state holder and `LazyColumn` integration. |
-| `composdown-coil` | Image loading with Coil 3 (planned). |
+| `composdown-coil` | `CoilImageRenderer`: image loading with Coil 3. |
 | `composdown-highlight` | Syntax-highlighted code blocks (planned). |
 | `composdown-math` | Inline and block math (planned). |
 
@@ -170,6 +170,15 @@ excellent choice for rendering complete documents. Composdown has a narrower foc
 still being written. Its parser is designed for incremental re-parsing, and its rendering model keeps
 completed content stable while new text arrives. Measured benchmark comparisons will be published with
 the first release.
+
+## Sample
+
+[`sample`](sample) contains a Compose Multiplatform app for Android, iOS and Desktop with a simulated
+language-model chat that streams responses token by token, and a showcase of every element:
+
+```bash
+./gradlew :sample:desktop:run
+```
 
 ## Contributing
 

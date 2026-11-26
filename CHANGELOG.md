@@ -31,6 +31,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   likely final form and holds back half-written block markers and table headers to avoid flicker;
   `StreamingPolicy.STRICT` parses the text exactly as written at every step.
 - JVM parser benchmarks (kotlinx-benchmark) with a recorded baseline.
+- `composdown-compose`: `Composdown` composables for static text, a `ComposdownState` (parsing on a
+  background dispatcher) or a parsed document; `composdownItems` to render a document's blocks as
+  `LazyColumn` items; Material 3 based `ComposdownTheme`; replaceable block rendering with
+  `ComposdownComponents`; pluggable `ImageRenderer`; safe default link handling; text selection;
+  heading, link, task and table semantics; per-block right-to-left layout.
+- Compose UI tests and light and dark screenshot tests (Roborazzi) on Desktop, verified in CI.
 - GitHub alerts (`> [!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]`, `[!CAUTION]`) as an opt-in
   extension.
 - Protection against hostile input: parsing runs in linear time on known pathological inputs, and

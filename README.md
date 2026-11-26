@@ -2,8 +2,8 @@
 
 **A streaming-first Markdown renderer for Compose Multiplatform, built for AI chat and real-time apps.**
 
-> **Status: in development.** Composdown is not published yet. The first release will be `0.1.0`.
-> The APIs shown below are the planned design and may change before that release.
+> **Status: in development.** Composdown is not published yet. The first release will be `0.1.0`,
+> and the API may still change before then.
 
 ## Why Composdown?
 
@@ -52,7 +52,7 @@ Compose-based modules cannot support it. The pure-Kotlin `composdown-core` parse
 | Module | Description |
 |---|---|
 | `composdown-core` | Markdown AST and incremental parser. Pure Kotlin, no UI dependencies. |
-| `composdown-compose` | Compose Multiplatform renderer, Material 3 theme and streaming state holder. |
+| `composdown-compose` | Compose Multiplatform renderer, Material 3 theme, streaming state holder and `LazyColumn` integration. |
 | `composdown-coil` | Image loading with Coil 3 (planned). |
 | `composdown-highlight` | Syntax-highlighted code blocks (planned). |
 | `composdown-math` | Inline and block math (planned). |
@@ -72,7 +72,7 @@ kotlin {
 }
 ```
 
-## Quick start (planned API)
+## Quick start
 
 Static content:
 
@@ -80,17 +80,31 @@ Static content:
 Composdown(markdown = "# Hello\n\nThis is **Composdown**.")
 ```
 
-## Streaming usage (planned API)
+## Streaming usage
 
 ```kotlin
 val state = rememberComposdownState()
 
-LaunchedEffect(Unit) {
-    llm.stream(prompt).collect { token -> state.append(token) }
+LaunchedEffect(response) {
+    response.tokens.collect { token -> state.append(token) }
     state.finish()
 }
 
 Composdown(state = state, onLinkClick = { url -> openUrl(url) })
+```
+
+Parsing runs on a background dispatcher. Completed blocks keep the same instances, so they are not
+recomposed while text streams in, and content above the streaming end does not move.
+
+In a chat, render each message's blocks as items of the surrounding `LazyColumn`, so only visible
+blocks are composed:
+
+```kotlin
+LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    for (message in messages) {
+        composdownItems(message.state.document, keyPrefix = message.id)
+    }
+}
 ```
 
 ### Parsing without Compose
@@ -112,11 +126,41 @@ spans and links in their likely final form and holds back half-written block mar
 rendered output does not flicker. See [`benchmarks/BASELINE.md`](benchmarks/BASELINE.md) for
 measured parser performance.
 
-## Customization (planned API)
+## Customization
 
-Composdown uses Material 3 defaults and a themeable `ComposdownTheme` (typography, colors and spacing
-for each element). The composable for any block or inline type can be replaced, for example to add a
-copy button to code blocks. Image loading is pluggable and has no default dependency.
+Composdown uses Material 3 defaults. Every color, text style and spacing can be replaced:
+
+```kotlin
+Composdown(
+    markdown = text,
+    theme = ComposdownDefaults.theme(
+        colors = ComposdownDefaults.colors(link = Color(0xFF0B57D0)),
+        spacing = ComposdownDefaults.spacing(block = 16.dp),
+    ),
+)
+```
+
+The rendering of any kind of block can be replaced, for example to add a copy button to code blocks:
+
+```kotlin
+val components = ComposdownComponents(
+    codeBlock = BlockComponent { block, modifier -> CodeBlockWithCopyButton(block, modifier) },
+)
+Composdown(markdown = text, components = components)
+```
+
+Use `ComposdownBlock(block)` inside a custom component to render nested blocks.
+
+- **Links** call `onLinkClick` with their destination. Without a handler, only `http`, `https`,
+  `mailto` and `tel` links are opened, because Markdown from a model is untrusted input.
+- **Images** are drawn by an `ImageRenderer` you provide (see `composdown-coil`); without one,
+  images show their description. Composdown has no image-loading dependency of its own.
+- **Raw HTML** is never interpreted; its source is shown as code.
+- **Text selection** works across blocks (`selectable = true` by default).
+- **Right-to-left text**: each block is laid out in the direction of its own text, so Hebrew or
+  Arabic paragraphs, lists and quotes put their markers on the right.
+- **Accessibility**: headings are exposed as headings, links as links, task items with their
+  checked state, and tables with their rows and columns.
 
 ## Comparison with other libraries
 

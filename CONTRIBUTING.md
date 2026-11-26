@@ -17,7 +17,7 @@ By participating, you agree to follow the [Code of Conduct](CODE_OF_CONDUCT.md).
 | Module | Purpose |
 |---|---|
 | `composdown-core` | Pure Kotlin Multiplatform: Markdown AST, incremental parser, CommonMark/GFM spec tests. No UI dependencies. |
-| `composdown-compose` | Compose Multiplatform renderer, theme and streaming state holder. |
+| `composdown-compose` | Compose Multiplatform renderer, theme, streaming state holder and lazy list integration. |
 | `benchmarks` | JVM parser benchmarks (kotlinx-benchmark). Run `./gradlew :benchmarks:benchmark`; baseline in `benchmarks/BASELINE.md`. |
 | `build-logic` | Gradle convention plugins shared by all modules. |
 
@@ -61,7 +61,10 @@ CI `apiCheck` job disagrees with your dump, use the dump produced by CI.
   parsing it in one go.
 - Parser performance changes should be measured with `./gradlew :benchmarks:benchmark` on the same
   machine before and after the change.
-- Rendering changes: Compose UI tests and, where visual, updated screenshot goldens.
+- Rendering changes: Compose UI tests and, where visual, updated screenshot goldens. Screenshot tests
+  run on Desktop with fonts bundled in the test resources: record new goldens with
+  `./gradlew :composdown-compose:recordRoborazziDesktop`, check them with `verifyRoborazziDesktop`,
+  and review the changed images in `composdown-compose/src/desktopTest/snapshots` before committing.
 
 ## Commits and pull requests
 

@@ -56,6 +56,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - README images (overview, streaming animation, customization, right-to-left), rendered by Composdown
   itself with `tools/screenshots`, and a project logo.
+- Baseline Profiles in the Android artifacts of `composdown-core` and `composdown-compose`, merged
+  automatically into applications' profiles.
+- Android Macrobenchmarks of startup, scrolling and streaming in the sample app, a Baseline Profile
+  generator, and a workflow that runs them on an emulator.
 
 ### Fixed
 

@@ -51,6 +51,7 @@ setup is required: Gradle downloads every dependency.
 | `composdown-coil` | Coil-based image renderer |
 | `composdown-highlight` | Highlights-based code highlighter |
 | `benchmarks` | JMH parser benchmarks and the recorded [baseline](benchmarks/BASELINE.md) |
+| `benchmarks/macrobenchmark` | Android Macrobenchmarks and the Baseline Profile generator for the sample app |
 | `sample` | Demonstration app: `shared` UI, `desktop`, `android` and `ios` hosts |
 | `tools/screenshots` | Generates the documentation images in `docs/images` |
 | `build-logic` | Gradle convention plugins and code generation tasks |
@@ -82,6 +83,7 @@ Android Lint and the API check. Narrower tasks for faster iteration:
 | `./gradlew detekt` | Static analysis |
 | `./gradlew apiCheck` / `apiDump` | Checks or records the public API |
 | `./gradlew :benchmarks:benchmark` | Parser benchmarks |
+| `./gradlew :benchmarks:macrobenchmark:connectedBenchmarkReleaseAndroidTest` | Android Macrobenchmarks (device or emulator) |
 | `./gradlew :sample:desktop:run` | Runs the sample app on Desktop |
 
 ## Quality gates

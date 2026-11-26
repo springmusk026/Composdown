@@ -272,6 +272,10 @@ Measured on the JVM with JMH (OpenJDK 21, 4 vCPUs). See [`benchmarks/BASELINE.md
 The cost of a streaming update depends on the size of the unfinished block, not on the length of the
 document, so it stays constant as a conversation grows.
 
+On Android, both libraries ship Baseline Profiles so that rendering code is precompiled at install
+time, and Macrobenchmarks measure startup, scrolling and streaming in the sample app. See
+[Performance](docs/performance.md).
+
 ## Documentation
 
 | Guide | |
@@ -281,6 +285,7 @@ document, so it stays constant as a conversation grows.
 | [Live content](docs/streaming.md) | `ComposdownState`, view models, streaming policies, guarantees |
 | [Customization](docs/customization.md) | Theme, components, image renderers, code highlighters |
 | [Parser and document model](docs/parser.md) | Using `composdown-core` directly |
+| [Performance](docs/performance.md) | Benchmarks, Baseline Profiles, guidance for applications |
 | [Accessibility](docs/accessibility.md) | Semantics, right-to-left text, manual verification |
 | [Compatibility](docs/compatibility.md) | Specification coverage, extensions, known differences |
 | [Architecture](docs/architecture.md) | How parsing, incremental updates and rendering work |
@@ -313,7 +318,7 @@ Measured comparisons will be published with the first release.
 | Milestone | Scope |
 |---|---|
 | 0.1.0 | First release: everything described above, published for Android, iOS and Desktop |
-| Next | Web (`wasmJs`) target, native TeX formula rendering, inline images inside text, Android Macrobenchmark and Baseline Profiles |
+| Next | Web (`wasmJs`) target, native TeX formula rendering, inline images inside text, published reference results from physical Android devices |
 
 ## Contributing
 

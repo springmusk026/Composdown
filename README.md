@@ -93,6 +93,25 @@ LaunchedEffect(Unit) {
 Composdown(state = state, onLinkClick = { url -> openUrl(url) })
 ```
 
+### Parsing without Compose
+
+`composdown-core` has no UI dependencies and can be used on its own:
+
+```kotlin
+// One-shot
+val document = MarkdownParser().parse(markdown)
+
+// Streaming: completed blocks keep the same instances; only the open end is re-parsed.
+val parser = IncrementalMarkdownParser()
+tokens.forEach { token -> render(parser.append(token)) }
+render(parser.finish()) // identical to MarkdownParser().parse(parser.text)
+```
+
+While text is arriving, `StreamingPolicy.OPTIMISTIC` (the default) shows unfinished emphasis, code
+spans and links in their likely final form and holds back half-written block markers, so the
+rendered output does not flicker. See [`benchmarks/BASELINE.md`](benchmarks/BASELINE.md) for
+measured parser performance.
+
 ## Customization (planned API)
 
 Composdown uses Material 3 defaults and a themeable `ComposdownTheme` (typography, colors and spacing

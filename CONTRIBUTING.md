@@ -18,6 +18,7 @@ By participating, you agree to follow the [Code of Conduct](CODE_OF_CONDUCT.md).
 |---|---|
 | `composdown-core` | Pure Kotlin Multiplatform: Markdown AST, incremental parser, CommonMark/GFM spec tests. No UI dependencies. |
 | `composdown-compose` | Compose Multiplatform renderer, theme and streaming state holder. |
+| `benchmarks` | JVM parser benchmarks (kotlinx-benchmark). Run `./gradlew :benchmarks:benchmark`; baseline in `benchmarks/BASELINE.md`. |
 | `build-logic` | Gradle convention plugins shared by all modules. |
 
 Library dependency versions live in `gradle/libs.versions.toml`. Shared build configuration lives in
@@ -58,6 +59,8 @@ CI `apiCheck` job disagrees with your dump, use the dump produced by CI.
 - Parser changes must keep the CommonMark and GFM spec suites at 100% and must not break the
   streaming-equivalence tests: feeding a document in arbitrary chunks must produce the same result as
   parsing it in one go.
+- Parser performance changes should be measured with `./gradlew :benchmarks:benchmark` on the same
+  machine before and after the change.
 - Rendering changes: Compose UI tests and, where visual, updated screenshot goldens.
 
 ## Commits and pull requests

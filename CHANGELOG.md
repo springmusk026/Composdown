@@ -22,6 +22,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `MarkdownExtension`: tables, task lists, strikethrough, extended autolinks (`www.`, `http(s)://`,
   `ftp://`, email, `mailto:` and `xmpp:`) and footnotes. The GFM specification's extension examples
   and cmark-gfm's extension tests run on every platform.
+- `IncrementalMarkdownParser` for streamed text: completed top-level blocks are parsed once and keep
+  their instances; only the open end of the document is parsed again on each update, so the cost
+  per update does not grow with the document. The finished document is always identical to a
+  one-shot parse, verified by streaming every specification example character by character, in
+  random chunks, with random edits, and with fuzzed input.
+- `StreamingPolicy.OPTIMISTIC` (default) renders unfinished emphasis, code spans and links in their
+  likely final form and holds back half-written block markers and table headers to avoid flicker;
+  `StreamingPolicy.STRICT` parses the text exactly as written at every step.
+- JVM parser benchmarks (kotlinx-benchmark) with a recorded baseline.
 - GitHub alerts (`> [!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]`, `[!CAUTION]`) as an opt-in
   extension.
 - Protection against hostile input: parsing runs in linear time on known pathological inputs, and

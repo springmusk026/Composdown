@@ -1,0 +1,33 @@
+# XcodeGen specification for the iOS sample app: run `xcodegen` in this directory to create
+# ComposdownSample.xcodeproj. The shared Kotlin framework is built by Gradle in a pre-build script.
+name: ComposdownSample
+options:
+  bundleIdPrefix: io.github.springmusk026.composdown
+  deploymentTarget:
+    iOS: "15.0"
+settings:
+  base:
+    # Compose Multiplatform frameworks are not built with bitcode.
+    ENABLE_BITCODE: NO
+targets:
+  ComposdownSample:
+    type: application
+    platform: iOS
+    sources:
+      - iosApp
+    info:
+      path: iosApp/Info.plist
+      properties:
+        CFBundleDisplayName: Composdown
+        UILaunchScreen: {}
+        CADisableMinimumFrameDurationOnPhone: true
+    settings:
+      base:
+        FRAMEWORK_SEARCH_PATHS: "$(SRCROOT)/../shared/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)"
+        OTHER_LDFLAGS: "-framework ComposdownSample"
+    preBuildScripts:
+      - name: Build Kotlin framework
+        basedOnDependencyAnalysis: false
+        script: |
+          cd "$SRCROOT/../.."
+          ./gradlew :sample:shared:embedAndSignAppleFrameworkForXcode

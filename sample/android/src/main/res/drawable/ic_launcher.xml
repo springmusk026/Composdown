@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A simple "#" mark for the sample app. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <path
+        android:fillColor="#FF0B57D0"
+        android:pathData="M8,4h32a4,4 0,0 1,4 4v32a4,4 0,0 1,-4 4H8a4,4 0,0 1,-4 -4V8a4,4 0,0 1,4 -4z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M18,12h3l-1,7h7l1,-7h3l-1,7h5v3h-5.4l-0.9,6H34v3h-5.7l-1,7h-3l1,-7h-7l-1,7h-3l1,-7H11v-3h5.7l0.9,-6H13v-3h5zM20.6,22l-0.9,6h7l0.9,-6z" />
+</vector>

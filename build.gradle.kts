@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.kotlinx.benchmark) apply false
     alias(libs.plugins.compose.multiplatform) apply false
     alias(libs.plugins.android.kmp.library) apply false
+    alias(libs.plugins.android.application) apply false
     alias(libs.plugins.detekt) apply false
     alias(libs.plugins.poko) apply false
     alias(libs.plugins.roborazzi) apply false
@@ -14,8 +15,8 @@ plugins {
 }
 
 apiValidation {
-    // Benchmarks are not published.
-    ignoredProjects += "benchmarks"
+    // Benchmarks and samples are not published.
+    ignoredProjects += listOf("benchmarks", "shared", "desktop", "android")
 
     @OptIn(kotlinx.validation.ExperimentalBCVApi::class)
     klib {

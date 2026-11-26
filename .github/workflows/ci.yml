@@ -76,6 +76,8 @@ jobs:
       - uses: gradle/actions/setup-gradle@v6
       - name: iOS simulator tests and compile all iOS targets
         run: ./gradlew iosSimulatorArm64Test compileKotlinIosArm64 compileKotlinIosX64
+      - name: Link the iOS sample framework
+        run: ./gradlew :sample:shared:linkDebugFrameworkIosSimulatorArm64
       - name: API check (JVM and KLib)
         run: ./gradlew apiCheck
       - name: Upload test reports

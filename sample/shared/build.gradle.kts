@@ -34,6 +34,7 @@ kotlin {
         commonMain.dependencies {
             implementation(projects.composdownCompose)
             implementation(projects.composdownCoil)
+            implementation(projects.composdownHighlight)
             implementation(libs.compose.material3)
             implementation(libs.coil.network.ktor3)
             implementation(libs.kotlinx.coroutines.core)

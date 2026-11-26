@@ -24,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+import io.github.springmusk026.composdown.compose.CodeHighlighter
 import io.github.springmusk026.composdown.compose.ComposdownState
 import io.github.springmusk026.composdown.compose.ImageRenderer
 import io.github.springmusk026.composdown.compose.composdownItems
@@ -44,6 +45,7 @@ private class ChatMessage(
 @Composable
 internal fun ChatScreen(
     imageRenderer: ImageRenderer,
+    codeHighlighter: CodeHighlighter,
     modifier: Modifier = Modifier,
 ) {
     val scope = rememberCoroutineScope()
@@ -69,6 +71,7 @@ internal fun ChatScreen(
                     message.response.document,
                     keyPrefix = message.id.toString(),
                     imageRenderer = imageRenderer,
+                    codeHighlighter = codeHighlighter,
                 )
             }
         }
@@ -92,7 +95,7 @@ private fun startResponse(
     response: String,
     scope: CoroutineScope,
 ): ChatMessage {
-    val state = ComposdownState(scope = scope)
+    val state = ComposdownState(extensions = SampleExtensions, scope = scope)
     scope.launch {
         simulatedTokenStream(response).collect(state::append)
         state.finish()

@@ -1,5 +1,11 @@
 package io.github.springmusk026.composdown.sample
 
+import io.github.springmusk026.composdown.compose.ComposdownDefaults
+import io.github.springmusk026.composdown.core.MarkdownExtension
+
+/** The sample renders GitHub Flavored Markdown with alerts and math. */
+internal val SampleExtensions = ComposdownDefaults.Extensions + MarkdownExtension.MATH
+
 /** Canned responses for the simulated chat, written the way language models format answers. */
 internal object SampleContent {
     val prompts: List<Pair<String, String>> =
@@ -49,6 +55,24 @@ internal object SampleContent {
                 > Worst cases matter for adversarial inputs.
 
                 [^1]: Time complexities for *n* elements.
+                """.trimIndent(),
+            "Explain Euler's identity" to
+                """
+                **Euler's identity** connects five fundamental constants:
+
+                ${'$'}${'$'}
+                e^{i\pi} + 1 = 0
+                ${'$'}${'$'}
+
+                It follows from Euler's formula ${'$'}e^{ix} = \cos x + i \sin x${'$'} with ${'$'}x = \pi${'$'},
+                since ${'$'}\cos \pi = -1${'$'} and ${'$'}\sin \pi = 0${'$'}.
+
+                A quick numerical check in Python:
+
+                ```python
+                import cmath
+                print(cmath.exp(1j * cmath.pi) + 1)  # about 1.2e-16j
+                ```
                 """.trimIndent(),
             "Write a greeting in Hebrew and Arabic" to
                 """

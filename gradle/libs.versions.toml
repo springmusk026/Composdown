@@ -15,6 +15,7 @@ kotlinx-coroutines = "1.11.0"
 kotlinx-collections-immutable = "0.5.2"
 poko = "0.23.2"
 kotlinx-benchmark = "0.5.0"
+roborazzi = "1.79.0"
 
 # Quality tooling
 spotless = "8.12.0"
@@ -36,6 +37,7 @@ compose-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "compose-mu
 compose-ui-test = { module = "org.jetbrains.compose.ui:ui-test", version.ref = "compose-multiplatform" }
 compose-material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "compose-material3" }
 
+roborazzi-compose-desktop = { module = "io.github.takahirom.roborazzi:roborazzi-compose-desktop", version.ref = "roborazzi" }
 kotlinx-benchmark-runtime = { module = "org.jetbrains.kotlinx:kotlinx-benchmark-runtime", version.ref = "kotlinx-benchmark" }
 
 ktlint-compose-rules = { module = "io.nlopez.compose.rules:ktlint", version.ref = "compose-rules" }
@@ -58,6 +60,7 @@ compose-multiplatform = { id = "org.jetbrains.compose", version.ref = "compose-m
 android-kmp-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
+roborazzi = { id = "io.github.takahirom.roborazzi", version.ref = "roborazzi" }
 poko = { id = "dev.drewhamilton.poko", version.ref = "poko" }
 binary-compatibility-validator = { id = "org.jetbrains.kotlinx.binary-compatibility-validator", version.ref = "binary-compatibility-validator" }
 

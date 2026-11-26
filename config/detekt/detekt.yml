@@ -28,8 +28,11 @@ complexity:
     thresholdInClasses: 30
     thresholdInObjects: 30
   LongParameterList:
-    # Composables take many optional parameters by design (modifier, styles, slots).
-    ignoreAnnotated: ['Composable']
+    # Composables take many optional parameters by design (modifier, styles, slots), and @Immutable
+    # theme classes hold one value per styled element, as in Material.
+    ignoreAnnotated: ['Composable', 'Immutable']
+    # Parameters with defaults are optional at call sites, so they do not make calls harder to read.
+    ignoreDefaultParameters: true
 
 naming:
   FunctionNaming:

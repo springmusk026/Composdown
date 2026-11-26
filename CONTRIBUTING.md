@@ -82,6 +82,8 @@ Android Lint and the API check. Narrower tasks for faster iteration:
 | `./gradlew spotlessApply` | Formats the code |
 | `./gradlew detekt` | Static analysis |
 | `./gradlew apiCheck` / `apiDump` | Checks or records the public API |
+| `./gradlew dokkaGenerate` | Builds the API reference in `build/dokka/html` |
+| `./gradlew publishToMavenLocal` | Publishes all library modules to the local Maven repository |
 | `./gradlew :benchmarks:benchmark` | Parser benchmarks |
 | `./gradlew :benchmarks:macrobenchmark:connectedBenchmarkReleaseAndroidTest` | Android Macrobenchmarks (device or emulator) |
 | `./gradlew :sample:desktop:run` | Runs the sample app on Desktop |
@@ -163,4 +165,5 @@ Public API is a long-term commitment. Before adding or changing it:
 
 Composdown follows [Semantic Versioning](https://semver.org/). Before 1.0, minor releases may contain
 breaking changes, which are always listed in the changelog. Releases are made from `main` by a
-maintainer: the changelog is finalized, the version is tagged, and CI publishes the artifacts.
+maintainer: the changelog is finalized, the version is tagged, and CI publishes the artifacts. The
+process is described in [RELEASING.md](RELEASING.md).

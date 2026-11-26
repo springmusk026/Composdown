@@ -21,6 +21,7 @@
 <p align="center">
   <a href="docs/getting-started.md">Getting started</a> ·
   <a href="#documentation">Documentation</a> ·
+  <a href="https://springmusk026.github.io/Composdown/">API reference</a> ·
   <a href="sample">Sample app</a> ·
   <a href="CHANGELOG.md">Changelog</a>
 </p>
@@ -289,6 +290,9 @@ time, and Macrobenchmarks measure startup, scrolling and streaming in the sample
 | [Accessibility](docs/accessibility.md) | Semantics, right-to-left text, manual verification |
 | [Compatibility](docs/compatibility.md) | Specification coverage, extensions, known differences |
 | [Architecture](docs/architecture.md) | How parsing, incremental updates and rendering work |
+
+The [API reference](https://springmusk026.github.io/Composdown/) is generated from the KDoc of every
+public declaration and published with each release (`./gradlew dokkaGenerate` builds it locally).
 
 A runnable [sample](sample) for Android, iOS and Desktop demonstrates every feature, including a
 simulated chat that streams responses at a realistic pace.

@@ -25,7 +25,8 @@ including server and command-line applications.
 ## Add the dependency
 
 > Composdown has not yet been published. The coordinates below take effect with the `0.1.0` release
-> to Maven Central. Until then, the [sample app](../sample) is the quickest way to try it.
+> to Maven Central. Until then, run `./gradlew publishToMavenLocal` in a clone of this repository and
+> add `mavenLocal()` to your project's repositories, or try the [sample app](../sample).
 
 With a version catalog:
 

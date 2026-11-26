@@ -78,6 +78,7 @@ Android Lint and the API check. Narrower tasks for faster iteration:
 | `./gradlew desktopTest` | All JVM tests, including Compose UI tests |
 | `./gradlew testAndroidHostTest` | Android host tests |
 | `./gradlew iosSimulatorArm64Test` | iOS simulator tests (macOS) |
+| `./gradlew wasmJsNodeTest` | Web (Kotlin/Wasm) tests of `composdown-core` on Node.js |
 | `./gradlew verifyRoborazziDesktop` | Screenshot tests |
 | `./gradlew spotlessApply` | Formats the code |
 | `./gradlew detekt` | Static analysis |
@@ -87,6 +88,7 @@ Android Lint and the API check. Narrower tasks for faster iteration:
 | `./gradlew :benchmarks:benchmark` | Parser benchmarks |
 | `./gradlew :benchmarks:macrobenchmark:connectedBenchmarkReleaseAndroidTest` | Android Macrobenchmarks (device or emulator) |
 | `./gradlew :sample:desktop:run` | Runs the sample app on Desktop |
+| `./gradlew :sample:web:wasmJsBrowserDevelopmentRun` | Runs the sample app in the browser |
 
 ## Quality gates
 

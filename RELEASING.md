@@ -34,8 +34,9 @@ document is for maintainers.
    | `SIGNING_KEY_ID` | The last 8 characters of the key ID |
    | `SIGNING_KEY_PASSWORD` | The key's passphrase |
 
-4. **GitHub Pages.** In **Settings**, **Pages**, set the source to **GitHub Actions**. The API
-   reference is published there with each release.
+4. **GitHub Pages.** In **Settings**, **Pages**, set the source to **GitHub Actions**. The site (a
+   landing page, the live web demo under `/demo/` and the API reference under `/api/`) is published
+   there with each release, or on demand with the Site workflow.
 
 ## Releasing a version
 
@@ -57,7 +58,7 @@ document is for maintainers.
 
 6. The release workflow verifies the build, checks that the tag matches `VERSION_NAME`, uploads
    signed artifacts to Maven Central, creates the GitHub release with the changelog section as notes,
-   and publishes the API reference.
+   and publishes the site.
 7. Artifacts are uploaded as a deployment that is **not** released automatically. Review it in the
    Central Portal (**Deployments**) and select **Publish**. Artifacts appear on Maven Central within
    about 30 minutes.

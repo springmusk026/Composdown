@@ -6,7 +6,7 @@
 
 <p align="center">
   <strong>Complete, spec-compliant Markdown rendering for Compose Multiplatform.</strong><br>
-  Native on Android, iOS and Desktop. Themeable, accessible, and fast enough for live content.
+  Native on Android, iOS, Desktop and the web. Themeable, accessible, and fast enough for live content.
 </p>
 
 <p align="center">
@@ -14,14 +14,15 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-blue.svg" alt="License: Apache 2.0"></a>
   <img src="https://img.shields.io/badge/kotlin-2.4-7F52FF.svg?logo=kotlin&amp;logoColor=white" alt="Kotlin 2.4">
   <img src="https://img.shields.io/badge/Compose%20Multiplatform-1.12-4285F4.svg" alt="Compose Multiplatform 1.12">
-  <img src="https://img.shields.io/badge/platforms-Android%20%7C%20iOS%20%7C%20Desktop-555.svg" alt="Platforms: Android, iOS, Desktop">
+  <img src="https://img.shields.io/badge/platforms-Android%20%7C%20iOS%20%7C%20Desktop%20%7C%20Web-555.svg" alt="Platforms: Android, iOS, Desktop, Web">
   <img src="https://img.shields.io/badge/CommonMark-0.31.2%20%E2%9C%93-2ea44f.svg" alt="CommonMark 0.31.2 compliant">
 </p>
 
 <p align="center">
   <a href="docs/getting-started.md">Getting started</a> ·
   <a href="#documentation">Documentation</a> ·
-  <a href="https://springmusk026.github.io/Composdown/">API reference</a> ·
+  <a href="https://springmusk026.github.io/Composdown/demo/">Live demo</a> ·
+  <a href="https://springmusk026.github.io/Composdown/api/">API reference</a> ·
   <a href="sample">Sample app</a> ·
   <a href="CHANGELOG.md">Changelog</a>
 </p>
@@ -30,8 +31,8 @@
   <img src="docs/images/overview.png" width="860" alt="The same Markdown document rendered by Composdown in a light and a dark Material 3 theme, with a heading, emphasis, a task list, a table, a syntax-highlighted Kotlin code block, a tip alert and a footnote">
 </p>
 
-Composdown parses and renders Markdown natively on Android, iOS and Desktop, from a single shared
-codebase. It covers the full CommonMark specification and GitHub Flavored Markdown, renders with
+Composdown parses and renders Markdown natively on Android, iOS, Desktop and the web, from a single
+shared codebase. It covers the full CommonMark specification and GitHub Flavored Markdown, renders with
 Material 3, can be themed and customized down to individual elements, and stays fast and stable
 whether the content is a static document, a long scrolling feed, or text that is still arriving
 from a language model.
@@ -121,7 +122,7 @@ or alerts drawn as cards.
 | Android | `android` | API 23 |
 | iOS | `iosArm64`, `iosSimulatorArm64` | iOS 15 for the sample app |
 | Desktop | `jvm` | JVM 17 |
-| Web | `wasmJs` | Planned |
+| Web | `wasmJs` | Browsers with WebAssembly GC (Chrome 119, Firefox 120, Safari 18.2) |
 
 `composdown-core` additionally targets `iosX64`. Compose Multiplatform no longer publishes `iosX64`
 artifacts, so the Compose-based modules cannot support Intel-Mac iOS simulators.
@@ -299,10 +300,10 @@ time, and Macrobenchmarks measure startup, scrolling and streaming in the sample
 | [Compatibility](docs/compatibility.md) | Specification coverage, extensions, known differences |
 | [Architecture](docs/architecture.md) | How parsing, incremental updates and rendering work |
 
-The [API reference](https://springmusk026.github.io/Composdown/) is generated from the KDoc of every
+The [API reference](https://springmusk026.github.io/Composdown/api/) is generated from the KDoc of every
 public declaration and published with each release (`./gradlew dokkaGenerate` builds it locally).
 
-A runnable [sample](sample) for Android, iOS and Desktop demonstrates every feature, including a
+A runnable [sample](sample) for Android, iOS, Desktop and the web ([try it in your browser](https://springmusk026.github.io/Composdown/demo/)) demonstrates every feature, including a
 simulated chat that streams responses at a realistic pace.
 
 The images in this README are rendered by Composdown itself, from
@@ -330,7 +331,7 @@ Measured comparisons will be published with the first release.
 | Milestone | Scope |
 |---|---|
 | 0.1.0 | First release: everything described above, published for Android, iOS and Desktop |
-| Next | Web (`wasmJs`) target, native TeX formula rendering, inline images inside text, published reference results from physical Android devices |
+| Next | Native TeX formula rendering, inline images inside text, published reference results from physical Android devices |
 
 ## Contributing
 

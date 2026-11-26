@@ -100,13 +100,17 @@ same Markdown:
 
 | Module | Android | iOS arm64 | iOS simulator arm64 | iOS x64 | Desktop JVM | wasmJs |
 |---|---|---|---|---|---|---|
-| `composdown-core` | Yes | Yes | Yes | Yes | Yes | Planned |
-| `composdown-compose` | Yes | Yes | Yes | No | Yes | Planned |
-| `composdown-coil` | Yes | Yes | Yes | No | Yes | Planned |
-| `composdown-highlight` | Yes | Yes | Yes | No | Yes | Planned |
+| `composdown-core` | Yes | Yes | Yes | Yes | Yes | Yes |
+| `composdown-compose` | Yes | Yes | Yes | No | Yes | Yes |
+| `composdown-coil` | Yes | Yes | Yes | No | Yes | Yes |
+| `composdown-highlight` | Yes | Yes | Yes | No | Yes | Yes |
 
 Compose Multiplatform no longer publishes `iosX64` artifacts, so the Compose-based modules cannot
 target Intel-Mac simulators.
+
+On the web, `composdown-core` is tested on Node.js with the full test suite, including every
+specification example. The Compose-based modules are built for the browser; their rendering tests run
+on the JVM, Android and iOS. Compose Multiplatform's web support is in Beta.
 
 ## Versioning and API stability
 

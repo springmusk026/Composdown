@@ -18,6 +18,7 @@ This guide takes you from an empty project to rendered Markdown on Android, iOS 
 | Android | API 23, built with JVM target 17 |
 | iOS | `iosArm64` or `iosSimulatorArm64` (the sample app targets iOS 15) |
 | Desktop | JVM 17 |
+| Web | `wasmJs`, in browsers with WebAssembly GC support (Chrome 119, Firefox 120, Safari 18.2) |
 
 `composdown-core` has no Compose dependency and can be used in any Kotlin Multiplatform project,
 including server and command-line applications.
@@ -110,6 +111,17 @@ the `iosX64` (Intel simulator) target, because Compose Multiplatform no longer p
 
 **Desktop.** No setup is required. Remote images need a Coil network module such as
 `coil-network-ktor3` with a Ktor engine.
+
+**Web.** Use Composdown inside `ComposeViewport`. Browsers give Compose no system fonts to fall back
+on, so bundle the fonts your content needs as Compose resources:
+
+- a monospace font for code and math, set through `ComposdownDefaults.typography(codeBlock = ...,
+  inlineCode = ..., math = ..., mathBlock = ...)`, as the sample's `SampleTheme.kt` does;
+- fonts for scripts other than Latin, Greek and Cyrillic (for example Noto Sans Hebrew or Arabic), if
+  your content uses them.
+
+Remote images need `coil-network-ktor3` with the `ktor-client-js` engine, and the image server must
+allow cross-origin requests.
 
 ## Next steps
 

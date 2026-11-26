@@ -2,7 +2,8 @@ package io.github.springmusk026.composdown.core.spec
 
 import io.github.springmusk026.composdown.core.MarkdownExtension
 import io.github.springmusk026.composdown.core.MarkdownParser
-import io.github.springmusk026.composdown.core.html.HtmlRenderer
+import io.github.springmusk026.composdown.core.html.HtmlOptions
+import io.github.springmusk026.composdown.core.html.toHtml
 import kotlin.test.assertEquals
 
 /** One example from a specification test suite: Markdown input and the expected HTML output. */
@@ -29,7 +30,7 @@ private fun assertExample(
     parser: MarkdownParser,
     example: SpecExample,
 ) {
-    val actual = HtmlRenderer.render(parser.parse(example.markdown))
+    val actual = parser.parse(example.markdown).toHtml(HtmlOptions.CommonMark)
     if (example.html == IGNORE_OUTPUT) return
     assertEquals(
         expected = example.html,

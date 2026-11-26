@@ -139,6 +139,23 @@ public final class io/github/springmusk026/composdown/core/ast/Block$ThematicBre
 	public fun toString ()Ljava/lang/String;
 }
 
+public final class io/github/springmusk026/composdown/core/ast/DocumentHeading {
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAnchor ()Ljava/lang/String;
+	public final fun getBlock ()Lio/github/springmusk026/composdown/core/ast/Block$Heading;
+	public final fun getLevel ()I
+	public final fun getText ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/springmusk026/composdown/core/ast/DocumentQueriesKt {
+	public static final fun allBlocks (Lio/github/springmusk026/composdown/core/ast/MarkdownDocument;)Lkotlin/sequences/Sequence;
+	public static final fun allInlines (Lio/github/springmusk026/composdown/core/ast/MarkdownDocument;)Lkotlin/sequences/Sequence;
+	public static final fun headings (Lio/github/springmusk026/composdown/core/ast/MarkdownDocument;)Ljava/util/List;
+	public static final fun plainText (Lio/github/springmusk026/composdown/core/ast/MarkdownDocument;)Ljava/lang/String;
+}
+
 public final class io/github/springmusk026/composdown/core/ast/FootnoteDefinition {
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getChildren ()Lkotlinx/collections/immutable/ImmutableList;
@@ -309,5 +326,38 @@ public final class io/github/springmusk026/composdown/core/ast/TaskState : java/
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lio/github/springmusk026/composdown/core/ast/TaskState;
 	public static fun values ()[Lio/github/springmusk026/composdown/core/ast/TaskState;
+}
+
+public final class io/github/springmusk026/composdown/core/html/HtmlKt {
+	public static final fun toHtml (Lio/github/springmusk026/composdown/core/ast/MarkdownDocument;Lio/github/springmusk026/composdown/core/html/HtmlOptions;)Ljava/lang/String;
+	public static synthetic fun toHtml$default (Lio/github/springmusk026/composdown/core/ast/MarkdownDocument;Lio/github/springmusk026/composdown/core/html/HtmlOptions;ILjava/lang/Object;)Ljava/lang/String;
+}
+
+public final class io/github/springmusk026/composdown/core/html/HtmlOptions {
+	public static final field Companion Lio/github/springmusk026/composdown/core/html/HtmlOptions$Companion;
+	public fun <init> ()V
+	public fun <init> (Lio/github/springmusk026/composdown/core/html/RawHtml;ZZLjava/lang/String;)V
+	public synthetic fun <init> (Lio/github/springmusk026/composdown/core/html/RawHtml;ZZLjava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getHeadingIds ()Z
+	public final fun getRawHtml ()Lio/github/springmusk026/composdown/core/html/RawHtml;
+	public final fun getSafeLinks ()Z
+	public final fun getSoftBreak ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/springmusk026/composdown/core/html/HtmlOptions$Companion {
+	public final fun getCommonMark ()Lio/github/springmusk026/composdown/core/html/HtmlOptions;
+	public final fun getDefault ()Lio/github/springmusk026/composdown/core/html/HtmlOptions;
+}
+
+public final class io/github/springmusk026/composdown/core/html/RawHtml : java/lang/Enum {
+	public static final field ALLOW Lio/github/springmusk026/composdown/core/html/RawHtml;
+	public static final field ESCAPE Lio/github/springmusk026/composdown/core/html/RawHtml;
+	public static final field OMIT Lio/github/springmusk026/composdown/core/html/RawHtml;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lio/github/springmusk026/composdown/core/html/RawHtml;
+	public static fun values ()[Lio/github/springmusk026/composdown/core/html/RawHtml;
 }
 

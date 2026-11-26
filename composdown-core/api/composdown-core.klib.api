@@ -44,6 +44,18 @@ final enum class io.github.springmusk026.composdown.core.ast/TaskState : kotlin/
     final fun values(): kotlin/Array<io.github.springmusk026.composdown.core.ast/TaskState> // io.github.springmusk026.composdown.core.ast/TaskState.values|values#static(){}[0]
 }
 
+final enum class io.github.springmusk026.composdown.core.html/RawHtml : kotlin/Enum<io.github.springmusk026.composdown.core.html/RawHtml> { // io.github.springmusk026.composdown.core.html/RawHtml|null[0]
+    enum entry ALLOW // io.github.springmusk026.composdown.core.html/RawHtml.ALLOW|null[0]
+    enum entry ESCAPE // io.github.springmusk026.composdown.core.html/RawHtml.ESCAPE|null[0]
+    enum entry OMIT // io.github.springmusk026.composdown.core.html/RawHtml.OMIT|null[0]
+
+    final val entries // io.github.springmusk026.composdown.core.html/RawHtml.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<io.github.springmusk026.composdown.core.html/RawHtml> // io.github.springmusk026.composdown.core.html/RawHtml.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): io.github.springmusk026.composdown.core.html/RawHtml // io.github.springmusk026.composdown.core.html/RawHtml.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<io.github.springmusk026.composdown.core.html/RawHtml> // io.github.springmusk026.composdown.core.html/RawHtml.values|values#static(){}[0]
+}
+
 final enum class io.github.springmusk026.composdown.core/MarkdownExtension : kotlin/Enum<io.github.springmusk026.composdown.core/MarkdownExtension> { // io.github.springmusk026.composdown.core/MarkdownExtension|null[0]
     enum entry ALERTS // io.github.springmusk026.composdown.core/MarkdownExtension.ALERTS|null[0]
     enum entry AUTOLINKS // io.github.springmusk026.composdown.core/MarkdownExtension.AUTOLINKS|null[0]
@@ -321,6 +333,21 @@ sealed interface io.github.springmusk026.composdown.core.ast/ListKind { // io.gi
     }
 }
 
+final class io.github.springmusk026.composdown.core.ast/DocumentHeading { // io.github.springmusk026.composdown.core.ast/DocumentHeading|null[0]
+    final val anchor // io.github.springmusk026.composdown.core.ast/DocumentHeading.anchor|{}anchor[0]
+        final fun <get-anchor>(): kotlin/String // io.github.springmusk026.composdown.core.ast/DocumentHeading.anchor.<get-anchor>|<get-anchor>(){}[0]
+    final val block // io.github.springmusk026.composdown.core.ast/DocumentHeading.block|{}block[0]
+        final fun <get-block>(): io.github.springmusk026.composdown.core.ast/Block.Heading // io.github.springmusk026.composdown.core.ast/DocumentHeading.block.<get-block>|<get-block>(){}[0]
+    final val level // io.github.springmusk026.composdown.core.ast/DocumentHeading.level|{}level[0]
+        final fun <get-level>(): kotlin/Int // io.github.springmusk026.composdown.core.ast/DocumentHeading.level.<get-level>|<get-level>(){}[0]
+    final val text // io.github.springmusk026.composdown.core.ast/DocumentHeading.text|{}text[0]
+        final fun <get-text>(): kotlin/String // io.github.springmusk026.composdown.core.ast/DocumentHeading.text.<get-text>|<get-text>(){}[0]
+
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.springmusk026.composdown.core.ast/DocumentHeading.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.springmusk026.composdown.core.ast/DocumentHeading.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // io.github.springmusk026.composdown.core.ast/DocumentHeading.toString|toString(){}[0]
+}
+
 final class io.github.springmusk026.composdown.core.ast/FootnoteDefinition { // io.github.springmusk026.composdown.core.ast/FootnoteDefinition|null[0]
     final val children // io.github.springmusk026.composdown.core.ast/FootnoteDefinition.children|{}children[0]
         final fun <get-children>(): kotlinx.collections.immutable/ImmutableList<io.github.springmusk026.composdown.core.ast/Block> // io.github.springmusk026.composdown.core.ast/FootnoteDefinition.children.<get-children>|<get-children>(){}[0]
@@ -374,6 +401,30 @@ final class io.github.springmusk026.composdown.core.ast/TableRow { // io.github.
     final fun toString(): kotlin/String // io.github.springmusk026.composdown.core.ast/TableRow.toString|toString(){}[0]
 }
 
+final class io.github.springmusk026.composdown.core.html/HtmlOptions { // io.github.springmusk026.composdown.core.html/HtmlOptions|null[0]
+    constructor <init>(io.github.springmusk026.composdown.core.html/RawHtml = ..., kotlin/Boolean = ..., kotlin/Boolean = ..., kotlin/String = ...) // io.github.springmusk026.composdown.core.html/HtmlOptions.<init>|<init>(io.github.springmusk026.composdown.core.html.RawHtml;kotlin.Boolean;kotlin.Boolean;kotlin.String){}[0]
+
+    final val headingIds // io.github.springmusk026.composdown.core.html/HtmlOptions.headingIds|{}headingIds[0]
+        final fun <get-headingIds>(): kotlin/Boolean // io.github.springmusk026.composdown.core.html/HtmlOptions.headingIds.<get-headingIds>|<get-headingIds>(){}[0]
+    final val rawHtml // io.github.springmusk026.composdown.core.html/HtmlOptions.rawHtml|{}rawHtml[0]
+        final fun <get-rawHtml>(): io.github.springmusk026.composdown.core.html/RawHtml // io.github.springmusk026.composdown.core.html/HtmlOptions.rawHtml.<get-rawHtml>|<get-rawHtml>(){}[0]
+    final val safeLinks // io.github.springmusk026.composdown.core.html/HtmlOptions.safeLinks|{}safeLinks[0]
+        final fun <get-safeLinks>(): kotlin/Boolean // io.github.springmusk026.composdown.core.html/HtmlOptions.safeLinks.<get-safeLinks>|<get-safeLinks>(){}[0]
+    final val softBreak // io.github.springmusk026.composdown.core.html/HtmlOptions.softBreak|{}softBreak[0]
+        final fun <get-softBreak>(): kotlin/String // io.github.springmusk026.composdown.core.html/HtmlOptions.softBreak.<get-softBreak>|<get-softBreak>(){}[0]
+
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.springmusk026.composdown.core.html/HtmlOptions.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.springmusk026.composdown.core.html/HtmlOptions.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // io.github.springmusk026.composdown.core.html/HtmlOptions.toString|toString(){}[0]
+
+    final object Companion { // io.github.springmusk026.composdown.core.html/HtmlOptions.Companion|null[0]
+        final val CommonMark // io.github.springmusk026.composdown.core.html/HtmlOptions.Companion.CommonMark|{}CommonMark[0]
+            final fun <get-CommonMark>(): io.github.springmusk026.composdown.core.html/HtmlOptions // io.github.springmusk026.composdown.core.html/HtmlOptions.Companion.CommonMark.<get-CommonMark>|<get-CommonMark>(){}[0]
+        final val Default // io.github.springmusk026.composdown.core.html/HtmlOptions.Companion.Default|{}Default[0]
+            final fun <get-Default>(): io.github.springmusk026.composdown.core.html/HtmlOptions // io.github.springmusk026.composdown.core.html/HtmlOptions.Companion.Default.<get-Default>|<get-Default>(){}[0]
+    }
+}
+
 final class io.github.springmusk026.composdown.core/IncrementalMarkdownParser { // io.github.springmusk026.composdown.core/IncrementalMarkdownParser|null[0]
     constructor <init>(kotlin.collections/Set<io.github.springmusk026.composdown.core/MarkdownExtension> = ..., io.github.springmusk026.composdown.core/StreamingPolicy = ...) // io.github.springmusk026.composdown.core/IncrementalMarkdownParser.<init>|<init>(kotlin.collections.Set<io.github.springmusk026.composdown.core.MarkdownExtension>;io.github.springmusk026.composdown.core.StreamingPolicy){}[0]
 
@@ -402,4 +453,9 @@ final class io.github.springmusk026.composdown.core/MarkdownParser { // io.githu
     final fun parse(kotlin/String): io.github.springmusk026.composdown.core.ast/MarkdownDocument // io.github.springmusk026.composdown.core/MarkdownParser.parse|parse(kotlin.String){}[0]
 }
 
+final fun (io.github.springmusk026.composdown.core.ast/MarkdownDocument).io.github.springmusk026.composdown.core.ast/allBlocks(): kotlin.sequences/Sequence<io.github.springmusk026.composdown.core.ast/Block> // io.github.springmusk026.composdown.core.ast/allBlocks|allBlocks@io.github.springmusk026.composdown.core.ast.MarkdownDocument(){}[0]
+final fun (io.github.springmusk026.composdown.core.ast/MarkdownDocument).io.github.springmusk026.composdown.core.ast/allInlines(): kotlin.sequences/Sequence<io.github.springmusk026.composdown.core.ast/Inline> // io.github.springmusk026.composdown.core.ast/allInlines|allInlines@io.github.springmusk026.composdown.core.ast.MarkdownDocument(){}[0]
+final fun (io.github.springmusk026.composdown.core.ast/MarkdownDocument).io.github.springmusk026.composdown.core.ast/headings(): kotlin.collections/List<io.github.springmusk026.composdown.core.ast/DocumentHeading> // io.github.springmusk026.composdown.core.ast/headings|headings@io.github.springmusk026.composdown.core.ast.MarkdownDocument(){}[0]
+final fun (io.github.springmusk026.composdown.core.ast/MarkdownDocument).io.github.springmusk026.composdown.core.ast/plainText(): kotlin/String // io.github.springmusk026.composdown.core.ast/plainText|plainText@io.github.springmusk026.composdown.core.ast.MarkdownDocument(){}[0]
+final fun (io.github.springmusk026.composdown.core.ast/MarkdownDocument).io.github.springmusk026.composdown.core.html/toHtml(io.github.springmusk026.composdown.core.html/HtmlOptions = ...): kotlin/String // io.github.springmusk026.composdown.core.html/toHtml|toHtml@io.github.springmusk026.composdown.core.ast.MarkdownDocument(io.github.springmusk026.composdown.core.html.HtmlOptions){}[0]
 final fun (kotlin.collections/Iterable<io.github.springmusk026.composdown.core.ast/Inline>).io.github.springmusk026.composdown.core.ast/plainText(): kotlin/String // io.github.springmusk026.composdown.core.ast/plainText|plainText@kotlin.collections.Iterable<io.github.springmusk026.composdown.core.ast.Inline>(){}[0]

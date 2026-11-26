@@ -20,13 +20,16 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDirection
@@ -86,13 +89,49 @@ internal fun DefaultCodeBlock(
     block: Block.CodeBlock,
     modifier: Modifier = Modifier,
 ) {
-    CodeText(block.literal.removeSuffix("\n"), modifier)
+    val environment = currentEnvironment()
+    val code = block.literal.removeSuffix("\n")
+    val language = block.language
+    val highlighter = environment.codeHighlighter
+    val darkTheme =
+        environment.theme.colors.codeBlockBackground
+            .luminance() < DARK_LUMINANCE
+    val highlighted =
+        remember(code, language, highlighter, darkTheme) {
+            if (highlighter != null && language != null) highlighter.highlight(code, language, darkTheme) else null
+        }
+    CodeText(highlighted ?: AnnotatedString(code), modifier)
+}
+
+/** Backgrounds darker than this count as dark when choosing syntax colors. */
+private const val DARK_LUMINANCE = 0.5f
+
+/** TeX source of a math block, centered and in the math style. */
+@Composable
+internal fun DefaultMathBlock(
+    block: Block.MathBlock,
+    modifier: Modifier = Modifier,
+) {
+    val theme = currentEnvironment().theme
+    // Formulas read left to right regardless of the surrounding text.
+    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+        Box(
+            modifier = modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = block.literal,
+                style = theme.typography.mathBlock.merge(color = theme.colors.text),
+                softWrap = false,
+            )
+        }
+    }
 }
 
 /** Monospace text on the code background, scrolling horizontally instead of wrapping. */
 @Composable
 private fun CodeText(
-    code: String,
+    code: AnnotatedString,
     modifier: Modifier = Modifier,
 ) {
     val theme = currentEnvironment().theme
@@ -202,7 +241,7 @@ internal fun DefaultHtmlBlock(
     block: Block.HtmlBlock,
     modifier: Modifier = Modifier,
 ) {
-    CodeText(block.literal, modifier)
+    CodeText(AnnotatedString(block.literal), modifier)
 }
 
 /** Renders blocks one under another with the theme's block spacing. */

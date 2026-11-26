@@ -51,4 +51,9 @@ public class ComposdownComponents(
     public val thematicBreak: BlockComponent<Block.ThematicBreak>? = null,
     /** Raw HTML blocks. By default their source is shown as code; Composdown never interprets HTML. */
     public val htmlBlock: BlockComponent<Block.HtmlBlock>? = null,
+    /**
+     * Math blocks (the `MATH` extension). By default their TeX source is shown in the math style;
+     * replace this to render formulas, for example with a TeX renderer.
+     */
+    public val mathBlock: BlockComponent<Block.MathBlock>? = null,
 )

@@ -95,6 +95,10 @@ internal object HtmlRenderer {
                 is Block.Table -> {
                     table(block)
                 }
+
+                is Block.MathBlock -> {
+                    line("<div class=\"math\">${escape(block.literal)}</div>")
+                }
             }
         }
 
@@ -255,23 +259,26 @@ internal object HtmlRenderer {
                 }
 
                 is Inline.Link -> {
-                    out.append("<a href=\"").append(escape(normalizeUri(inline.destination))).append('"')
-                    inline.title?.let { out.append(" title=\"").append(escape(it)).append('"') }
-                    out.append('>')
-                    inlines(inline.children)
-                    out.append("</a>")
+                    link(inline)
                 }
 
                 is Inline.Image -> {
-                    out.append("<img src=\"").append(escape(normalizeUri(inline.destination))).append("\" alt=\"")
-                    altText(inline.children)
-                    out.append('"')
-                    inline.title?.let { out.append(" title=\"").append(escape(it)).append('"') }
-                    out.append(" />")
+                    image(inline)
                 }
 
                 is Inline.FootnoteReference -> {
                     footnoteReference(inline)
+                }
+
+                is Inline.Math -> {
+                    val kind = if (inline.isDisplay) "math display" else "math inline"
+                    out
+                        .append(
+                            "<span class=\"",
+                        ).append(kind)
+                        .append("\">")
+                        .append(escape(inline.literal))
+                        .append("</span>")
                 }
 
                 is Inline.HtmlInline -> {
@@ -286,6 +293,22 @@ internal object HtmlRenderer {
                     out.append("<br />\n")
                 }
             }
+        }
+
+        private fun link(inline: Inline.Link) {
+            out.append("<a href=\"").append(escape(normalizeUri(inline.destination))).append('"')
+            inline.title?.let { out.append(" title=\"").append(escape(it)).append('"') }
+            out.append('>')
+            inlines(inline.children)
+            out.append("</a>")
+        }
+
+        private fun image(inline: Inline.Image) {
+            out.append("<img src=\"").append(escape(normalizeUri(inline.destination))).append("\" alt=\"")
+            altText(inline.children)
+            out.append('"')
+            inline.title?.let { out.append(" title=\"").append(escape(it)).append('"') }
+            out.append(" />")
         }
 
         private fun wrap(
@@ -320,6 +343,7 @@ internal object HtmlRenderer {
                     is Inline.Link -> altText(inline.children)
                     is Inline.Image -> altText(inline.children)
                     is Inline.FootnoteReference -> out.append(inline.number)
+                    is Inline.Math -> out.append(escape(inline.literal))
                     is Inline.HtmlInline -> out.append(inline.literal)
                     Inline.SoftBreak, Inline.HardBreak -> out.append('\n')
                 }
@@ -347,7 +371,7 @@ internal object HtmlRenderer {
                 is Block.Alert -> children
                 is Block.ListBlock -> items.flatMap { it.children }
                 is Block.Table -> (listOf(header) + rows).flatMap { row -> row.cells.flatMap { it.content } }
-                Block.ThematicBreak, is Block.CodeBlock, is Block.HtmlBlock -> emptyList()
+                Block.ThematicBreak, is Block.CodeBlock, is Block.HtmlBlock, is Block.MathBlock -> emptyList()
             }
 
         private fun Inline.childrenForCounting(): List<Any> =

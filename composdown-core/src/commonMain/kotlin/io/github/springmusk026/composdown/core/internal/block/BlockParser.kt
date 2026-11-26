@@ -12,6 +12,9 @@ internal const val MAX_NESTING_DEPTH = 100
 
 private const val MAX_HEADING_LEVEL = 6
 
+/** Opening delimiters of math blocks and their closing delimiters. */
+private val MATH_DELIMITERS = mapOf("$$" to "$$", "\\[" to "\\]")
+
 /** Characters that cannot appear in a footnote definition label. */
 private const val FOOTNOTE_LABEL_TERMINATORS = "] \t\r\n"
 private const val MIN_FENCE_LENGTH = 3
@@ -34,6 +37,7 @@ internal class BlockParser(
     private val footnotes: FootnoteRegistry?,
 ) {
     private val tables = MarkdownExtension.TABLES in extensions
+    private val math = MarkdownExtension.MATH in extensions
 
     val document: DocumentNode = DocumentNode().also { it.startLine = 1 }
 
@@ -149,6 +153,7 @@ internal class BlockParser(
             startBlockQuote(container) -> StartResult.CONTAINER
             startAtxHeading() -> StartResult.LEAF
             startFencedCodeBlock() -> StartResult.LEAF
+            startMathBlock() -> StartResult.LEAF
             startHtmlBlock(container) -> StartResult.LEAF
             startSetextHeading(container) -> StartResult.LEAF
             startTable(container) -> StartResult.LEAF
@@ -208,6 +213,30 @@ internal class BlockParser(
         )
         cursor.advanceNextNonspace()
         cursor.advanceChars(fenceLength)
+        return true
+    }
+
+    /**
+     * A line that is just `$$` or `\[` opens a math block (the `MATH` extension), which ends at a line
+     * ending with `$$` or `\]`. A line that both starts and ends with the delimiters is a one-line
+     * block. Other lines starting with `$$` are paragraphs that begin with inline math.
+     */
+    private fun startMathBlock(): Boolean {
+        if (!math || cursor.indented) return false
+        val rest = cursor.line.substring(cursor.nextNonspace).trimEnd(' ', '\t')
+        val opener = MATH_DELIMITERS.keys.firstOrNull { rest.startsWith(it) } ?: return false
+        val closer = MATH_DELIMITERS.getValue(opener)
+        val body = rest.substring(opener.length)
+        val singleLine = body.length >= closer.length && body.endsWith(closer)
+        if (body.isNotEmpty() && !singleLine) return false
+        closeUnmatchedBlocks()
+        val block = MathBlockNode(closer)
+        addChild(block)
+        cursor.advanceToEnd()
+        if (singleLine) {
+            block.content.append(body, 0, body.length - closer.length).append('\n')
+            finalize(block, lineNumber)
+        }
         return true
     }
 
@@ -398,6 +427,10 @@ internal class BlockParser(
                 block.finalizeTable()
             }
 
+            is MathBlockNode -> {
+                block.finalizeMath()
+            }
+
             is DocumentNode, is BlockQuoteNode, is HeadingNode, is ThematicBreakNode, is FootnoteDefinitionNode -> {
                 // These blocks have no content to post-process.
             }
@@ -418,7 +451,7 @@ internal class BlockParser(
     private fun Char.mayStartBlock(): Boolean =
         when (this) {
             // `|`, `:` and `[` can start table delimiter rows and footnote definitions.
-            '#', '`', '~', '*', '+', '_', '=', '<', '>', '-', '|', ':', '[' -> true
+            '#', '`', '~', '*', '+', '_', '=', '<', '>', '-', '|', ':', '[', '$', '\\' -> true
 
             else -> isAsciiDigit()
         }

@@ -20,7 +20,9 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
+import androidx.compose.ui.text.AnnotatedString
 import io.github.springmusk026.composdown.compose.internal.DefaultParagraph
+import io.github.springmusk026.composdown.core.MarkdownExtension
 import io.github.springmusk026.composdown.core.ast.Block
 import io.github.springmusk026.composdown.core.ast.plainText
 import kotlinx.coroutines.CoroutineScope
@@ -91,6 +93,45 @@ class ComposdownUiTest {
                 )
             setContent { Composdown("```kotlin\nval x = 1\n```", components = components) }
             onNodeWithTag("code").assert(hasText("custom kotlin"))
+        }
+
+    @Test
+    fun codeHighlighterReceivesTheLanguage() =
+        runComposeUiTest {
+            val requests = mutableListOf<String>()
+            val highlighter =
+                CodeHighlighter { code, language, _ ->
+                    requests += language
+                    AnnotatedString(code.uppercase())
+                }
+            setContent { Composdown("```kotlin\nval x\n```", codeHighlighter = highlighter) }
+            onNodeWithText("VAL X").assertExists()
+            assertEquals("kotlin", requests.single())
+        }
+
+    @Test
+    fun mathRendersItsSourceAndCanBeReplaced() =
+        runComposeUiTest {
+            val extensions = ComposdownDefaults.Extensions + MarkdownExtension.MATH
+            val components =
+                ComposdownComponents(
+                    mathBlock =
+                        BlockComponent {
+                            block,
+                            modifier,
+                            ->
+                            Text("formula ${block.literal}", modifier)
+                        },
+                )
+            setContent {
+                Composdown(
+                    "Inline \$\\alpha\$ here.\n\n\$\$\nE = mc^2\n\$\$\n",
+                    extensions = extensions,
+                    components = components,
+                )
+            }
+            onNodeWithText("Inline \\alpha here.").assertExists()
+            onNodeWithText("formula E = mc^2").assertExists()
         }
 
     @Test

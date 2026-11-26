@@ -48,6 +48,7 @@ final enum class io.github.springmusk026.composdown.core/MarkdownExtension : kot
     enum entry ALERTS // io.github.springmusk026.composdown.core/MarkdownExtension.ALERTS|null[0]
     enum entry AUTOLINKS // io.github.springmusk026.composdown.core/MarkdownExtension.AUTOLINKS|null[0]
     enum entry FOOTNOTES // io.github.springmusk026.composdown.core/MarkdownExtension.FOOTNOTES|null[0]
+    enum entry MATH // io.github.springmusk026.composdown.core/MarkdownExtension.MATH|null[0]
     enum entry STRIKETHROUGH // io.github.springmusk026.composdown.core/MarkdownExtension.STRIKETHROUGH|null[0]
     enum entry TABLES // io.github.springmusk026.composdown.core/MarkdownExtension.TABLES|null[0]
     enum entry TASK_LISTS // io.github.springmusk026.composdown.core/MarkdownExtension.TASK_LISTS|null[0]
@@ -144,6 +145,15 @@ sealed interface io.github.springmusk026.composdown.core.ast/Block { // io.githu
         final fun toString(): kotlin/String // io.github.springmusk026.composdown.core.ast/Block.ListBlock.toString|toString(){}[0]
     }
 
+    final class MathBlock : io.github.springmusk026.composdown.core.ast/Block { // io.github.springmusk026.composdown.core.ast/Block.MathBlock|null[0]
+        final val literal // io.github.springmusk026.composdown.core.ast/Block.MathBlock.literal|{}literal[0]
+            final fun <get-literal>(): kotlin/String // io.github.springmusk026.composdown.core.ast/Block.MathBlock.literal.<get-literal>|<get-literal>(){}[0]
+
+        final fun equals(kotlin/Any?): kotlin/Boolean // io.github.springmusk026.composdown.core.ast/Block.MathBlock.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // io.github.springmusk026.composdown.core.ast/Block.MathBlock.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // io.github.springmusk026.composdown.core.ast/Block.MathBlock.toString|toString(){}[0]
+    }
+
     final class Paragraph : io.github.springmusk026.composdown.core.ast/Block { // io.github.springmusk026.composdown.core.ast/Block.Paragraph|null[0]
         final val content // io.github.springmusk026.composdown.core.ast/Block.Paragraph.content|{}content[0]
             final fun <get-content>(): kotlinx.collections.immutable/ImmutableList<io.github.springmusk026.composdown.core.ast/Inline> // io.github.springmusk026.composdown.core.ast/Block.Paragraph.content.<get-content>|<get-content>(){}[0]
@@ -236,6 +246,17 @@ sealed interface io.github.springmusk026.composdown.core.ast/Inline { // io.gith
         final fun equals(kotlin/Any?): kotlin/Boolean // io.github.springmusk026.composdown.core.ast/Inline.Link.equals|equals(kotlin.Any?){}[0]
         final fun hashCode(): kotlin/Int // io.github.springmusk026.composdown.core.ast/Inline.Link.hashCode|hashCode(){}[0]
         final fun toString(): kotlin/String // io.github.springmusk026.composdown.core.ast/Inline.Link.toString|toString(){}[0]
+    }
+
+    final class Math : io.github.springmusk026.composdown.core.ast/Inline { // io.github.springmusk026.composdown.core.ast/Inline.Math|null[0]
+        final val isDisplay // io.github.springmusk026.composdown.core.ast/Inline.Math.isDisplay|{}isDisplay[0]
+            final fun <get-isDisplay>(): kotlin/Boolean // io.github.springmusk026.composdown.core.ast/Inline.Math.isDisplay.<get-isDisplay>|<get-isDisplay>(){}[0]
+        final val literal // io.github.springmusk026.composdown.core.ast/Inline.Math.literal|{}literal[0]
+            final fun <get-literal>(): kotlin/String // io.github.springmusk026.composdown.core.ast/Inline.Math.literal.<get-literal>|<get-literal>(){}[0]
+
+        final fun equals(kotlin/Any?): kotlin/Boolean // io.github.springmusk026.composdown.core.ast/Inline.Math.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // io.github.springmusk026.composdown.core.ast/Inline.Math.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // io.github.springmusk026.composdown.core.ast/Inline.Math.toString|toString(){}[0]
     }
 
     final class Strikethrough : io.github.springmusk026.composdown.core.ast/Inline { // io.github.springmusk026.composdown.core.ast/Inline.Strikethrough|null[0]

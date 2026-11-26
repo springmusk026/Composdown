@@ -24,6 +24,12 @@ internal class InlineNode(
 
         /** [literal] holds the definition's label and [number] the footnote number. */
         FOOTNOTE_REFERENCE,
+
+        /** [literal] holds the TeX source. */
+        MATH,
+
+        /** [literal] holds the TeX source. */
+        DISPLAY_MATH,
     }
 
     /** Destination of a link or image. */

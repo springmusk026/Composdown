@@ -17,6 +17,7 @@ public final class io/github/springmusk026/composdown/core/MarkdownExtension : j
 	public static final field AUTOLINKS Lio/github/springmusk026/composdown/core/MarkdownExtension;
 	public static final field Companion Lio/github/springmusk026/composdown/core/MarkdownExtension$Companion;
 	public static final field FOOTNOTES Lio/github/springmusk026/composdown/core/MarkdownExtension;
+	public static final field MATH Lio/github/springmusk026/composdown/core/MarkdownExtension;
 	public static final field STRIKETHROUGH Lio/github/springmusk026/composdown/core/MarkdownExtension;
 	public static final field TABLES Lio/github/springmusk026/composdown/core/MarkdownExtension;
 	public static final field TASK_LISTS Lio/github/springmusk026/composdown/core/MarkdownExtension;
@@ -108,6 +109,13 @@ public final class io/github/springmusk026/composdown/core/ast/Block$ListBlock :
 	public fun toString ()Ljava/lang/String;
 }
 
+public final class io/github/springmusk026/composdown/core/ast/Block$MathBlock : io/github/springmusk026/composdown/core/ast/Block {
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getLiteral ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
 public final class io/github/springmusk026/composdown/core/ast/Block$Paragraph : io/github/springmusk026/composdown/core/ast/Block {
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getContent ()Lkotlinx/collections/immutable/ImmutableList;
@@ -194,6 +202,14 @@ public final class io/github/springmusk026/composdown/core/ast/Inline$Link : io/
 	public final fun getDestination ()Ljava/lang/String;
 	public final fun getTitle ()Ljava/lang/String;
 	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/springmusk026/composdown/core/ast/Inline$Math : io/github/springmusk026/composdown/core/ast/Inline {
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getLiteral ()Ljava/lang/String;
+	public fun hashCode ()I
+	public final fun isDisplay ()Z
 	public fun toString ()Ljava/lang/String;
 }
 

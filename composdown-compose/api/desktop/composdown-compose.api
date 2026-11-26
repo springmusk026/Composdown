@@ -2,6 +2,10 @@ public abstract interface class io/github/springmusk026/composdown/compose/Block
 	public abstract fun Content (Lio/github/springmusk026/composdown/core/ast/Block;Landroidx/compose/ui/Modifier;Landroidx/compose/runtime/Composer;I)V
 }
 
+public abstract interface class io/github/springmusk026/composdown/compose/CodeHighlighter {
+	public abstract fun highlight (Ljava/lang/String;Ljava/lang/String;Z)Landroidx/compose/ui/text/AnnotatedString;
+}
+
 public final class io/github/springmusk026/composdown/compose/ComposableSingletons$ComposdownKt {
 	public static final field INSTANCE Lio/github/springmusk026/composdown/compose/ComposableSingletons$ComposdownKt;
 	public fun <init> ()V
@@ -9,6 +13,7 @@ public final class io/github/springmusk026/composdown/compose/ComposableSingleto
 	public final fun getLambda$-1207776694$io_github_springmusk026_composdown_compose ()Lkotlin/jvm/functions/Function4;
 	public final fun getLambda$-1361449282$io_github_springmusk026_composdown_compose ()Lkotlin/jvm/functions/Function4;
 	public final fun getLambda$-1485259499$io_github_springmusk026_composdown_compose ()Lkotlin/jvm/functions/Function4;
+	public final fun getLambda$-1575995998$io_github_springmusk026_composdown_compose ()Lkotlin/jvm/functions/Function4;
 	public final fun getLambda$-2106128828$io_github_springmusk026_composdown_compose ()Lkotlin/jvm/functions/Function4;
 	public final fun getLambda$-858898488$io_github_springmusk026_composdown_compose ()Lkotlin/jvm/functions/Function4;
 	public final fun getLambda$1062429568$io_github_springmusk026_composdown_compose ()Lkotlin/jvm/functions/Function4;
@@ -37,8 +42,8 @@ public final class io/github/springmusk026/composdown/compose/ComposdownColors {
 public final class io/github/springmusk026/composdown/compose/ComposdownComponents {
 	public static final field $stable I
 	public fun <init> ()V
-	public fun <init> (Lio/github/springmusk026/composdown/compose/BlockComponent;Lio/github/springmusk026/composdown/compose/BlockComponent;Lio/github/springmusk026/composdown/compose/BlockComponent;Lio/github/springmusk026/composdown/compose/BlockComponent;Lio/github/springmusk026/composdown/compose/BlockComponent;Lio/github/springmusk026/composdown/compose/BlockComponent;Lio/github/springmusk026/composdown/compose/BlockComponent;Lio/github/springmusk026/composdown/compose/BlockComponent;Lio/github/springmusk026/composdown/compose/BlockComponent;)V
-	public synthetic fun <init> (Lio/github/springmusk026/composdown/compose/BlockComponent;Lio/github/springmusk026/composdown/compose/BlockComponent;Lio/github/springmusk026/composdown/compose/BlockComponent;Lio/github/springmusk026/composdown/compose/BlockComponent;Lio/github/springmusk026/composdown/compose/BlockComponent;Lio/github/springmusk026/composdown/compose/BlockComponent;Lio/github/springmusk026/composdown/compose/BlockComponent;Lio/github/springmusk026/composdown/compose/BlockComponent;Lio/github/springmusk026/composdown/compose/BlockComponent;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lio/github/springmusk026/composdown/compose/BlockComponent;Lio/github/springmusk026/composdown/compose/BlockComponent;Lio/github/springmusk026/composdown/compose/BlockComponent;Lio/github/springmusk026/composdown/compose/BlockComponent;Lio/github/springmusk026/composdown/compose/BlockComponent;Lio/github/springmusk026/composdown/compose/BlockComponent;Lio/github/springmusk026/composdown/compose/BlockComponent;Lio/github/springmusk026/composdown/compose/BlockComponent;Lio/github/springmusk026/composdown/compose/BlockComponent;Lio/github/springmusk026/composdown/compose/BlockComponent;)V
+	public synthetic fun <init> (Lio/github/springmusk026/composdown/compose/BlockComponent;Lio/github/springmusk026/composdown/compose/BlockComponent;Lio/github/springmusk026/composdown/compose/BlockComponent;Lio/github/springmusk026/composdown/compose/BlockComponent;Lio/github/springmusk026/composdown/compose/BlockComponent;Lio/github/springmusk026/composdown/compose/BlockComponent;Lio/github/springmusk026/composdown/compose/BlockComponent;Lio/github/springmusk026/composdown/compose/BlockComponent;Lio/github/springmusk026/composdown/compose/BlockComponent;Lio/github/springmusk026/composdown/compose/BlockComponent;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getAlert ()Lio/github/springmusk026/composdown/compose/BlockComponent;
 	public final fun getBlockQuote ()Lio/github/springmusk026/composdown/compose/BlockComponent;
@@ -46,6 +51,7 @@ public final class io/github/springmusk026/composdown/compose/ComposdownComponen
 	public final fun getHeading ()Lio/github/springmusk026/composdown/compose/BlockComponent;
 	public final fun getHtmlBlock ()Lio/github/springmusk026/composdown/compose/BlockComponent;
 	public final fun getList ()Lio/github/springmusk026/composdown/compose/BlockComponent;
+	public final fun getMathBlock ()Lio/github/springmusk026/composdown/compose/BlockComponent;
 	public final fun getParagraph ()Lio/github/springmusk026/composdown/compose/BlockComponent;
 	public final fun getTable ()Lio/github/springmusk026/composdown/compose/BlockComponent;
 	public final fun getThematicBreak ()Lio/github/springmusk026/composdown/compose/BlockComponent;
@@ -62,13 +68,13 @@ public final class io/github/springmusk026/composdown/compose/ComposdownDefaults
 	public final fun spacing-oRJhP44 (FFFFFFF)Lio/github/springmusk026/composdown/compose/ComposdownSpacing;
 	public static synthetic fun spacing-oRJhP44$default (Lio/github/springmusk026/composdown/compose/ComposdownDefaults;FFFFFFFILjava/lang/Object;)Lio/github/springmusk026/composdown/compose/ComposdownSpacing;
 	public final fun theme (Lio/github/springmusk026/composdown/compose/ComposdownColors;Lio/github/springmusk026/composdown/compose/ComposdownTypography;Lio/github/springmusk026/composdown/compose/ComposdownSpacing;Landroidx/compose/runtime/Composer;II)Lio/github/springmusk026/composdown/compose/ComposdownTheme;
-	public final fun typography (Landroidx/compose/ui/text/TextStyle;Ljava/util/List;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/SpanStyle;Landroidx/compose/ui/text/SpanStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/runtime/Composer;II)Lio/github/springmusk026/composdown/compose/ComposdownTypography;
+	public final fun typography (Landroidx/compose/ui/text/TextStyle;Ljava/util/List;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/SpanStyle;Landroidx/compose/ui/text/SpanStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/SpanStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/runtime/Composer;III)Lio/github/springmusk026/composdown/compose/ComposdownTypography;
 }
 
 public final class io/github/springmusk026/composdown/compose/ComposdownKt {
-	public static final fun Composdown (Lio/github/springmusk026/composdown/compose/ComposdownState;Landroidx/compose/ui/Modifier;Lio/github/springmusk026/composdown/compose/ComposdownTheme;Lio/github/springmusk026/composdown/compose/ComposdownComponents;Lio/github/springmusk026/composdown/compose/ImageRenderer;Lkotlin/jvm/functions/Function1;ZLandroidx/compose/runtime/Composer;II)V
-	public static final fun Composdown (Lio/github/springmusk026/composdown/core/ast/MarkdownDocument;Landroidx/compose/ui/Modifier;Lio/github/springmusk026/composdown/compose/ComposdownTheme;Lio/github/springmusk026/composdown/compose/ComposdownComponents;Lio/github/springmusk026/composdown/compose/ImageRenderer;Lkotlin/jvm/functions/Function1;ZLandroidx/compose/runtime/Composer;II)V
-	public static final fun Composdown (Ljava/lang/String;Landroidx/compose/ui/Modifier;Ljava/util/Set;Lio/github/springmusk026/composdown/compose/ComposdownTheme;Lio/github/springmusk026/composdown/compose/ComposdownComponents;Lio/github/springmusk026/composdown/compose/ImageRenderer;Lkotlin/jvm/functions/Function1;ZLandroidx/compose/runtime/Composer;II)V
+	public static final fun Composdown (Lio/github/springmusk026/composdown/compose/ComposdownState;Landroidx/compose/ui/Modifier;Lio/github/springmusk026/composdown/compose/ComposdownTheme;Lio/github/springmusk026/composdown/compose/ComposdownComponents;Lio/github/springmusk026/composdown/compose/ImageRenderer;Lio/github/springmusk026/composdown/compose/CodeHighlighter;Lkotlin/jvm/functions/Function1;ZLandroidx/compose/runtime/Composer;II)V
+	public static final fun Composdown (Lio/github/springmusk026/composdown/core/ast/MarkdownDocument;Landroidx/compose/ui/Modifier;Lio/github/springmusk026/composdown/compose/ComposdownTheme;Lio/github/springmusk026/composdown/compose/ComposdownComponents;Lio/github/springmusk026/composdown/compose/ImageRenderer;Lio/github/springmusk026/composdown/compose/CodeHighlighter;Lkotlin/jvm/functions/Function1;ZLandroidx/compose/runtime/Composer;II)V
+	public static final fun Composdown (Ljava/lang/String;Landroidx/compose/ui/Modifier;Ljava/util/Set;Lio/github/springmusk026/composdown/compose/ComposdownTheme;Lio/github/springmusk026/composdown/compose/ComposdownComponents;Lio/github/springmusk026/composdown/compose/ImageRenderer;Lio/github/springmusk026/composdown/compose/CodeHighlighter;Lkotlin/jvm/functions/Function1;ZLandroidx/compose/runtime/Composer;II)V
 	public static final fun ComposdownBlock (Lio/github/springmusk026/composdown/core/ast/Block;Landroidx/compose/ui/Modifier;Landroidx/compose/runtime/Composer;II)V
 }
 
@@ -122,6 +128,8 @@ public final class io/github/springmusk026/composdown/compose/ComposdownTypograp
 	public final fun getHeadings ()Ljava/util/List;
 	public final fun getInlineCode ()Landroidx/compose/ui/text/SpanStyle;
 	public final fun getLink ()Landroidx/compose/ui/text/SpanStyle;
+	public final fun getMath ()Landroidx/compose/ui/text/SpanStyle;
+	public final fun getMathBlock ()Landroidx/compose/ui/text/TextStyle;
 	public final fun getParagraph ()Landroidx/compose/ui/text/TextStyle;
 	public final fun getTableCell ()Landroidx/compose/ui/text/TextStyle;
 	public final fun getTableHeader ()Landroidx/compose/ui/text/TextStyle;
@@ -135,7 +143,7 @@ public abstract interface class io/github/springmusk026/composdown/compose/Image
 }
 
 public final class io/github/springmusk026/composdown/compose/LazyComposdownKt {
-	public static final fun composdownItems (Landroidx/compose/foundation/lazy/LazyListScope;Lio/github/springmusk026/composdown/core/ast/MarkdownDocument;Ljava/lang/String;Lio/github/springmusk026/composdown/compose/ComposdownTheme;Lio/github/springmusk026/composdown/compose/ComposdownComponents;Lio/github/springmusk026/composdown/compose/ImageRenderer;Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;)V
-	public static synthetic fun composdownItems$default (Landroidx/compose/foundation/lazy/LazyListScope;Lio/github/springmusk026/composdown/core/ast/MarkdownDocument;Ljava/lang/String;Lio/github/springmusk026/composdown/compose/ComposdownTheme;Lio/github/springmusk026/composdown/compose/ComposdownComponents;Lio/github/springmusk026/composdown/compose/ImageRenderer;Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;ILjava/lang/Object;)V
+	public static final fun composdownItems (Landroidx/compose/foundation/lazy/LazyListScope;Lio/github/springmusk026/composdown/core/ast/MarkdownDocument;Ljava/lang/String;Lio/github/springmusk026/composdown/compose/ComposdownTheme;Lio/github/springmusk026/composdown/compose/ComposdownComponents;Lio/github/springmusk026/composdown/compose/ImageRenderer;Lio/github/springmusk026/composdown/compose/CodeHighlighter;Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;)V
+	public static synthetic fun composdownItems$default (Landroidx/compose/foundation/lazy/LazyListScope;Lio/github/springmusk026/composdown/core/ast/MarkdownDocument;Ljava/lang/String;Lio/github/springmusk026/composdown/compose/ComposdownTheme;Lio/github/springmusk026/composdown/compose/ComposdownComponents;Lio/github/springmusk026/composdown/compose/ImageRenderer;Lio/github/springmusk026/composdown/compose/CodeHighlighter;Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;ILjava/lang/Object;)V
 }
 

@@ -73,6 +73,8 @@ internal class InlineConverter(
             InlineNode.Kind.SOFT_BREAK -> Inline.SoftBreak
             InlineNode.Kind.HARD_BREAK -> Inline.HardBreak
             InlineNode.Kind.FOOTNOTE_REFERENCE -> Inline.FootnoteReference(node.literal, node.number)
+            InlineNode.Kind.MATH -> Inline.Math(node.literal, isDisplay = false)
+            InlineNode.Kind.DISPLAY_MATH -> Inline.Math(node.literal, isDisplay = true)
             InlineNode.Kind.TEXT -> Inline.Text(node.literal)
             InlineNode.Kind.ROOT -> error("The root node is not an inline element")
         }
@@ -83,10 +85,24 @@ internal class InlineConverter(
         var node = root.firstChild
         while (node != null && node !== root) {
             when (node.kind) {
-                InlineNode.Kind.TEXT, InlineNode.Kind.CODE -> text.append(node.literal)
-                InlineNode.Kind.SOFT_BREAK, InlineNode.Kind.HARD_BREAK -> text.append('\n')
-                InlineNode.Kind.FOOTNOTE_REFERENCE -> text.append(node.number)
-                else -> Unit
+                InlineNode.Kind.TEXT, InlineNode.Kind.CODE, InlineNode.Kind.MATH, InlineNode.Kind.DISPLAY_MATH -> {
+                    text
+                        .append(
+                            node.literal,
+                        )
+                }
+
+                InlineNode.Kind.SOFT_BREAK, InlineNode.Kind.HARD_BREAK -> {
+                    text.append('\n')
+                }
+
+                InlineNode.Kind.FOOTNOTE_REFERENCE -> {
+                    text.append(node.number)
+                }
+
+                else -> {
+                    // Containers contribute only their children's text.
+                }
             }
             node = node.firstChild ?: nextInPreOrder(node, root)
         }

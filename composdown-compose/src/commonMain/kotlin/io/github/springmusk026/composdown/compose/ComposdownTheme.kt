@@ -85,6 +85,10 @@ public class ComposdownTypography internal constructor(
     public val footnote: TextStyle,
     /** The title line of alerts. */
     public val alertTitle: TextStyle,
+    /** Inline math (TeX source). */
+    public val math: SpanStyle,
+    /** Math blocks (TeX source). */
+    public val mathBlock: TextStyle,
 ) {
     init {
         require(headings.size == HEADING_LEVELS) { "Expected $HEADING_LEVELS heading styles, got ${headings.size}" }
@@ -195,6 +199,9 @@ public object ComposdownDefaults {
         tableCell: TextStyle = MaterialTheme.typography.bodyMedium.withContentDirection(),
         footnote: TextStyle = MaterialTheme.typography.bodySmall.withContentDirection(),
         alertTitle: TextStyle = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
+        // Math is shown as TeX source, where every character (backslashes included) must be legible.
+        math: SpanStyle = SpanStyle(fontFamily = FontFamily.Monospace),
+        mathBlock: TextStyle = MaterialTheme.typography.bodyLarge.copy(fontFamily = FontFamily.Monospace),
     ): ComposdownTypography =
         ComposdownTypography(
             paragraph,
@@ -206,6 +213,8 @@ public object ComposdownDefaults {
             tableCell,
             footnote,
             alertTitle,
+            math,
+            mathBlock,
         )
 
     /** Default spacing; any value can be replaced. */

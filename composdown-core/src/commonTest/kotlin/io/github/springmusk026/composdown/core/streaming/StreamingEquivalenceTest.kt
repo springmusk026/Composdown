@@ -15,7 +15,7 @@ import kotlin.test.assertEquals
  * finished document equals a one-shot parse of the same text.
  */
 class StreamingEquivalenceTest {
-    private val gfm = MarkdownExtension.GFM + MarkdownExtension.ALERTS
+    private val gfm = MarkdownExtension.GFM + MarkdownExtension.ALERTS + MarkdownExtension.MATH
     private val inputs: List<Pair<String, Set<MarkdownExtension>>> =
         CommonMarkSpecExamples.all.map { it.markdown to emptySet<MarkdownExtension>() } +
             CommonMarkSpecExamples.all.map { it.markdown to gfm } +
@@ -189,6 +189,12 @@ class StreamingEquivalenceTest {
                 "    ",
                 "- [ ] ",
                 "www.x.co",
+                "$",
+                "$$",
+                "\\(",
+                "\\)",
+                "\\[",
+                "\\]",
                 "http://x.co",
                 "a@b.co",
                 "!",

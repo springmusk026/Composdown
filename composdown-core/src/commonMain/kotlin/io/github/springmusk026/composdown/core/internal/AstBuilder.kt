@@ -19,6 +19,7 @@ import io.github.springmusk026.composdown.core.internal.block.HeadingNode
 import io.github.springmusk026.composdown.core.internal.block.HtmlBlockNode
 import io.github.springmusk026.composdown.core.internal.block.ItemNode
 import io.github.springmusk026.composdown.core.internal.block.ListNode
+import io.github.springmusk026.composdown.core.internal.block.MathBlockNode
 import io.github.springmusk026.composdown.core.internal.block.ParagraphNode
 import io.github.springmusk026.composdown.core.internal.block.TableNode
 import io.github.springmusk026.composdown.core.internal.block.ThematicBreakNode
@@ -45,6 +46,7 @@ internal class AstBuilder(
 ) {
     private val taskLists = MarkdownExtension.TASK_LISTS in extensions
     private val alerts = MarkdownExtension.ALERTS in extensions
+    private val math = MarkdownExtension.MATH in extensions
 
     /** Converted footnote definitions by normalized label; the first definition of a label wins. */
     private val footnoteDefinitions = LinkedHashMap<String, Pair<String, ImmutableList<Block>>>()
@@ -89,8 +91,7 @@ internal class AstBuilder(
             }
 
             is BlockQuoteNode -> {
-                (if (alerts && topLevel) alert(node) else null)
-                    ?: Block.BlockQuote(blocks(node.children))
+                blockQuote(node, topLevel)
             }
 
             is ListNode -> {
@@ -98,7 +99,11 @@ internal class AstBuilder(
             }
 
             is CodeBlockNode -> {
-                Block.CodeBlock(node.literal, node.info, node.isFenced)
+                codeBlock(node)
+            }
+
+            is MathBlockNode -> {
+                Block.MathBlock(node.literal)
             }
 
             is HtmlBlockNode -> {
@@ -117,6 +122,20 @@ internal class AstBuilder(
             is ItemNode, is DocumentNode -> {
                 error("${node::class.simpleName} is not a standalone block")
             }
+        }
+
+    /** A top-level block quote may be an alert. */
+    private fun blockQuote(
+        node: BlockQuoteNode,
+        topLevel: Boolean,
+    ): Block = (if (alerts && topLevel) alert(node) else null) ?: Block.BlockQuote(blocks(node.children))
+
+    /** A ```math code block is a math block, as on GitHub. */
+    private fun codeBlock(node: CodeBlockNode): Block =
+        if (math && node.isFenced && node.info?.substringBefore(' ') == "math") {
+            Block.MathBlock(node.literal.trim())
+        } else {
+            Block.CodeBlock(node.literal, node.info, node.isFenced)
         }
 
     private fun list(node: ListNode): Block.ListBlock {

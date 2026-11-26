@@ -28,6 +28,8 @@ internal class InlineParser(
 ) {
     private val strikethrough = MarkdownExtension.STRIKETHROUGH in extensions
     private val autolinks = MarkdownExtension.AUTOLINKS in extensions
+    private val math = MarkdownExtension.MATH in extensions
+    private var mathScanner = MathScanner()
 
     private var subject: String = ""
     private var pos = 0
@@ -61,6 +63,7 @@ internal class InlineParser(
         brackets = null
         backticks = null
         htmlMemo = HtmlScanMemo()
+        mathScanner = MathScanner()
         val root = InlineNode(InlineNode.Kind.ROOT)
         while (pos < subject.length) {
             parseInline(root)
@@ -96,37 +99,40 @@ internal class InlineParser(
     private fun parseInline(block: InlineNode) {
         val c = subject[pos]
         val handled =
-            when {
-                c == '\n' -> parseNewline(block)
-
-                c == '\\' -> parseBackslash(block)
-
-                c == '`' -> parseBackticks(block)
-
-                c == '*' || c == '_' || (c == '~' && strikethrough) -> handleDelimiter(c, block)
-
-                c == '[' -> parseOpenBracket(block)
-
-                c == '!' -> parseBang(block)
-
-                c == ']' -> parseCloseBracket(block)
-
-                c == '<' -> parseAutolink(block) || parseHtmlTag(block)
-
-                c == '&' -> parseEntity(block)
-
-                // Extended autolinks are not recognized inside link text.
-                autolinks && brackets == null && c == ':' -> consumeAutolink(parseUrlAutolink(block, subject, pos))
-
-                autolinks && brackets == null && c == '@' -> consumeAutolink(parseEmailAutolink(block, subject, pos))
-
-                autolinks && brackets == null && c == 'w' -> consumeAutolink(parseWwwAutolink(block, subject, pos))
-
+            when (c) {
+                '\n' -> parseNewline(block)
+                '\\' -> parseBackslash(block)
+                '`' -> parseBackticks(block)
+                '*', '_' -> handleDelimiter(c, block)
+                '[' -> parseOpenBracket(block)
+                '!' -> parseBang(block)
+                ']' -> parseCloseBracket(block)
+                '<' -> parseAutolink(block) || parseHtmlTag(block)
+                '&' -> parseEntity(block)
+                '~', '$', ':', '@', 'w' -> parseExtension(c, block)
                 else -> parseString(block)
             }
         if (!handled) {
             block.appendChild(text(c.toString()))
             pos++
+        }
+    }
+
+    /**
+     * Syntax that depends on an extension: strikethrough (`~`), math (`$`) and extended autolinks
+     * (`:`, `@`, `w`). Extended autolinks are not recognized inside link text.
+     */
+    private fun parseExtension(
+        c: Char,
+        block: InlineNode,
+    ): Boolean {
+        val autolinkAllowed = autolinks && brackets == null
+        return when (c) {
+            '~' -> strikethrough && handleDelimiter(c, block)
+            '$' -> math && advanceTo(appendMath(block, mathScanner.scanDollar(subject, pos)))
+            ':' -> autolinkAllowed && advanceTo(parseUrlAutolink(block, subject, pos))
+            '@' -> autolinkAllowed && advanceTo(parseEmailAutolink(block, subject, pos))
+            else -> autolinkAllowed && advanceTo(parseWwwAutolink(block, subject, pos))
         }
     }
 
@@ -143,6 +149,7 @@ internal class InlineParser(
         when (subject[index]) {
             '\n', '`', '[', ']', '\\', '!', '<', '&', '*', '_' -> true
             '~' -> strikethrough
+            '$' -> math
             ':', '@' -> autolinks
             'w' -> autolinks && ExtendedAutolinks.mayStartWwwAt(subject, index)
             else -> false
@@ -163,6 +170,7 @@ internal class InlineParser(
     }
 
     private fun parseBackslash(block: InlineNode): Boolean {
+        if (math && advanceTo(appendMath(block, mathScanner.scanBracketed(subject, pos)))) return true
         pos++
         val next = subject.charAtOrEnd(pos)
         when {
@@ -438,8 +446,8 @@ internal class InlineParser(
         return true
     }
 
-    /** Advances past an extended autolink that ends at [end], if one was found (`end >= 0`). */
-    private fun consumeAutolink(end: Int): Boolean {
+    /** Advances past an inline construct that ends at [end], if one was found (`end >= 0`). */
+    private fun advanceTo(end: Int): Boolean {
         if (end < 0) return false
         pos = end
         return true
@@ -746,3 +754,15 @@ private fun isUnterminatedInlineLink(
     subject: String,
     afterBracket: Int,
 ): Boolean = subject.charAtOrEnd(afterBracket) == '(' && subject.indexOf(')', afterBracket) < 0
+
+/** Appends [span] as inline math and returns its end, or returns -1 if there is no math. */
+private fun appendMath(
+    block: InlineNode,
+    span: MathSpan?,
+): Int {
+    if (span == null) return -1
+    block.appendChild(
+        InlineNode(if (span.isDisplay) InlineNode.Kind.DISPLAY_MATH else InlineNode.Kind.MATH, span.source),
+    )
+    return span.end
+}

@@ -85,6 +85,11 @@ private class InlineTextBuilder(
                 out.withStyle(footnoteReferenceStyle()) { append(inline.number.toString()) }
             }
 
+            // TeX source in the math style; a block component can render formulas.
+            is Inline.Math -> {
+                out.withStyle(theme.typography.math) { append(inline.literal) }
+            }
+
             // Raw HTML is never interpreted; its source is shown as text.
             is Inline.HtmlInline -> {
                 out.append(inline.literal)

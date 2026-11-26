@@ -30,6 +30,14 @@ public enum class MarkdownExtension {
      * `[!WARNING]` or `[!CAUTION]`.
      */
     ALERTS,
+
+    /**
+     * TeX math: inline `$...$`, `\(...\)` and display `$$...$$`, `\[...\]`, and blocks delimited
+     * by `$$` or `\[`/`\]` lines or written as a ```` ```math ```` code block. A `$` must be followed by
+     * a non-space character and the closing `$` preceded by one and not followed by a digit, so amounts
+     * such as "$5 and $10" remain text.
+     */
+    MATH,
     ;
 
     /** Predefined sets of extensions. */

@@ -330,3 +330,27 @@ internal class FootnoteDefinitionNode(
             }
         }
 }
+
+/**
+ * A block of TeX math delimited by lines starting with `$$` and ending with [closer] (`$$` or `\]`).
+ * Like a fenced code block, it ends at its closing delimiter or at the end of its container.
+ */
+internal class MathBlockNode(
+    private val closer: String,
+) : LeafBlockNode() {
+    override val acceptsLines: Boolean get() = true
+
+    var literal: String = ""
+
+    override fun continueWith(cursor: LineCursor): ContinueResult {
+        val rest = cursor.line.substring(cursor.offset).trimEnd(' ', '\t')
+        if (!rest.endsWith(closer)) return ContinueResult.MATCHED
+        // The closing line ends the block; text before the delimiter belongs to the math.
+        content.append(rest, 0, rest.length - closer.length).append('\n')
+        return ContinueResult.LINE_CONSUMED
+    }
+
+    fun finalizeMath() {
+        literal = content.toString().trim()
+    }
+}

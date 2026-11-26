@@ -36,33 +36,50 @@ public fun LazyListScope.composdownItems(
     theme: ComposdownTheme? = null,
     components: ComposdownComponents = ComposdownDefaults.Components,
     imageRenderer: ImageRenderer? = null,
+    codeHighlighter: CodeHighlighter? = null,
     onLinkClick: ((String) -> Unit)? = null,
     itemModifier: Modifier = Modifier,
 ) {
+    val config = ItemConfig(theme, components, imageRenderer, codeHighlighter, onLinkClick)
     val blocks = document.blocks
     items(
         count = blocks.size,
         key = { index -> "$keyPrefix:$index" },
         contentType = { index -> blocks[index].contentType() },
     ) { index ->
-        Item(theme, components, imageRenderer, onLinkClick) { ComposdownBlock(blocks[index], itemModifier) }
+        Item(config) { ComposdownBlock(blocks[index], itemModifier) }
     }
     if (document.footnotes.isNotEmpty()) {
         item(key = "$keyPrefix:footnotes", contentType = "footnotes") {
-            Item(theme, components, imageRenderer, onLinkClick) { Footnotes(document.footnotes, itemModifier) }
+            Item(config) { Footnotes(document.footnotes, itemModifier) }
         }
     }
 }
 
+/** The configuration shared by all items of one document. */
+private class ItemConfig(
+    val theme: ComposdownTheme?,
+    val components: ComposdownComponents,
+    val imageRenderer: ImageRenderer?,
+    val codeHighlighter: CodeHighlighter?,
+    val onLinkClick: ((String) -> Unit)?,
+)
+
 @Composable
 private fun Item(
-    theme: ComposdownTheme?,
-    components: ComposdownComponents,
-    imageRenderer: ImageRenderer?,
-    onLinkClick: ((String) -> Unit)?,
+    config: ItemConfig,
     content: @Composable () -> Unit,
 ) {
-    ProvideComposdown(theme ?: ComposdownDefaults.theme(), components, imageRenderer, onLinkClick, content)
+    with(config) {
+        ProvideComposdown(
+            theme ?: ComposdownDefaults.theme(),
+            components,
+            imageRenderer,
+            codeHighlighter,
+            onLinkClick,
+            content,
+        )
+    }
 }
 
 /** Items of the same kind of block can reuse each other's compositions when scrolled. */
@@ -77,4 +94,5 @@ private fun Block.contentType(): String =
         is Block.Table -> "table"
         Block.ThematicBreak -> "break"
         is Block.HtmlBlock -> "html"
+        is Block.MathBlock -> "math"
     }

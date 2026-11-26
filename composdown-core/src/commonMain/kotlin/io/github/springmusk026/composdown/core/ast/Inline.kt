@@ -103,6 +103,19 @@ public sealed interface Inline {
     ) : Inline
 
     /**
+     * Inline TeX math (the `MATH` extension).
+     *
+     * @property literal the TeX source, without delimiters.
+     * @property isDisplay `true` for display math (`$$...$$` or `\[...\]`), usually set on its own line
+     *   and larger; `false` for math within the text (`$...$` or `\(...\)`).
+     */
+    @Poko
+    public class Math internal constructor(
+        public val literal: String,
+        public val isDisplay: Boolean,
+    ) : Inline
+
+    /**
      * Raw inline HTML, such as `<span>`. Composdown never interprets HTML.
      *
      * @property literal the raw HTML source.
@@ -132,6 +145,7 @@ private fun StringBuilder.appendPlainText(inlines: Iterable<Inline>) {
         when (inline) {
             is Inline.Text -> append(inline.literal)
             is Inline.Code -> append(inline.literal)
+            is Inline.Math -> append(inline.literal)
             is Inline.Emphasis -> appendPlainText(inline.children)
             is Inline.Strong -> appendPlainText(inline.children)
             is Inline.Strikethrough -> appendPlainText(inline.children)

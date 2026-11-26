@@ -54,7 +54,7 @@ private fun Block.firstText(): String? =
                 ?.plainText()
         }
 
-        is Block.CodeBlock, is Block.HtmlBlock, Block.ThematicBreak -> {
+        is Block.CodeBlock, is Block.HtmlBlock, is Block.MathBlock, Block.ThematicBreak -> {
             null
         }
     }

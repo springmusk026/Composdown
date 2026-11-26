@@ -16,6 +16,7 @@ import io.github.springmusk026.composdown.compose.internal.DefaultCodeBlock
 import io.github.springmusk026.composdown.compose.internal.DefaultHeading
 import io.github.springmusk026.composdown.compose.internal.DefaultHtmlBlock
 import io.github.springmusk026.composdown.compose.internal.DefaultList
+import io.github.springmusk026.composdown.compose.internal.DefaultMathBlock
 import io.github.springmusk026.composdown.compose.internal.DefaultParagraph
 import io.github.springmusk026.composdown.compose.internal.DefaultTable
 import io.github.springmusk026.composdown.compose.internal.DefaultThematicBreak
@@ -36,6 +37,7 @@ import io.github.springmusk026.composdown.core.ast.MarkdownDocument
  * @param theme colors, text styles and spacing.
  * @param components replacements for how specific kinds of blocks are drawn.
  * @param imageRenderer loads and draws images, or `null` to show images as their description.
+ * @param codeHighlighter adds syntax colors to code blocks, or `null` for plain code.
  * @param onLinkClick called with the destination of a clicked link. If `null`, web, email and phone
  *   links are opened with the platform's URI handler and other links are ignored.
  * @param selectable whether the text can be selected (across blocks).
@@ -48,11 +50,12 @@ public fun Composdown(
     theme: ComposdownTheme = ComposdownDefaults.theme(),
     components: ComposdownComponents = ComposdownDefaults.Components,
     imageRenderer: ImageRenderer? = null,
+    codeHighlighter: CodeHighlighter? = null,
     onLinkClick: ((String) -> Unit)? = null,
     selectable: Boolean = true,
 ) {
     val document = remember(markdown, extensions) { MarkdownParser(extensions).parse(markdown) }
-    Composdown(document, modifier, theme, components, imageRenderer, onLinkClick, selectable)
+    Composdown(document, modifier, theme, components, imageRenderer, codeHighlighter, onLinkClick, selectable)
 }
 
 /**
@@ -68,10 +71,11 @@ public fun Composdown(
     theme: ComposdownTheme = ComposdownDefaults.theme(),
     components: ComposdownComponents = ComposdownDefaults.Components,
     imageRenderer: ImageRenderer? = null,
+    codeHighlighter: CodeHighlighter? = null,
     onLinkClick: ((String) -> Unit)? = null,
     selectable: Boolean = true,
 ) {
-    Composdown(state.document, modifier, theme, components, imageRenderer, onLinkClick, selectable)
+    Composdown(state.document, modifier, theme, components, imageRenderer, codeHighlighter, onLinkClick, selectable)
 }
 
 /**
@@ -86,10 +90,11 @@ public fun Composdown(
     theme: ComposdownTheme = ComposdownDefaults.theme(),
     components: ComposdownComponents = ComposdownDefaults.Components,
     imageRenderer: ImageRenderer? = null,
+    codeHighlighter: CodeHighlighter? = null,
     onLinkClick: ((String) -> Unit)? = null,
     selectable: Boolean = true,
 ) {
-    ProvideComposdown(theme, components, imageRenderer, onLinkClick) {
+    ProvideComposdown(theme, components, imageRenderer, codeHighlighter, onLinkClick) {
         val content: @Composable () -> Unit = {
             Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(theme.spacing.block)) {
                 document.blocks.forEachIndexed { index, block ->
@@ -175,6 +180,10 @@ public fun ComposdownBlock(
                     modifier,
                 ) { b, m -> DefaultHtmlBlock(b, m) }
             }
+
+            is Block.MathBlock -> {
+                BlockOrDefault(block, components.mathBlock, modifier) { b, m -> DefaultMathBlock(b, m) }
+            }
         }
     }
 }
@@ -196,12 +205,13 @@ internal fun ProvideComposdown(
     theme: ComposdownTheme,
     components: ComposdownComponents,
     imageRenderer: ImageRenderer?,
+    codeHighlighter: CodeHighlighter?,
     onLinkClick: ((String) -> Unit)?,
     content: @Composable () -> Unit,
 ) {
     val environment =
-        remember(theme, components, imageRenderer, onLinkClick) {
-            ComposdownEnvironment(theme, components, imageRenderer, onLinkClick)
+        remember(theme, components, imageRenderer, codeHighlighter, onLinkClick) {
+            ComposdownEnvironment(theme, components, imageRenderer, codeHighlighter, onLinkClick)
         }
     CompositionLocalProvider(LocalComposdownEnvironment provides environment, content = content)
 }

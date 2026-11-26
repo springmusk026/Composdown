@@ -24,9 +24,9 @@ complexity:
   TooManyFunctions:
     # The parser is a set of small single-purpose functions, one per CommonMark construct, kept in the
     # class whose state they share rather than split across artificial helper classes.
-    thresholdInFiles: 30
-    thresholdInClasses: 30
-    thresholdInObjects: 30
+    thresholdInFiles: 35
+    thresholdInClasses: 35
+    thresholdInObjects: 35
   LongParameterList:
     # Composables take many optional parameters by design (modifier, styles, slots), and @Immutable
     # theme classes hold one value per styled element, as in Material.

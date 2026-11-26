@@ -16,5 +16,6 @@ internal fun currentEnvironment(): ComposdownEnvironment =
             ComposdownDefaults.theme(),
             ComposdownDefaults.Components,
             imageRenderer = null,
+            codeHighlighter = null,
             onLinkClick = null,
         )

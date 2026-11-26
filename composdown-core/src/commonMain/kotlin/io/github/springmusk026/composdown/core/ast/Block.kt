@@ -108,6 +108,16 @@ public sealed interface Block {
     ) : Block
 
     /**
+     * A block of TeX math (the `MATH` extension).
+     *
+     * @property literal the TeX source, without delimiters.
+     */
+    @Poko
+    public class MathBlock internal constructor(
+        public val literal: String,
+    ) : Block
+
+    /**
      * A block of raw HTML. Composdown never interprets HTML; renderers decide whether to show the
      * source text or hide it.
      *

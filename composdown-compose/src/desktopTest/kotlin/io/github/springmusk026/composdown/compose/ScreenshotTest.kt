@@ -22,6 +22,7 @@ import androidx.compose.ui.text.platform.Font
 import androidx.compose.ui.unit.dp
 import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import com.github.takahirom.roborazzi.RoborazziOptions
+import io.github.springmusk026.composdown.core.MarkdownExtension
 import io.github.takahirom.roborazzi.captureRoboImage
 import kotlin.test.Test
 
@@ -47,7 +48,11 @@ class ScreenshotTest {
         setContent {
             TestTheme(colors) {
                 Box(Modifier.background(MaterialTheme.colorScheme.surface).padding(16.dp).width(480.dp)) {
-                    Composdown(Showcase.MARKDOWN, theme = testComposdownTheme())
+                    Composdown(
+                        Showcase.MARKDOWN,
+                        extensions = ComposdownDefaults.Extensions + MarkdownExtension.MATH,
+                        theme = testComposdownTheme(),
+                    )
                 }
             }
         }
@@ -57,7 +62,7 @@ class ScreenshotTest {
     private companion object {
         /** Large enough for the whole showcase, which is 480 dp wide plus padding. */
         const val WIDTH_PX = 512
-        const val HEIGHT_PX = 1100
+        const val HEIGHT_PX = 1240
 
         /** Tolerates tiny anti-aliasing differences between machines. */
         val OPTIONS = RoborazziOptions(compareOptions = RoborazziOptions.CompareOptions(changeThreshold = 0.005f))
@@ -105,5 +110,7 @@ private fun testComposdownTheme(): ComposdownTheme =
             ComposdownDefaults.typography(
                 codeBlock = MaterialTheme.typography.bodyMedium.copy(fontFamily = JetBrainsMono),
                 inlineCode = ComposdownDefaults.typography().inlineCode.copy(fontFamily = JetBrainsMono),
+                math = ComposdownDefaults.typography().math.copy(fontFamily = JetBrainsMono),
+                mathBlock = MaterialTheme.typography.bodyLarge.copy(fontFamily = JetBrainsMono),
             ),
     )

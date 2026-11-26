@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Composdown</title>
+    <meta name="description" content="Complete, spec-compliant Markdown rendering for Compose Multiplatform.">
+    <link rel="icon" href="logo.svg" type="image/svg+xml">
+    <style>
+        :root { --bg: #faf9fe; --text: #1d1b26; --muted: #5d5a6b; --card: #ffffff; --border: #e4e1ee; --accent: #6a4df0; }
+        @media (prefers-color-scheme: dark) {
+            :root { --bg: #14131a; --text: #ecebf3; --muted: #a9a6b8; --card: #1d1c25; --border: #2f2d3a; --accent: #a996ff; }
+        }
+        * { box-sizing: border-box; }
+        body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif; }
+        main { max-width: 760px; margin: 0 auto; padding: 72px 16px; text-align: center; }
+        img { width: 96px; height: 96px; }
+        h1 { font-size: 40px; margin: 16px 0 8px; letter-spacing: -0.02em; }
+        p.lead { color: var(--muted); font-size: 18px; margin: 0 auto 40px; max-width: 560px; }
+        .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; text-align: left; }
+        a.card { display: block; padding: 20px; border: 1px solid var(--border); border-radius: 14px; background: var(--card); color: inherit; text-decoration: none; }
+        a.card:hover { border-color: var(--accent); }
+        a.card strong { display: block; color: var(--accent); margin-bottom: 4px; }
+        a.card span { color: var(--muted); font-size: 14px; }
+    </style>
+</head>
+<body>
+<main>
+    <img src="logo.svg" alt="">
+    <h1>Composdown</h1>
+    <p class="lead">Complete, spec-compliant Markdown rendering for Compose Multiplatform on Android, iOS, Desktop and the web.</p>
+    <div class="cards">
+        <a class="card" href="demo/"><strong>Live demo</strong><span>The sample app in your browser, built with Kotlin/Wasm.</span></a>
+        <a class="card" href="api/"><strong>API reference</strong><span>Every public declaration, generated from KDoc.</span></a>
+        <a class="card" href="https://github.com/springmusk026/Composdown#documentation"><strong>Guides</strong><span>Getting started, rendering, customization and more.</span></a>
+    </div>
+</main>
+</body>
+</html>

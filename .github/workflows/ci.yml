@@ -40,7 +40,7 @@ jobs:
           path: '**/build/reports/detekt/'
 
   test-jvm-android:
-    name: Tests (Desktop JVM, Android host)
+    name: Tests (Desktop JVM, Android host, web)
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -56,6 +56,8 @@ jobs:
         run: ./gradlew verifyRoborazziDesktop
       - name: Build the Android sample (with its Baseline Profile) and the macrobenchmarks
         run: ./gradlew :sample:android:assembleRelease :benchmarks:macrobenchmark:assemble
+      - name: Web (Kotlin/Wasm) tests and web demo
+        run: ./gradlew wasmJsNodeTest compileKotlinWasmJs :sample:web:wasmJsBrowserDistribution
       - name: Upload test reports and screenshot diffs
         if: failure()
         uses: actions/upload-artifact@v7

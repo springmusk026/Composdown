@@ -1,8 +1,8 @@
 name: Release
 
 # Publishes a release when a version tag (v0.1.0) is pushed: verifies the build, uploads signed
-# artifacts to Maven Central, creates the GitHub release from the changelog, and publishes the API
-# reference to GitHub Pages. See RELEASING.md.
+# artifacts to Maven Central, creates the GitHub release from the changelog, and publishes the site
+# (live demo and API reference) to GitHub Pages. See RELEASING.md.
 
 on:
   push:
@@ -55,28 +55,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
 
-  api-reference:
-    name: Publish the API reference
+  site:
+    name: Publish the site
     needs: publish
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
     permissions:
       pages: write
       id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-java@v6
-        with:
-          distribution: temurin
-          java-version: 21
-      - uses: gradle/actions/setup-gradle@v6
-      - name: Generate
-        run: ./gradlew dokkaGenerate
-      - uses: actions/upload-pages-artifact@v4
-        with:
-          path: build/dokka/html
-      - id: deploy
-        uses: actions/deploy-pages@v5
+    uses: ./.github/workflows/site.yml

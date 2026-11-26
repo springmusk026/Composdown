@@ -64,6 +64,17 @@ final enum class io.github.springmusk026.composdown.core/MarkdownExtension : kot
     }
 }
 
+final enum class io.github.springmusk026.composdown.core/StreamingPolicy : kotlin/Enum<io.github.springmusk026.composdown.core/StreamingPolicy> { // io.github.springmusk026.composdown.core/StreamingPolicy|null[0]
+    enum entry OPTIMISTIC // io.github.springmusk026.composdown.core/StreamingPolicy.OPTIMISTIC|null[0]
+    enum entry STRICT // io.github.springmusk026.composdown.core/StreamingPolicy.STRICT|null[0]
+
+    final val entries // io.github.springmusk026.composdown.core/StreamingPolicy.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<io.github.springmusk026.composdown.core/StreamingPolicy> // io.github.springmusk026.composdown.core/StreamingPolicy.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): io.github.springmusk026.composdown.core/StreamingPolicy // io.github.springmusk026.composdown.core/StreamingPolicy.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<io.github.springmusk026.composdown.core/StreamingPolicy> // io.github.springmusk026.composdown.core/StreamingPolicy.values|values#static(){}[0]
+}
+
 sealed interface io.github.springmusk026.composdown.core.ast/Block { // io.github.springmusk026.composdown.core.ast/Block|null[0]
     final class Alert : io.github.springmusk026.composdown.core.ast/Block { // io.github.springmusk026.composdown.core.ast/Block.Alert|null[0]
         final val children // io.github.springmusk026.composdown.core.ast/Block.Alert.children|{}children[0]
@@ -340,6 +351,25 @@ final class io.github.springmusk026.composdown.core.ast/TableRow { // io.github.
     final fun equals(kotlin/Any?): kotlin/Boolean // io.github.springmusk026.composdown.core.ast/TableRow.equals|equals(kotlin.Any?){}[0]
     final fun hashCode(): kotlin/Int // io.github.springmusk026.composdown.core.ast/TableRow.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // io.github.springmusk026.composdown.core.ast/TableRow.toString|toString(){}[0]
+}
+
+final class io.github.springmusk026.composdown.core/IncrementalMarkdownParser { // io.github.springmusk026.composdown.core/IncrementalMarkdownParser|null[0]
+    constructor <init>(kotlin.collections/Set<io.github.springmusk026.composdown.core/MarkdownExtension> = ..., io.github.springmusk026.composdown.core/StreamingPolicy = ...) // io.github.springmusk026.composdown.core/IncrementalMarkdownParser.<init>|<init>(kotlin.collections.Set<io.github.springmusk026.composdown.core.MarkdownExtension>;io.github.springmusk026.composdown.core.StreamingPolicy){}[0]
+
+    final val document // io.github.springmusk026.composdown.core/IncrementalMarkdownParser.document|{}document[0]
+        final fun <get-document>(): io.github.springmusk026.composdown.core.ast/MarkdownDocument // io.github.springmusk026.composdown.core/IncrementalMarkdownParser.document.<get-document>|<get-document>(){}[0]
+    final val extensions // io.github.springmusk026.composdown.core/IncrementalMarkdownParser.extensions|{}extensions[0]
+        final fun <get-extensions>(): kotlin.collections/Set<io.github.springmusk026.composdown.core/MarkdownExtension> // io.github.springmusk026.composdown.core/IncrementalMarkdownParser.extensions.<get-extensions>|<get-extensions>(){}[0]
+    final val isFinished // io.github.springmusk026.composdown.core/IncrementalMarkdownParser.isFinished|{}isFinished[0]
+        final fun <get-isFinished>(): kotlin/Boolean // io.github.springmusk026.composdown.core/IncrementalMarkdownParser.isFinished.<get-isFinished>|<get-isFinished>(){}[0]
+    final val streamingPolicy // io.github.springmusk026.composdown.core/IncrementalMarkdownParser.streamingPolicy|{}streamingPolicy[0]
+        final fun <get-streamingPolicy>(): io.github.springmusk026.composdown.core/StreamingPolicy // io.github.springmusk026.composdown.core/IncrementalMarkdownParser.streamingPolicy.<get-streamingPolicy>|<get-streamingPolicy>(){}[0]
+    final val text // io.github.springmusk026.composdown.core/IncrementalMarkdownParser.text|{}text[0]
+        final fun <get-text>(): kotlin/String // io.github.springmusk026.composdown.core/IncrementalMarkdownParser.text.<get-text>|<get-text>(){}[0]
+
+    final fun append(kotlin/String): io.github.springmusk026.composdown.core.ast/MarkdownDocument // io.github.springmusk026.composdown.core/IncrementalMarkdownParser.append|append(kotlin.String){}[0]
+    final fun finish(): io.github.springmusk026.composdown.core.ast/MarkdownDocument // io.github.springmusk026.composdown.core/IncrementalMarkdownParser.finish|finish(){}[0]
+    final fun setText(kotlin/String): io.github.springmusk026.composdown.core.ast/MarkdownDocument // io.github.springmusk026.composdown.core/IncrementalMarkdownParser.setText|setText(kotlin.String){}[0]
 }
 
 final class io.github.springmusk026.composdown.core/MarkdownParser { // io.github.springmusk026.composdown.core/MarkdownParser|null[0]

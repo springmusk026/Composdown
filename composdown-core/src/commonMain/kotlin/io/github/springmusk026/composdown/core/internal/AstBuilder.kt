@@ -34,17 +34,26 @@ import kotlinx.collections.immutable.toImmutableList
  * are first referenced.
  *
  * @param footnotes the document's footnote definitions, or `null` if footnotes are disabled.
+ * @param streamingLeaf the block whose text is still being written, if any. Its inline content is
+ *   parsed optimistically (see [io.github.springmusk026.composdown.core.internal.inline.InlineParser.parse]).
  */
 internal class AstBuilder(
     private val inlines: InlineConverter,
     extensions: Set<MarkdownExtension>,
     private val footnotes: FootnoteRegistry?,
+    private val streamingLeaf: BlockNode? = null,
 ) {
     private val taskLists = MarkdownExtension.TASK_LISTS in extensions
     private val alerts = MarkdownExtension.ALERTS in extensions
 
     /** Converted footnote definitions by normalized label; the first definition of a label wins. */
     private val footnoteDefinitions = LinkedHashMap<String, Pair<String, ImmutableList<Block>>>()
+
+    /** Footnote definitions converted so far, by normalized label: the label as written and its blocks. */
+    val collectedFootnotes: Map<String, Pair<String, ImmutableList<Block>>> get() = footnoteDefinitions
+
+    /** Converts one top-level block, or returns `null` if it is not part of the block flow. */
+    fun topLevelBlock(node: BlockNode): Block? = block(node, topLevel = true)
 
     fun document(root: DocumentNode): MarkdownDocument {
         val blocks = blocks(root.children, topLevel = true)
@@ -68,11 +77,11 @@ internal class AstBuilder(
     ): Block? =
         when (node) {
             is ParagraphNode -> {
-                Block.Paragraph(inlines.convert(node.content.toString()))
+                Block.Paragraph(inlines.convert(node.content.toString(), node === streamingLeaf))
             }
 
             is HeadingNode -> {
-                Block.Heading(node.level, inlines.convert(node.content.toString()))
+                Block.Heading(node.level, inlines.convert(node.content.toString(), node === streamingLeaf))
             }
 
             is ThematicBreakNode -> {
@@ -133,17 +142,7 @@ internal class AstBuilder(
         if (taskState == null || content == null) return ListItem(blocks(node.children), null)
 
         val text = content.substring(TASK_MARKER_LENGTH).trimStart(' ', '\t')
-        val rest = blocks(node.children.drop(1))
-        val children =
-            if (text.isBlank()) {
-                rest
-            } else {
-                (
-                    listOf(
-                        Block.Paragraph(inlines.convert(text)),
-                    ) + rest
-                ).toImmutableList()
-            }
+        val children = withLeadingText(text, first, blocks(node.children.drop(1)))
         return ListItem(children, taskState)
     }
 
@@ -158,17 +157,25 @@ internal class AstBuilder(
 
     private fun table(node: TableNode): Block.Table {
         val columns = node.alignments.size
+        val lastRowIsStreaming = node === streamingLeaf
 
-        fun row(cells: List<String>) =
-            TableRow(
-                List(columns) {
-                    TableCell(inlines.convert(cells.getOrElse(it) { "" }))
-                }.toImmutableList(),
-            )
+        fun row(
+            cells: List<String>,
+            optimistic: Boolean,
+        ) = TableRow(
+            List(columns) { TableCell(inlines.convert(cells.getOrElse(it) { "" }, optimistic)) }.toImmutableList(),
+        )
+        val rows =
+            node.rows.mapIndexed {
+                index,
+                cells,
+                ->
+                row(cells, lastRowIsStreaming && index == node.rows.lastIndex)
+            }
         return Block.Table(
             node.alignments.toImmutableList(),
-            row(node.headerCells),
-            node.rows.map(::row).toImmutableList(),
+            row(node.headerCells, optimistic = false),
+            rows.toImmutableList(),
         )
     }
 
@@ -187,18 +194,21 @@ internal class AstBuilder(
                 ?: return null
 
         val text = content.substring(minOf(lineEnd + 1, content.length))
-        val rest = blocks(node.children.drop(1))
-        val children =
-            if (text.isBlank()) {
-                rest
-            } else {
-                (
-                    listOf(
-                        Block.Paragraph(inlines.convert(text)),
-                    ) + rest
-                ).toImmutableList()
-            }
-        return Block.Alert(type, children)
+        return Block.Alert(type, withLeadingText(text, first, blocks(node.children.drop(1))))
+    }
+
+    /**
+     * [rest] preceded by a paragraph of [text] (what remains of [source] after a marker was removed),
+     * unless the text is blank.
+     */
+    private fun withLeadingText(
+        text: String,
+        source: ParagraphNode,
+        rest: ImmutableList<Block>,
+    ): ImmutableList<Block> {
+        if (text.isBlank()) return rest
+        val paragraph = Block.Paragraph(inlines.convert(text, source === streamingLeaf))
+        return (listOf<Block>(paragraph) + rest).toImmutableList()
     }
 
     private fun collectFootnote(node: FootnoteDefinitionNode) {

@@ -13,18 +13,35 @@ internal class LinkReference(
 /**
  * Link reference definitions, keyed by normalized label. The first definition of a label wins, as
  * CommonMark requires.
+ *
+ * A map can be layered over a [base] map: lookups fall through to the base, and new definitions are
+ * kept in this layer only. The incremental parser uses this for the provisional end of a document,
+ * whose definitions must not leak into the definitions of completed blocks.
  */
-internal class LinkReferenceMap {
+internal class LinkReferenceMap(
+    private val base: LinkReferenceMap? = null,
+) {
     private val references = HashMap<String, LinkReference>()
+    private val labels = ArrayList<String>()
 
-    operator fun get(normalizedLabel: String): LinkReference? = references[normalizedLabel]
+    /** Number of definitions added to this layer. */
+    val size: Int get() = labels.size
 
-    /** Adds a definition unless one already exists for [normalizedLabel]. */
+    /** The normalized label of the [index]th definition added to this layer, in order of definition. */
+    fun labelAt(index: Int): String = labels[index]
+
+    operator fun get(normalizedLabel: String): LinkReference? =
+        references[normalizedLabel] ?: base?.get(normalizedLabel)
+
+    /** Adds a definition unless one already exists for [normalizedLabel] in this layer or the base. */
     fun putIfAbsent(
         normalizedLabel: String,
         reference: LinkReference,
     ) {
-        if (normalizedLabel !in references) references[normalizedLabel] = reference
+        if (get(normalizedLabel) == null) {
+            references[normalizedLabel] = reference
+            labels.add(normalizedLabel)
+        }
     }
 }
 

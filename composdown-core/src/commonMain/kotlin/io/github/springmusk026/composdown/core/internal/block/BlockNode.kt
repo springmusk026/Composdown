@@ -275,6 +275,13 @@ internal class TableNode(
 
     var rows: List<List<String>> = emptyList()
 
+    /**
+     * If the header row was split off a longer paragraph, the first line of that paragraph; else 0.
+     * Re-parsing from the header line alone could read it differently (it was a continuation line of
+     * the paragraph), so incremental parsing re-parses from here instead.
+     */
+    var splitFromLine: Int = 0
+
     fun finalizeTable() {
         rows =
             content

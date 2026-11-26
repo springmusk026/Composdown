@@ -1,3 +1,17 @@
+public final class io/github/springmusk026/composdown/core/IncrementalMarkdownParser {
+	public fun <init> ()V
+	public fun <init> (Ljava/util/Set;Lio/github/springmusk026/composdown/core/StreamingPolicy;)V
+	public synthetic fun <init> (Ljava/util/Set;Lio/github/springmusk026/composdown/core/StreamingPolicy;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun append (Ljava/lang/String;)Lio/github/springmusk026/composdown/core/ast/MarkdownDocument;
+	public final fun finish ()Lio/github/springmusk026/composdown/core/ast/MarkdownDocument;
+	public final fun getDocument ()Lio/github/springmusk026/composdown/core/ast/MarkdownDocument;
+	public final fun getExtensions ()Ljava/util/Set;
+	public final fun getStreamingPolicy ()Lio/github/springmusk026/composdown/core/StreamingPolicy;
+	public final fun getText ()Ljava/lang/String;
+	public final fun isFinished ()Z
+	public final fun setText (Ljava/lang/String;)Lio/github/springmusk026/composdown/core/ast/MarkdownDocument;
+}
+
 public final class io/github/springmusk026/composdown/core/MarkdownExtension : java/lang/Enum {
 	public static final field ALERTS Lio/github/springmusk026/composdown/core/MarkdownExtension;
 	public static final field AUTOLINKS Lio/github/springmusk026/composdown/core/MarkdownExtension;
@@ -21,6 +35,14 @@ public final class io/github/springmusk026/composdown/core/MarkdownParser {
 	public synthetic fun <init> (Ljava/util/Set;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun getExtensions ()Ljava/util/Set;
 	public final fun parse (Ljava/lang/String;)Lio/github/springmusk026/composdown/core/ast/MarkdownDocument;
+}
+
+public final class io/github/springmusk026/composdown/core/StreamingPolicy : java/lang/Enum {
+	public static final field OPTIMISTIC Lio/github/springmusk026/composdown/core/StreamingPolicy;
+	public static final field STRICT Lio/github/springmusk026/composdown/core/StreamingPolicy;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lio/github/springmusk026/composdown/core/StreamingPolicy;
+	public static fun values ()[Lio/github/springmusk026/composdown/core/StreamingPolicy;
 }
 
 public final class io/github/springmusk026/composdown/core/ast/AlertType : java/lang/Enum {

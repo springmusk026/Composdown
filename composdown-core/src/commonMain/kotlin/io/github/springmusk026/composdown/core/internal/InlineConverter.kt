@@ -15,7 +15,11 @@ import kotlinx.collections.immutable.toImmutableList
 internal class InlineConverter(
     private val inlineParser: InlineParser,
 ) {
-    fun convert(content: String): ImmutableList<Inline> = inlines(inlineParser.parse(content), depth = 0)
+    /** Parses [content]; see [InlineParser.parse] for [optimistic]. */
+    fun convert(
+        content: String,
+        optimistic: Boolean = false,
+    ): ImmutableList<Inline> = inlines(inlineParser.parse(content, optimistic), depth = 0)
 
     /**
      * Converts the children of [parent]. At [MAX_NESTING_DEPTH], nested elements are flattened to

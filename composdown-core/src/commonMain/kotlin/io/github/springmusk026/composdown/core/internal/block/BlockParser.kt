@@ -80,6 +80,16 @@ internal class BlockParser(
         addRemainingText(container)
     }
 
+    /**
+     * The innermost open block if it holds text that is still being written (a paragraph, heading or
+     * table), or `null`. Only meaningful before [finish].
+     */
+    val openTextBlock: BlockNode?
+        get() = tip.takeIf { it is ParagraphNode || it is HeadingNode || it is TableNode }
+
+    /** Number of lines added so far. */
+    val lineCount: Int get() = lineNumber
+
     /** Closes all open blocks. Call once, after the last line. */
     fun finish(): DocumentNode {
         while (tip !== document) finalize(tip, lineNumber)
@@ -252,6 +262,7 @@ internal class BlockParser(
             container.replaceWith(table)
             tip = table
         } else {
+            table.splitFromLine = container.startLine
             content.setLength(headerStart)
             finalize(container, lineNumber - 2)
             addChild(table)

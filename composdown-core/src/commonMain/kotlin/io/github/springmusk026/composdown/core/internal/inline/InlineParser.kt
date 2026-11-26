@@ -35,10 +35,27 @@ internal class InlineParser(
     private var brackets: Bracket? = null
     private var backticks: BacktickIndex? = null
     private var htmlMemo = HtmlScanMemo()
+    private var optimistic = false
 
-    /** Parses [content] (raw paragraph or heading text) and returns a root node holding the result. */
-    fun parse(content: String): InlineNode {
-        subject = content.trim { it == ' ' || it == '\t' || it == '\n' }
+    /** Where to record unresolved labels and footnote references, if anywhere. */
+    var trace: ConversionTrace? = null
+
+    /**
+     * Parses [content] (raw paragraph or heading text) and returns a root node holding the result.
+     *
+     * With [optimistic] set, [content] is treated as text that is still being written: constructs
+     * that are open at the end are rendered as if they were closed (`**bold` as strong emphasis,
+     * `` `code`` as a code span, `[text](partial` as a link), and a trailing run of delimiter
+     * characters, which may still become an opener or closer, is held back. This avoids flicker while
+     * streaming; the final parse of the complete text is never optimistic.
+     */
+    fun parse(
+        content: String,
+        optimistic: Boolean = false,
+    ): InlineNode {
+        val trimmed = content.trim { it == ' ' || it == '\t' || it == '\n' }
+        subject = if (optimistic) withoutTrailingDelimiters(trimmed) else trimmed
+        this.optimistic = optimistic
         pos = 0
         delimiters = null
         brackets = null
@@ -48,8 +65,32 @@ internal class InlineParser(
         while (pos < subject.length) {
             parseInline(root)
         }
-        processEmphasis(null)
+        if (optimistic) closeUnterminatedDelimiters(root) else processEmphasis(null)
         return root
+    }
+
+    /**
+     * Matches every opener left on the delimiter stack with a synthetic closer at the end of the
+     * content, innermost first, then removes any synthetic closer that still did not match.
+     */
+    private fun closeUnterminatedDelimiters(root: InlineNode) {
+        processEmphasis(null, clearRemaining = false)
+        val synthetic = ArrayList<InlineNode>()
+        var delimiter = delimiters
+        while (delimiter != null) {
+            val opener = delimiter
+            delimiter = opener.previous
+            if (!opener.canOpen) continue
+            val node = text(opener.char.toString().repeat(opener.count))
+            root.appendChild(node)
+            synthetic.add(node)
+            val closer =
+                Delimiter(opener.char, opener.count, node, canOpen = false, canClose = true, previous = delimiters)
+            delimiters?.next = closer
+            delimiters = closer
+        }
+        processEmphasis(null)
+        synthetic.forEach { it.unlink() }
     }
 
     private fun parseInline(block: InlineNode) {
@@ -88,8 +129,6 @@ internal class InlineParser(
             pos++
         }
     }
-
-    private fun text(literal: String) = InlineNode(InlineNode.Kind.TEXT, literal)
 
     private fun parseString(block: InlineNode): Boolean {
         val start = pos
@@ -150,6 +189,12 @@ internal class InlineParser(
         val length = pos - start
         val index = backticks ?: BacktickIndex(subject).also { backticks = it }
         val closer = index.findRun(length, pos)
+        if (closer < 0 && optimistic) {
+            // A code span still being written extends to the end of the content.
+            block.appendChild(InlineNode(InlineNode.Kind.CODE, subject.substring(pos).replace('\n', ' ')))
+            pos = subject.length
+            return true
+        }
         if (closer < 0) {
             block.appendChild(text(subject.substring(start, pos)))
             return true
@@ -226,7 +271,13 @@ internal class InlineParser(
         val target = parseInlineLinkTarget() ?: parseReferenceLinkTarget(opener, afterBracket)
         if (target != null) {
             closeLink(block, opener, target)
-        } else if (!parseFootnoteReference(block, opener, afterBracket)) {
+        } else if (parseFootnoteReference(block, opener, afterBracket)) {
+            // Handled as a footnote reference.
+        } else if (optimistic && isUnterminatedInlineLink(subject, afterBracket)) {
+            // `[text](partial` while the destination is still being written renders as a link.
+            closeLink(block, opener, LinkReference("", null))
+            pos = subject.length
+        } else {
             brackets = opener.previous
             pos = afterBracket
             block.appendChild(text("]"))
@@ -310,7 +361,12 @@ internal class InlineParser(
                     null
                 }
             }
-        val reference = label?.let { references[normalizeLinkLabel(it)] } ?: return null
+        val normalized = label?.let(::normalizeLinkLabel) ?: return null
+        val reference = references[normalized]
+        if (reference == null) {
+            trace?.linkMisses?.add(normalized)
+            return null
+        }
         pos = if (labelLength > 0) labelEnd else afterBracket
         return reference
     }
@@ -343,6 +399,13 @@ internal class InlineParser(
         // For `![^label]`, the `!` is plain text.
         if (opener.image) block.appendChild(text("!"))
         val reference = footnotes.reference(rawLabel)
+        val key = normalizeLinkLabel(rawLabel)
+        if (reference == null) {
+            trace?.footnoteMisses?.add(key)
+        } else {
+            trace?.footnoteKeys?.add(key)
+            trace?.footnoteNumbers?.add(reference.second)
+        }
         if (reference != null) {
             block.appendChild(
                 InlineNode(InlineNode.Kind.FOOTNOTE_REFERENCE, reference.first).also {
@@ -406,7 +469,10 @@ internal class InlineParser(
      * Resolves emphasis and strikethrough between the delimiters above [stackBottom], then removes
      * them from the stack. This is the "process emphasis" procedure from the CommonMark specification.
      */
-    private fun processEmphasis(stackBottom: Delimiter?) {
+    private fun processEmphasis(
+        stackBottom: Delimiter?,
+        clearRemaining: Boolean = true,
+    ) {
         // Lower bounds for opener searches, per closer type, so failed searches are not repeated.
         val openersBottom = arrayOfNulls<Delimiter>(OPENERS_BOTTOM_SLOTS)
         openersBottom.fill(stackBottom)
@@ -440,7 +506,9 @@ internal class InlineParser(
             }
         }
 
-        while (delimiters != null && delimiters !== stackBottom) removeDelimiter(checkNotNull(delimiters))
+        if (clearRemaining) {
+            while (delimiters != null && delimiters !== stackBottom) removeDelimiter(checkNotNull(delimiters))
+        }
     }
 
     /**
@@ -657,3 +725,24 @@ private fun stripCodeSpanSpace(contents: String): String {
         contents
     }
 }
+
+private fun text(literal: String) = InlineNode(InlineNode.Kind.TEXT, literal)
+
+/** Characters held back at the end of optimistically parsed content. */
+private const val TRAILING_DELIMITERS = "*_~`"
+
+/**
+ * Drops a trailing run of delimiter characters (and the whitespace before it), unless the run starts
+ * with a backslash-escaped character.
+ */
+private fun withoutTrailingDelimiters(text: String): String {
+    val runStart = text.dropLastWhile { it in TRAILING_DELIMITERS }.length
+    if (runStart == text.length || (runStart > 0 && text[runStart - 1] == '\\')) return text
+    return text.substring(0, runStart).trimEnd(' ', '\t')
+}
+
+/** Whether the text after `]` at [afterBracket] is `(` with no closing `)` anywhere after it. */
+private fun isUnterminatedInlineLink(
+    subject: String,
+    afterBracket: Int,
+): Boolean = subject.charAtOrEnd(afterBracket) == '(' && subject.indexOf(')', afterBracket) < 0

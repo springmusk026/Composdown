@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.compose.multiplatform) apply false
     alias(libs.plugins.android.kmp.library) apply false
     alias(libs.plugins.detekt) apply false
+    alias(libs.plugins.poko) apply false
     alias(libs.plugins.spotless)
     alias(libs.plugins.binary.compatibility.validator)
 }

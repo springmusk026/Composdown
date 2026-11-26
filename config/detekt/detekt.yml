@@ -4,28 +4,46 @@
 config:
   validation: true
 
+comments:
+  # Every public API must be documented (explicit API mode enforces visibility; this enforces KDoc).
+  UndocumentedPublicClass:
+    active: true
+    excludes: ['**/commonTest/**', '**/*Test/**', '**/test/**']
+  UndocumentedPublicFunction:
+    active: true
+    excludes: ['**/commonTest/**', '**/*Test/**', '**/test/**']
+  UndocumentedPublicProperty:
+    active: true
+    excludes: ['**/commonTest/**', '**/*Test/**', '**/test/**']
+
 complexity:
+  CyclomaticComplexMethod:
+    # A `when` that dispatches on a character with one simple action per branch reads as a table,
+    # not as branching logic.
+    ignoreSimpleWhenEntries: true
+  TooManyFunctions:
+    # The parser is a set of small single-purpose functions, one per CommonMark construct, kept in the
+    # class whose state they share rather than split across artificial helper classes.
+    thresholdInFiles: 30
+    thresholdInClasses: 30
   LongParameterList:
     # Composables take many optional parameters by design (modifier, styles, slots).
     ignoreAnnotated: ['Composable']
-  TooManyFunctions:
-    # Parser modules group many small, private, single-purpose functions per file.
-    thresholdInFiles: 25
-    thresholdInClasses: 25
 
 naming:
   FunctionNaming:
     # Composable functions are PascalCase by convention.
     ignoreAnnotated: ['Composable']
-  TopLevelPropertyNaming:
-    # CompositionLocals follow the Compose `LocalXxx` convention.
-    constantPattern: '[A-Z][A-Za-z0-9]*'
 
 style:
   MagicNumber:
     excludes: ['**/commonTest/**', '**/*Test/**', '**/test/**']
     ignorePropertyDeclaration: true
     ignoreCompanionObjectPropertyDeclaration: true
+  ReturnCount:
+    # Scanners and parsers return as soon as a condition fails (guard clauses). Forcing a single exit
+    # point would require nested conditionals or flags, which are harder to verify against the spec.
+    active: false
   UnusedPrivateMember:
     # Compose previews are private and referenced only by tooling.
     ignoreAnnotated: ['Preview']

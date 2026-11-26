@@ -42,15 +42,41 @@ internal class MathScanner {
     ): MathSpan? {
         val first = text.charAtOrEnd(start + 1)
         if (first.isWhitespace() || first == '$' || start + 1 >= text.length) return null
-        var from = start + 1
-        while (true) {
-            val close = find(text, from, "$") ?: return null
-            val before = text[close - 1]
-            val valid =
-                close > start + 1 && !before.isWhitespace() && before != '\\' && !text.charAtOrEnd(close + 1).isDigit()
-            if (valid) return span(text, start + 1, close, close + 1, isDisplay = false)
-            from = close + 1
+        val close = nextValidSingleCloser(text, start + 1) ?: return null
+        return span(text, start + 1, close, close + 1, isDisplay = false)
+    }
+
+    /** Where the last search for a closing `$` started, and what it found (`-1` for nothing). */
+    private var lastCloserSearchFrom = Int.MAX_VALUE
+    private var lastCloser = -1
+
+    /**
+     * The first `$` at or after [from] that can close `$...$`. Whether a `$` can close does not depend
+     * on the opener (the opener is never directly before it, since `$` cannot follow the opener), so
+     * results are reused across openers: a later search from inside an already searched range has
+     * the same answer, which keeps many unmatched openers (such as prices) linear.
+     */
+    private fun nextValidSingleCloser(
+        text: CharSequence,
+        from: Int,
+    ): Int? {
+        if (from >= lastCloserSearchFrom && (lastCloser < 0 || from <= lastCloser)) {
+            return lastCloser.takeIf { it >= 0 }
         }
+        var position = from
+        var result = -1
+        while (result < 0) {
+            val close = find(text, position, "$") ?: break
+            val before = text[close - 1]
+            if (!before.isWhitespace() && before != '\\' && !text.charAtOrEnd(close + 1).isDigit()) {
+                result = close
+            } else {
+                position = close + 1
+            }
+        }
+        lastCloserSearchFrom = from
+        lastCloser = result
+        return result.takeIf { it >= 0 }
     }
 
     /** `\(...\)` or `\[...\]` starting at the backslash at [start], or `null` if not closed. */

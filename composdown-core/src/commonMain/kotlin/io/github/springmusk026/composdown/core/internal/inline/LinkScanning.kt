@@ -9,6 +9,9 @@ import io.github.springmusk026.composdown.core.internal.text.unescapeString
 /** Maximum length of a link label including its brackets: 999 characters inside, plus `[` and `]`. */
 private const val MAX_LINK_LABEL_LENGTH = 1001
 
+/** Maximum nesting of unescaped parentheses in a link destination, as in cmark. */
+private const val MAX_DESTINATION_PAREN_DEPTH = 32
+
 /** A scanned link component: its end index (exclusive) and its unescaped value. */
 internal class ScannedValue(
     val end: Int,
@@ -67,6 +70,9 @@ private fun scanBracketedDestination(
     return null
 }
 
+/** A `)` that closes no parenthesis, a space or a control character ends a bare destination. */
+private fun Char.endsBareDestination(): Boolean = this == ')' || this == ' ' || isAsciiControl()
+
 private fun scanBareDestination(
     text: CharSequence,
     start: Int,
@@ -78,9 +84,17 @@ private fun scanBareDestination(
         val step =
             when {
                 c == '\\' && text.charAtOrEnd(i + 1).isAsciiPunctuation() -> 2
+
+                // Like cmark, deeply nested parentheses end the scan, which keeps repeated unclosed
+                // destinations (`[a](` many times) linear.
+                c == '(' && openParens == MAX_DESTINATION_PAREN_DEPTH -> return null
+
                 c == '(' -> 1.also { openParens++ }
+
                 c == ')' && openParens > 0 -> 1.also { openParens-- }
-                c == ')' || c == ' ' || c.isAsciiControl() -> 0
+
+                c.endsBareDestination() -> 0
+
                 else -> 1
             }
         if (step == 0) break

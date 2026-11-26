@@ -78,6 +78,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- With tables enabled (the default), a link reference definition followed by a `---` or `-` line
+  threw `StringIndexOutOfBoundsException`; it is now a definition and a thematic break.
+- A list whose item ended with an indented code block followed by a blank line was rendered tight.
+- `[\^label]` and `[&#94;label]` showed the caret twice.
+- `x.mailto:a@b.com` was linked as a whole with a broken destination; the link now starts at
+  `mailto:`.
+- While streaming, `[text](https://example.com/a_(b)` was shown as raw text instead of a link.
+- `setText` with unchanged text, or an empty `append`, after `finish()` reverted the document to
+  its unfinished state.
+- Inputs that took quadratic time or memory now parse in linear time: nested `[^` brackets (which
+  could run out of memory), many `$` amounts with math enabled, many `[a](` openers, a long run of
+  `)` after an autolink, many link reference definitions in one paragraph, and long runs of `>`
+  while streaming.
+- Streaming cost grew with the number of completed blocks (16,000 streamed paragraphs took 7 s);
+  each update now costs the same however long the document is.
+- On the web (Kotlin/Wasm), streaming was quadratic because reading a `StringBuilder` after an
+  append re-flattens it there; the source text now uses a buffer with constant-time reads.
 - `ComposdownState` parsed every queued chunk separately; chunks that arrive while a parse runs are
   now combined into one update, as documented. Text sent after its scope is cancelled is dropped
   instead of being buffered forever.

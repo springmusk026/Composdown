@@ -81,21 +81,24 @@ internal object ExtendedAutolinks {
     fun rewindEmail(before: String): EmailStart? {
         var i = before.length
         var protocol: String? = null
-        while (i > 0) {
+        var atStart = false
+        while (i > 0 && !atStart) {
             val c = before[i - 1]
-            val protocolHere = if (c == ':' && protocol == null) protocolEndingAt(before, i) else null
+            val protocolHere = if (c == ':') protocolEndingAt(before, i) else null
             when {
                 c.isAsciiAlphanumeric() || c in EMAIL_LOCAL_PUNCTUATION -> {
                     i--
                 }
 
                 protocolHere != null -> {
+                    // The link starts at the protocol, which must not be preceded by a letter or digit.
                     protocol = protocolHere
-                    i--
+                    i -= protocolHere.length
+                    atStart = true
                 }
 
                 else -> {
-                    break
+                    atStart = true
                 }
             }
         }
@@ -214,16 +217,33 @@ internal object ExtendedAutolinks {
         start: Int,
         end: Int,
     ): Int {
+        // Parentheses are counted once and the counts updated as characters are trimmed, so that a
+        // long run of `)` is trimmed in linear time.
+        var opening = 0
+        var closing = 0
+        for (i in start until end) {
+            when (text[i]) {
+                '(' -> opening++
+                ')' -> closing++
+            }
+        }
         var linkEnd = end
         while (linkEnd > start) {
             val last = text[linkEnd - 1]
-            linkEnd =
+            val newEnd =
                 when {
                     last in TRAILING_PUNCTUATION -> linkEnd - 1
                     last == ';' -> trimEntitySuffix(text, start, linkEnd)
-                    last == ')' && hasUnbalancedClosingParenthesis(text, start, linkEnd) -> linkEnd - 1
+                    last == ')' && closing > opening -> linkEnd - 1
                     else -> return linkEnd
                 }
+            for (i in newEnd until linkEnd) {
+                when (text[i]) {
+                    '(' -> opening--
+                    ')' -> closing--
+                }
+            }
+            linkEnd = newEnd
         }
         return linkEnd
     }
@@ -237,22 +257,6 @@ internal object ExtendedAutolinks {
         var i = end - 2
         while (i > start && text[i].isAsciiLetter()) i--
         return if (i < end - 2 && text[i] == '&') i else end - 1
-    }
-
-    private fun hasUnbalancedClosingParenthesis(
-        text: CharSequence,
-        start: Int,
-        end: Int,
-    ): Boolean {
-        var opening = 0
-        var closing = 0
-        for (i in start until end) {
-            when (text[i]) {
-                '(' -> opening++
-                ')' -> closing++
-            }
-        }
-        return closing > opening
     }
 
     private fun Char.isAsciiWhitespace(): Boolean =

@@ -30,14 +30,15 @@ internal fun unescapeString(text: String): String {
     return result.toString()
 }
 
+/** Whitespace characters that separate words in link labels. */
+private const val LABEL_WHITESPACE = " \t\n\r"
+
 /**
  * Normalizes a link label for matching, as CommonMark requires: surrounding whitespace is removed,
  * inner whitespace runs collapse to one space, and the result is Unicode case-folded.
  *
  * @param label the label without its surrounding brackets.
  */
-private const val LABEL_WHITESPACE = " \t\n\r"
-
 internal fun normalizeLinkLabel(label: CharSequence): String {
     val collapsed = StringBuilder(label.length)
     var pendingSpace = false

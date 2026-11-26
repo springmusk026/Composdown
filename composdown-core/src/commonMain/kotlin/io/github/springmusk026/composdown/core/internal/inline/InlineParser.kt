@@ -391,10 +391,7 @@ internal class InlineParser(
     ): Boolean {
         val footnotes = footnotes ?: return false
         val first = opener.node.next ?: return false
-        val isLabel =
-            first.kind == InlineNode.Kind.TEXT && first.literal.startsWith('^') &&
-                (first.literal.length > 1 || first.next != null)
-        if (!isLabel) return false
+        if (!isFootnoteLabel(opener, afterBracket, first)) return false
 
         val rawLabel = subject.substring(opener.index + 2, afterBracket - 1)
         processEmphasis(opener.previousDelimiter)
@@ -427,6 +424,24 @@ internal class InlineParser(
         pos = afterBracket
         return true
     }
+
+    /**
+     * Whether the brackets from [opener] to [afterBracket], whose content starts with [first], hold a
+     * footnote label. The caret must be written literally (not escaped or as an entity), and the label
+     * must be a valid link label: at most 999 characters and without brackets. The length and the
+     * nested-bracket flag are checked first, which keeps nested `[^[^...]]` input linear.
+     */
+    private fun isFootnoteLabel(
+        opener: Bracket,
+        afterBracket: Int,
+        first: InlineNode,
+    ): Boolean =
+        afterBracket - opener.index <= MAX_REFERENCE_LABEL_LENGTH &&
+            !opener.bracketAfter &&
+            subject[opener.index + 1] == '^' &&
+            first.kind == InlineNode.Kind.TEXT &&
+            first.literal.startsWith('^') &&
+            (first.literal.length > 1 || first.next != null)
 
     private fun parseAutolink(block: InlineNode): Boolean {
         val end = scanUriAutolink(subject, pos)
@@ -749,11 +764,34 @@ private fun withoutTrailingDelimiters(text: String): String {
     return text.substring(0, runStart).trimEnd(' ', '\t')
 }
 
-/** Whether the text after `]` at [afterBracket] is `(` with no closing `)` anywhere after it. */
+/**
+ * Whether `](` at [afterBracket] starts a link destination that runs to the end of the text without
+ * being closed, that is, a link still being written. Parentheses inside the destination are matched,
+ * so `](https://en.wikipedia.org/wiki/Foo_(bar)` is still open. Only the last
+ * [MAX_PARTIAL_DESTINATION_LENGTH] characters are considered, which keeps the check linear.
+ */
 private fun isUnterminatedInlineLink(
     subject: String,
     afterBracket: Int,
-): Boolean = subject.charAtOrEnd(afterBracket) == '(' && subject.indexOf(')', afterBracket) < 0
+): Boolean {
+    if (subject.charAtOrEnd(afterBracket) != '(' || subject.length - afterBracket > MAX_PARTIAL_DESTINATION_LENGTH) {
+        return false
+    }
+    var depth = 0
+    var i = afterBracket + 1
+    while (i < subject.length) {
+        when (subject[i]) {
+            '\\' -> i++
+            '(' -> depth++
+            ')' -> if (depth == 0) return false else depth--
+        }
+        i++
+    }
+    return true
+}
+
+/** The longest partial link destination (and title) shown as a link while it is being written. */
+private const val MAX_PARTIAL_DESTINATION_LENGTH = 2048
 
 /** Appends [span] as inline math and returns its end, or returns -1 if there is no math. */
 private fun appendMath(

@@ -5,6 +5,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import io.github.springmusk026.composdown.compose.CodeHighlighter
 import io.github.springmusk026.composdown.compose.Composdown
@@ -19,7 +20,11 @@ internal fun ShowcaseScreen(
 ) {
     Composdown(
         markdown = SampleContent.showcase,
-        modifier = modifier.verticalScroll(rememberScrollState()).padding(16.dp),
+        modifier =
+            modifier
+                .testTag(SampleTags.SHOWCASE)
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp),
         extensions = SampleExtensions,
         imageRenderer = imageRenderer,
         codeHighlighter = codeHighlighter,

@@ -17,6 +17,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import io.github.springmusk026.composdown.coil.CoilImageRenderer
 import io.github.springmusk026.composdown.highlight.HighlightsCodeHighlighter
 
@@ -31,8 +32,18 @@ fun SampleApp(modifier: Modifier = Modifier) {
             var tab by rememberSaveable { mutableIntStateOf(0) }
             Column {
                 PrimaryTabRow(selectedTabIndex = tab) {
-                    Tab(selected = tab == 0, onClick = { tab = 0 }, text = { Text("Chat") })
-                    Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text("Showcase") })
+                    Tab(
+                        selected = tab == 0,
+                        onClick = { tab = 0 },
+                        text = { Text("Chat") },
+                        modifier = Modifier.testTag(SampleTags.CHAT_TAB),
+                    )
+                    Tab(
+                        selected = tab == 1,
+                        onClick = { tab = 1 },
+                        text = { Text("Showcase") },
+                        modifier = Modifier.testTag(SampleTags.SHOWCASE_TAB),
+                    )
                 }
                 when (tab) {
                     0 -> ChatScreen(imageRenderer, codeHighlighter)

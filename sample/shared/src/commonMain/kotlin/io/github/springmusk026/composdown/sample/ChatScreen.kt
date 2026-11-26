@@ -23,6 +23,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import io.github.springmusk026.composdown.compose.CodeHighlighter
 import io.github.springmusk026.composdown.compose.ComposdownState
@@ -59,7 +60,7 @@ internal fun ChatScreen(
     Column(modifier = modifier) {
         LazyColumn(
             state = listState,
-            modifier = Modifier.weight(1f).fillMaxWidth(),
+            modifier = Modifier.weight(1f).fillMaxWidth().testTag(SampleTags.CHAT_LIST),
             verticalArrangement = Arrangement.spacedBy(12.dp),
             contentPadding =
                 androidx.compose.foundation.layout
@@ -79,10 +80,11 @@ internal fun ChatScreen(
             modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(8.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            for ((prompt, response) in SampleContent.prompts) {
+            SampleContent.prompts.forEachIndexed { index, (prompt, response) ->
                 AssistChip(
                     onClick = { messages += startResponse(messages.size, prompt, response, scope) },
                     label = { Text(prompt) },
+                    modifier = Modifier.testTag(SampleTags.prompt(index)),
                 )
             }
         }

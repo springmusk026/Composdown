@@ -99,6 +99,27 @@ class PathologicalInputTest {
         }
 
     @Test
+    fun manyUnmatchedTildes() = assertParsesQuickly("~a ".repeat(N) + "a~~ ".repeat(N) + "~".repeat(N))
+
+    @Test
+    fun manyAtSignsAndColons() = assertParsesQuickly("a@".repeat(N) + "http:".repeat(N) + "mailto:".repeat(N))
+
+    @Test
+    fun longEmailLocalPartsFollowedByAtSigns() = assertParsesQuickly(("a".repeat(1_000) + "@").repeat(N / 100))
+
+    @Test
+    fun manyWwwPrefixes() = assertParsesQuickly("www.".repeat(N) + " www.a".repeat(N))
+
+    @Test
+    fun manyTableRows() = assertParsesQuickly("| a | b |\n| - | - |\n" + "| x | y |\n".repeat(N))
+
+    @Test
+    fun manyFootnoteReferences() =
+        assertParsesQuickly("[^a] [^b] [^nope] ".repeat(N) + "\n\n[^a]: A\n[^b]: B\n") { document ->
+            assertTrue(document.footnotes.size == 2)
+        }
+
+    @Test
     fun manyLinkReferenceDefinitionsAndReferences() =
         assertParsesQuickly(
             (0 until N / 10).joinToString("\n") { "[ref$it]: /url$it" } + "\n\n" +

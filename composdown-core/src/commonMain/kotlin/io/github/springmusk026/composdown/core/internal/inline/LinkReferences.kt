@@ -53,10 +53,11 @@ internal class LinkReferenceMap(
 internal fun parseLinkReferenceDefinition(
     text: String,
     references: LinkReferenceMap,
+    start: Int = 0,
 ): Int {
-    val labelEnd = scanLinkLabel(text, 0)
+    val labelEnd = scanLinkLabel(text, start)
     if (labelEnd < 0 || text.charAtOrEnd(labelEnd) != ':') return 0
-    val label = normalizeLinkLabel(text.subSequence(1, labelEnd - 1))
+    val label = normalizeLinkLabel(text.subSequence(start + 1, labelEnd - 1))
     if (label.isEmpty()) return 0
 
     val destination = scanLinkDestination(text, skipSpacesTabsAndOneNewline(text, labelEnd + 1)) ?: return 0
@@ -79,7 +80,7 @@ internal fun parseLinkReferenceDefinition(
     if (end < 0) return 0
 
     references.putIfAbsent(label, LinkReference(destination.value, titleValue))
-    return end
+    return end - start
 }
 
 /** If only spaces and tabs remain before a line ending (or the end), returns the index after it; else -1. */

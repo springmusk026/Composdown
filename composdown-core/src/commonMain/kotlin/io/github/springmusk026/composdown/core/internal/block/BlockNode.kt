@@ -222,6 +222,9 @@ internal class CodeBlockNode(
                 end = lineStart
             }
             literal = content.substring(0, end)
+            // The block ends at its last non-blank line, so that a list containing it can tell that a
+            // blank line follows (which makes the list loose), as for any other block.
+            endLine -= (end until content.length).count { content[it] == '\n' }
         }
     }
 

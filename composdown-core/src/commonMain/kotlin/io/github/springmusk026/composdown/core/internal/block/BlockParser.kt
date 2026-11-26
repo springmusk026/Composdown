@@ -4,6 +4,7 @@ import io.github.springmusk026.composdown.core.MarkdownExtension
 import io.github.springmusk026.composdown.core.internal.inline.FootnoteRegistry
 import io.github.springmusk026.composdown.core.internal.inline.LinkReferenceMap
 import io.github.springmusk026.composdown.core.internal.inline.parseLinkReferenceDefinition
+import io.github.springmusk026.composdown.core.internal.text.charAtOrEnd
 import io.github.springmusk026.composdown.core.internal.text.isAsciiDigit
 import io.github.springmusk026.composdown.core.internal.text.isSpaceOrTab
 
@@ -278,6 +279,9 @@ internal class BlockParser(
      */
     private fun startTable(container: BlockNode): Boolean {
         if (!tables || cursor.indented || container !is ParagraphNode) return false
+        // A paragraph emptied by consuming link reference definitions (see startSetextHeading) has no
+        // header row.
+        if (container.content.isEmpty()) return false
         val alignments = parseDelimiterRow(splitTableRow(cursor.line, cursor.nextNonspace)) ?: return false
         val content = container.content
         val headerStart = content.lastIndexOf('\n', content.length - 2) + 1
@@ -440,11 +444,16 @@ internal class BlockParser(
 
     /** Parses link reference definitions at the start of [paragraph] and removes them from its content. */
     private fun consumeLinkReferenceDefinitions(paragraph: ParagraphNode) {
-        while (paragraph.content.startsWith('[')) {
-            val consumed = parseLinkReferenceDefinition(paragraph.content.toString(), references)
+        if (!paragraph.content.startsWith('[')) return
+        // One copy of the content and one deletion, however many definitions there are.
+        val text = paragraph.content.toString()
+        var offset = 0
+        while (text.charAtOrEnd(offset) == '[') {
+            val consumed = parseLinkReferenceDefinition(text, references, offset)
             if (consumed == 0) break
-            paragraph.content.deleteRange(0, consumed)
+            offset += consumed
         }
+        if (offset > 0) paragraph.content.deleteRange(0, offset)
     }
 
     /** Fast check: only these characters can start a block when the line is not indented. */

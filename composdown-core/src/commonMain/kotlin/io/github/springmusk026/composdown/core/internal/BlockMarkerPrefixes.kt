@@ -14,9 +14,13 @@ private const val MAX_HEADING_LEVEL = 6
  *
  * Such a line is better hidden until it is complete, so that it does not briefly appear as text.
  */
+private fun Char.isQuoteMarkerOrSpace(): Boolean = this == '>' || this == ' ' || this == '\t'
+
 internal fun mayBecomeBlockMarker(line: CharSequence): Boolean {
-    var content = line.trimStart(' ', '\t')
-    while (content.startsWith('>')) content = content.drop(1).trimStart(' ', '\t')
+    // Skip block quote markers by index rather than by copying the rest of the line for each one.
+    var start = 0
+    while (start < line.length && line[start].isQuoteMarkerOrSpace()) start++
+    val content = line.subSequence(start, line.length)
     // A line of only block quote markers may still be followed by any of the markers below.
     if (content.isEmpty()) return line.any { it == '>' }
     val first = content[0]

@@ -1,0 +1,17 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <io.github.springmusk026:composdown-highlight>
+final class io.github.springmusk026.composdown.highlight/HighlightsCodeHighlighter : io.github.springmusk026.composdown.compose/CodeHighlighter { // io.github.springmusk026.composdown.highlight/HighlightsCodeHighlighter|null[0]
+    constructor <init>() // io.github.springmusk026.composdown.highlight/HighlightsCodeHighlighter.<init>|<init>(){}[0]
+
+    final fun highlight(kotlin/String, kotlin/String, kotlin/Boolean): androidx.compose.ui.text/AnnotatedString? // io.github.springmusk026.composdown.highlight/HighlightsCodeHighlighter.highlight|highlight(kotlin.String;kotlin.String;kotlin.Boolean){}[0]
+}
+
+final val io.github.springmusk026.composdown.highlight/io_github_springmusk026_composdown_highlight_HighlightsCodeHighlighter$stableprop // io.github.springmusk026.composdown.highlight/io_github_springmusk026_composdown_highlight_HighlightsCodeHighlighter$stableprop|#static{}io_github_springmusk026_composdown_highlight_HighlightsCodeHighlighter$stableprop[0]
+
+final fun io.github.springmusk026.composdown.highlight/io_github_springmusk026_composdown_highlight_HighlightsCodeHighlighter$stableprop_getter(): kotlin/Int // io.github.springmusk026.composdown.highlight/io_github_springmusk026_composdown_highlight_HighlightsCodeHighlighter$stableprop_getter|io_github_springmusk026_composdown_highlight_HighlightsCodeHighlighter$stableprop_getter(){}[0]

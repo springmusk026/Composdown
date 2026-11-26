@@ -1,0 +1,6 @@
+public final class io/github/springmusk026/composdown/highlight/HighlightsCodeHighlighter : io/github/springmusk026/composdown/compose/CodeHighlighter {
+	public static final field $stable I
+	public fun <init> ()V
+	public fun highlight (Ljava/lang/String;Ljava/lang/String;Z)Landroidx/compose/ui/text/AnnotatedString;
+}
+

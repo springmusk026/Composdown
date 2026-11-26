@@ -22,7 +22,7 @@ font size settings.
 | Tables | Expose collection semantics: number of rows and columns, and each cell's position |
 | Images | Content description from the image's Markdown description (`![description](url)`), through `CoilImageRenderer` or any renderer following the `ImageRenderer` contract |
 | Alerts | The title (for example "Warning") is read before the content |
-| Footnote references | Read as their number; the definitions follow at the end of the document |
+| Footnote references | Activatable links to their footnote; each footnote has a "Back to reference" link |
 | Text size | All text styles use `sp` units from the theme and scale with system font size |
 | Selection | Text can be selected and copied, across blocks |
 

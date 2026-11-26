@@ -68,6 +68,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `MarkdownDocument.headings()` with GitHub-compatible anchors, `plainText()` for whole documents, and
   `allBlocks()` and `allInlines()` to traverse every node of a document.
 - Links to a heading of the document (`[Installation](#installation)`) scroll to it in `Composdown`.
+- Footnote references scroll to their footnote, and each footnote has a `↩` link back to its first
+  reference.
 - Web support: every library module targets `wasmJs`. `composdown-core` runs its full test suite on
   Node.js; the sample app runs in the browser and is published as a live demo with the API reference.
 

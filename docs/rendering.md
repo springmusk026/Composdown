@@ -173,6 +173,10 @@ Footnote references are rendered as superscript numbers, numbered in order of fi
 definitions are collected into a section at the end of the document, below a divider, regardless of
 where they appear in the source.
 
+When the document is in a scrollable container, a footnote reference scrolls to its footnote, and the
+footnote's `↩` link scrolls back to the text that first references it, as on GitHub. In a lazy list,
+references are shown but not clickable, because the footnotes may not be composed.
+
 ## Raw HTML
 
 Composdown never interprets HTML. HTML blocks are shown as source code, and inline HTML as literal

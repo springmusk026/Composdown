@@ -16,7 +16,7 @@ plugins {
 
 apiValidation {
     // Benchmarks and samples are not published.
-    ignoredProjects += listOf("benchmarks", "shared", "desktop", "android")
+    ignoredProjects += listOf("benchmarks", "shared", "desktop", "android", "screenshots")
 
     @OptIn(kotlinx.validation.ExperimentalBCVApi::class)
     klib {

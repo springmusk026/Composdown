@@ -30,6 +30,12 @@ kotlin {
         wasmJsMain.dependencies {
             implementation(projects.sample.shared)
             implementation(libs.compose.ui)
+            implementation(libs.compose.components.resources)
         }
     }
+}
+
+compose.resources {
+    packageOfResClass = "io.github.springmusk026.composdown.sample.web.resources"
+    generateResClass = always
 }

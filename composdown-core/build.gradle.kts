@@ -1,4 +1,5 @@
 import codegen.GenerateHtmlEntitiesTask
+import codegen.GenerateSpecTestsTask
 
 plugins {
     alias(libs.plugins.composdown.kmp.library)
@@ -17,6 +18,13 @@ val generateHtmlEntities by tasks.registering(GenerateHtmlEntitiesTask::class) {
     outputDirectory.set(layout.buildDirectory.dir("generated/htmlEntities/commonMain/kotlin"))
 }
 
+val generateCommonMarkSpecTests by tasks.registering(GenerateSpecTestsTask::class) {
+    specJson.set(layout.projectDirectory.file("spec/commonmark-0.31.2.json"))
+    className.set("CommonMarkSpecTest")
+    packageName.set("io.github.springmusk026.composdown.core.spec")
+    outputDirectory.set(layout.buildDirectory.dir("generated/specTests/commonTest/kotlin"))
+}
+
 kotlin {
     sourceSets {
         commonMain {
@@ -24,6 +32,9 @@ kotlin {
             dependencies {
                 api(libs.kotlinx.collections.immutable)
             }
+        }
+        commonTest {
+            kotlin.srcDir(generateCommonMarkSpecTests)
         }
     }
 }

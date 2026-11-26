@@ -51,3 +51,9 @@ kotlin {
         }
     }
 }
+
+// Android Lint reads all Kotlin source directories, including generated ones, but does not depend on
+// the tasks that generate them.
+tasks.matching { it.name.startsWith("lintAnalyze") || it.name.endsWith("LintModel") }.configureEach {
+    dependsOn(generateHtmlEntities, generateCommonMarkSpecTests, generateGfmSpecTests)
+}

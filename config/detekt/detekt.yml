@@ -26,6 +26,7 @@ complexity:
     # class whose state they share rather than split across artificial helper classes.
     thresholdInFiles: 30
     thresholdInClasses: 30
+    thresholdInObjects: 30
   LongParameterList:
     # Composables take many optional parameters by design (modifier, styles, slots).
     ignoreAnnotated: ['Composable']

@@ -6,7 +6,76 @@
 // - Show declarations: true
 
 // Library unique name: <io.github.springmusk026:composdown-core>
+final enum class io.github.springmusk026.composdown.core.ast/AlertType : kotlin/Enum<io.github.springmusk026.composdown.core.ast/AlertType> { // io.github.springmusk026.composdown.core.ast/AlertType|null[0]
+    enum entry CAUTION // io.github.springmusk026.composdown.core.ast/AlertType.CAUTION|null[0]
+    enum entry IMPORTANT // io.github.springmusk026.composdown.core.ast/AlertType.IMPORTANT|null[0]
+    enum entry NOTE // io.github.springmusk026.composdown.core.ast/AlertType.NOTE|null[0]
+    enum entry TIP // io.github.springmusk026.composdown.core.ast/AlertType.TIP|null[0]
+    enum entry WARNING // io.github.springmusk026.composdown.core.ast/AlertType.WARNING|null[0]
+
+    final val entries // io.github.springmusk026.composdown.core.ast/AlertType.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<io.github.springmusk026.composdown.core.ast/AlertType> // io.github.springmusk026.composdown.core.ast/AlertType.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): io.github.springmusk026.composdown.core.ast/AlertType // io.github.springmusk026.composdown.core.ast/AlertType.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<io.github.springmusk026.composdown.core.ast/AlertType> // io.github.springmusk026.composdown.core.ast/AlertType.values|values#static(){}[0]
+}
+
+final enum class io.github.springmusk026.composdown.core.ast/TableAlignment : kotlin/Enum<io.github.springmusk026.composdown.core.ast/TableAlignment> { // io.github.springmusk026.composdown.core.ast/TableAlignment|null[0]
+    enum entry CENTER // io.github.springmusk026.composdown.core.ast/TableAlignment.CENTER|null[0]
+    enum entry LEFT // io.github.springmusk026.composdown.core.ast/TableAlignment.LEFT|null[0]
+    enum entry NONE // io.github.springmusk026.composdown.core.ast/TableAlignment.NONE|null[0]
+    enum entry RIGHT // io.github.springmusk026.composdown.core.ast/TableAlignment.RIGHT|null[0]
+
+    final val entries // io.github.springmusk026.composdown.core.ast/TableAlignment.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<io.github.springmusk026.composdown.core.ast/TableAlignment> // io.github.springmusk026.composdown.core.ast/TableAlignment.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): io.github.springmusk026.composdown.core.ast/TableAlignment // io.github.springmusk026.composdown.core.ast/TableAlignment.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<io.github.springmusk026.composdown.core.ast/TableAlignment> // io.github.springmusk026.composdown.core.ast/TableAlignment.values|values#static(){}[0]
+}
+
+final enum class io.github.springmusk026.composdown.core.ast/TaskState : kotlin/Enum<io.github.springmusk026.composdown.core.ast/TaskState> { // io.github.springmusk026.composdown.core.ast/TaskState|null[0]
+    enum entry CHECKED // io.github.springmusk026.composdown.core.ast/TaskState.CHECKED|null[0]
+    enum entry UNCHECKED // io.github.springmusk026.composdown.core.ast/TaskState.UNCHECKED|null[0]
+
+    final val entries // io.github.springmusk026.composdown.core.ast/TaskState.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<io.github.springmusk026.composdown.core.ast/TaskState> // io.github.springmusk026.composdown.core.ast/TaskState.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): io.github.springmusk026.composdown.core.ast/TaskState // io.github.springmusk026.composdown.core.ast/TaskState.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<io.github.springmusk026.composdown.core.ast/TaskState> // io.github.springmusk026.composdown.core.ast/TaskState.values|values#static(){}[0]
+}
+
+final enum class io.github.springmusk026.composdown.core/MarkdownExtension : kotlin/Enum<io.github.springmusk026.composdown.core/MarkdownExtension> { // io.github.springmusk026.composdown.core/MarkdownExtension|null[0]
+    enum entry ALERTS // io.github.springmusk026.composdown.core/MarkdownExtension.ALERTS|null[0]
+    enum entry AUTOLINKS // io.github.springmusk026.composdown.core/MarkdownExtension.AUTOLINKS|null[0]
+    enum entry FOOTNOTES // io.github.springmusk026.composdown.core/MarkdownExtension.FOOTNOTES|null[0]
+    enum entry STRIKETHROUGH // io.github.springmusk026.composdown.core/MarkdownExtension.STRIKETHROUGH|null[0]
+    enum entry TABLES // io.github.springmusk026.composdown.core/MarkdownExtension.TABLES|null[0]
+    enum entry TASK_LISTS // io.github.springmusk026.composdown.core/MarkdownExtension.TASK_LISTS|null[0]
+
+    final val entries // io.github.springmusk026.composdown.core/MarkdownExtension.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<io.github.springmusk026.composdown.core/MarkdownExtension> // io.github.springmusk026.composdown.core/MarkdownExtension.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): io.github.springmusk026.composdown.core/MarkdownExtension // io.github.springmusk026.composdown.core/MarkdownExtension.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<io.github.springmusk026.composdown.core/MarkdownExtension> // io.github.springmusk026.composdown.core/MarkdownExtension.values|values#static(){}[0]
+
+    final object Companion { // io.github.springmusk026.composdown.core/MarkdownExtension.Companion|null[0]
+        final val GFM // io.github.springmusk026.composdown.core/MarkdownExtension.Companion.GFM|{}GFM[0]
+            final fun <get-GFM>(): kotlin.collections/Set<io.github.springmusk026.composdown.core/MarkdownExtension> // io.github.springmusk026.composdown.core/MarkdownExtension.Companion.GFM.<get-GFM>|<get-GFM>(){}[0]
+    }
+}
+
 sealed interface io.github.springmusk026.composdown.core.ast/Block { // io.github.springmusk026.composdown.core.ast/Block|null[0]
+    final class Alert : io.github.springmusk026.composdown.core.ast/Block { // io.github.springmusk026.composdown.core.ast/Block.Alert|null[0]
+        final val children // io.github.springmusk026.composdown.core.ast/Block.Alert.children|{}children[0]
+            final fun <get-children>(): kotlinx.collections.immutable/ImmutableList<io.github.springmusk026.composdown.core.ast/Block> // io.github.springmusk026.composdown.core.ast/Block.Alert.children.<get-children>|<get-children>(){}[0]
+        final val type // io.github.springmusk026.composdown.core.ast/Block.Alert.type|{}type[0]
+            final fun <get-type>(): io.github.springmusk026.composdown.core.ast/AlertType // io.github.springmusk026.composdown.core.ast/Block.Alert.type.<get-type>|<get-type>(){}[0]
+
+        final fun equals(kotlin/Any?): kotlin/Boolean // io.github.springmusk026.composdown.core.ast/Block.Alert.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // io.github.springmusk026.composdown.core.ast/Block.Alert.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // io.github.springmusk026.composdown.core.ast/Block.Alert.toString|toString(){}[0]
+    }
+
     final class BlockQuote : io.github.springmusk026.composdown.core.ast/Block { // io.github.springmusk026.composdown.core.ast/Block.BlockQuote|null[0]
         final val children // io.github.springmusk026.composdown.core.ast/Block.BlockQuote.children|{}children[0]
             final fun <get-children>(): kotlinx.collections.immutable/ImmutableList<io.github.springmusk026.composdown.core.ast/Block> // io.github.springmusk026.composdown.core.ast/Block.BlockQuote.children.<get-children>|<get-children>(){}[0]
@@ -73,6 +142,19 @@ sealed interface io.github.springmusk026.composdown.core.ast/Block { // io.githu
         final fun toString(): kotlin/String // io.github.springmusk026.composdown.core.ast/Block.Paragraph.toString|toString(){}[0]
     }
 
+    final class Table : io.github.springmusk026.composdown.core.ast/Block { // io.github.springmusk026.composdown.core.ast/Block.Table|null[0]
+        final val columns // io.github.springmusk026.composdown.core.ast/Block.Table.columns|{}columns[0]
+            final fun <get-columns>(): kotlinx.collections.immutable/ImmutableList<io.github.springmusk026.composdown.core.ast/TableAlignment> // io.github.springmusk026.composdown.core.ast/Block.Table.columns.<get-columns>|<get-columns>(){}[0]
+        final val header // io.github.springmusk026.composdown.core.ast/Block.Table.header|{}header[0]
+            final fun <get-header>(): io.github.springmusk026.composdown.core.ast/TableRow // io.github.springmusk026.composdown.core.ast/Block.Table.header.<get-header>|<get-header>(){}[0]
+        final val rows // io.github.springmusk026.composdown.core.ast/Block.Table.rows|{}rows[0]
+            final fun <get-rows>(): kotlinx.collections.immutable/ImmutableList<io.github.springmusk026.composdown.core.ast/TableRow> // io.github.springmusk026.composdown.core.ast/Block.Table.rows.<get-rows>|<get-rows>(){}[0]
+
+        final fun equals(kotlin/Any?): kotlin/Boolean // io.github.springmusk026.composdown.core.ast/Block.Table.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // io.github.springmusk026.composdown.core.ast/Block.Table.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // io.github.springmusk026.composdown.core.ast/Block.Table.toString|toString(){}[0]
+    }
+
     final object ThematicBreak : io.github.springmusk026.composdown.core.ast/Block { // io.github.springmusk026.composdown.core.ast/Block.ThematicBreak|null[0]
         final fun equals(kotlin/Any?): kotlin/Boolean // io.github.springmusk026.composdown.core.ast/Block.ThematicBreak.equals|equals(kotlin.Any?){}[0]
         final fun hashCode(): kotlin/Int // io.github.springmusk026.composdown.core.ast/Block.ThematicBreak.hashCode|hashCode(){}[0]
@@ -97,6 +179,17 @@ sealed interface io.github.springmusk026.composdown.core.ast/Inline { // io.gith
         final fun equals(kotlin/Any?): kotlin/Boolean // io.github.springmusk026.composdown.core.ast/Inline.Emphasis.equals|equals(kotlin.Any?){}[0]
         final fun hashCode(): kotlin/Int // io.github.springmusk026.composdown.core.ast/Inline.Emphasis.hashCode|hashCode(){}[0]
         final fun toString(): kotlin/String // io.github.springmusk026.composdown.core.ast/Inline.Emphasis.toString|toString(){}[0]
+    }
+
+    final class FootnoteReference : io.github.springmusk026.composdown.core.ast/Inline { // io.github.springmusk026.composdown.core.ast/Inline.FootnoteReference|null[0]
+        final val label // io.github.springmusk026.composdown.core.ast/Inline.FootnoteReference.label|{}label[0]
+            final fun <get-label>(): kotlin/String // io.github.springmusk026.composdown.core.ast/Inline.FootnoteReference.label.<get-label>|<get-label>(){}[0]
+        final val number // io.github.springmusk026.composdown.core.ast/Inline.FootnoteReference.number|{}number[0]
+            final fun <get-number>(): kotlin/Int // io.github.springmusk026.composdown.core.ast/Inline.FootnoteReference.number.<get-number>|<get-number>(){}[0]
+
+        final fun equals(kotlin/Any?): kotlin/Boolean // io.github.springmusk026.composdown.core.ast/Inline.FootnoteReference.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // io.github.springmusk026.composdown.core.ast/Inline.FootnoteReference.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // io.github.springmusk026.composdown.core.ast/Inline.FootnoteReference.toString|toString(){}[0]
     }
 
     final class HtmlInline : io.github.springmusk026.composdown.core.ast/Inline { // io.github.springmusk026.composdown.core.ast/Inline.HtmlInline|null[0]
@@ -132,6 +225,15 @@ sealed interface io.github.springmusk026.composdown.core.ast/Inline { // io.gith
         final fun equals(kotlin/Any?): kotlin/Boolean // io.github.springmusk026.composdown.core.ast/Inline.Link.equals|equals(kotlin.Any?){}[0]
         final fun hashCode(): kotlin/Int // io.github.springmusk026.composdown.core.ast/Inline.Link.hashCode|hashCode(){}[0]
         final fun toString(): kotlin/String // io.github.springmusk026.composdown.core.ast/Inline.Link.toString|toString(){}[0]
+    }
+
+    final class Strikethrough : io.github.springmusk026.composdown.core.ast/Inline { // io.github.springmusk026.composdown.core.ast/Inline.Strikethrough|null[0]
+        final val children // io.github.springmusk026.composdown.core.ast/Inline.Strikethrough.children|{}children[0]
+            final fun <get-children>(): kotlinx.collections.immutable/ImmutableList<io.github.springmusk026.composdown.core.ast/Inline> // io.github.springmusk026.composdown.core.ast/Inline.Strikethrough.children.<get-children>|<get-children>(){}[0]
+
+        final fun equals(kotlin/Any?): kotlin/Boolean // io.github.springmusk026.composdown.core.ast/Inline.Strikethrough.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // io.github.springmusk026.composdown.core.ast/Inline.Strikethrough.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // io.github.springmusk026.composdown.core.ast/Inline.Strikethrough.toString|toString(){}[0]
     }
 
     final class Strong : io.github.springmusk026.composdown.core.ast/Inline { // io.github.springmusk026.composdown.core.ast/Inline.Strong|null[0]
@@ -187,9 +289,24 @@ sealed interface io.github.springmusk026.composdown.core.ast/ListKind { // io.gi
     }
 }
 
+final class io.github.springmusk026.composdown.core.ast/FootnoteDefinition { // io.github.springmusk026.composdown.core.ast/FootnoteDefinition|null[0]
+    final val children // io.github.springmusk026.composdown.core.ast/FootnoteDefinition.children|{}children[0]
+        final fun <get-children>(): kotlinx.collections.immutable/ImmutableList<io.github.springmusk026.composdown.core.ast/Block> // io.github.springmusk026.composdown.core.ast/FootnoteDefinition.children.<get-children>|<get-children>(){}[0]
+    final val label // io.github.springmusk026.composdown.core.ast/FootnoteDefinition.label|{}label[0]
+        final fun <get-label>(): kotlin/String // io.github.springmusk026.composdown.core.ast/FootnoteDefinition.label.<get-label>|<get-label>(){}[0]
+    final val number // io.github.springmusk026.composdown.core.ast/FootnoteDefinition.number|{}number[0]
+        final fun <get-number>(): kotlin/Int // io.github.springmusk026.composdown.core.ast/FootnoteDefinition.number.<get-number>|<get-number>(){}[0]
+
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.springmusk026.composdown.core.ast/FootnoteDefinition.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.springmusk026.composdown.core.ast/FootnoteDefinition.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // io.github.springmusk026.composdown.core.ast/FootnoteDefinition.toString|toString(){}[0]
+}
+
 final class io.github.springmusk026.composdown.core.ast/ListItem { // io.github.springmusk026.composdown.core.ast/ListItem|null[0]
     final val children // io.github.springmusk026.composdown.core.ast/ListItem.children|{}children[0]
         final fun <get-children>(): kotlinx.collections.immutable/ImmutableList<io.github.springmusk026.composdown.core.ast/Block> // io.github.springmusk026.composdown.core.ast/ListItem.children.<get-children>|<get-children>(){}[0]
+    final val taskState // io.github.springmusk026.composdown.core.ast/ListItem.taskState|{}taskState[0]
+        final fun <get-taskState>(): io.github.springmusk026.composdown.core.ast/TaskState? // io.github.springmusk026.composdown.core.ast/ListItem.taskState.<get-taskState>|<get-taskState>(){}[0]
 
     final fun equals(kotlin/Any?): kotlin/Boolean // io.github.springmusk026.composdown.core.ast/ListItem.equals|equals(kotlin.Any?){}[0]
     final fun hashCode(): kotlin/Int // io.github.springmusk026.composdown.core.ast/ListItem.hashCode|hashCode(){}[0]
@@ -199,14 +316,37 @@ final class io.github.springmusk026.composdown.core.ast/ListItem { // io.github.
 final class io.github.springmusk026.composdown.core.ast/MarkdownDocument { // io.github.springmusk026.composdown.core.ast/MarkdownDocument|null[0]
     final val blocks // io.github.springmusk026.composdown.core.ast/MarkdownDocument.blocks|{}blocks[0]
         final fun <get-blocks>(): kotlinx.collections.immutable/ImmutableList<io.github.springmusk026.composdown.core.ast/Block> // io.github.springmusk026.composdown.core.ast/MarkdownDocument.blocks.<get-blocks>|<get-blocks>(){}[0]
+    final val footnotes // io.github.springmusk026.composdown.core.ast/MarkdownDocument.footnotes|{}footnotes[0]
+        final fun <get-footnotes>(): kotlinx.collections.immutable/ImmutableList<io.github.springmusk026.composdown.core.ast/FootnoteDefinition> // io.github.springmusk026.composdown.core.ast/MarkdownDocument.footnotes.<get-footnotes>|<get-footnotes>(){}[0]
 
     final fun equals(kotlin/Any?): kotlin/Boolean // io.github.springmusk026.composdown.core.ast/MarkdownDocument.equals|equals(kotlin.Any?){}[0]
     final fun hashCode(): kotlin/Int // io.github.springmusk026.composdown.core.ast/MarkdownDocument.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // io.github.springmusk026.composdown.core.ast/MarkdownDocument.toString|toString(){}[0]
 }
 
+final class io.github.springmusk026.composdown.core.ast/TableCell { // io.github.springmusk026.composdown.core.ast/TableCell|null[0]
+    final val content // io.github.springmusk026.composdown.core.ast/TableCell.content|{}content[0]
+        final fun <get-content>(): kotlinx.collections.immutable/ImmutableList<io.github.springmusk026.composdown.core.ast/Inline> // io.github.springmusk026.composdown.core.ast/TableCell.content.<get-content>|<get-content>(){}[0]
+
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.springmusk026.composdown.core.ast/TableCell.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.springmusk026.composdown.core.ast/TableCell.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // io.github.springmusk026.composdown.core.ast/TableCell.toString|toString(){}[0]
+}
+
+final class io.github.springmusk026.composdown.core.ast/TableRow { // io.github.springmusk026.composdown.core.ast/TableRow|null[0]
+    final val cells // io.github.springmusk026.composdown.core.ast/TableRow.cells|{}cells[0]
+        final fun <get-cells>(): kotlinx.collections.immutable/ImmutableList<io.github.springmusk026.composdown.core.ast/TableCell> // io.github.springmusk026.composdown.core.ast/TableRow.cells.<get-cells>|<get-cells>(){}[0]
+
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.springmusk026.composdown.core.ast/TableRow.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.springmusk026.composdown.core.ast/TableRow.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // io.github.springmusk026.composdown.core.ast/TableRow.toString|toString(){}[0]
+}
+
 final class io.github.springmusk026.composdown.core/MarkdownParser { // io.github.springmusk026.composdown.core/MarkdownParser|null[0]
-    constructor <init>() // io.github.springmusk026.composdown.core/MarkdownParser.<init>|<init>(){}[0]
+    constructor <init>(kotlin.collections/Set<io.github.springmusk026.composdown.core/MarkdownExtension> = ...) // io.github.springmusk026.composdown.core/MarkdownParser.<init>|<init>(kotlin.collections.Set<io.github.springmusk026.composdown.core.MarkdownExtension>){}[0]
+
+    final val extensions // io.github.springmusk026.composdown.core/MarkdownParser.extensions|{}extensions[0]
+        final fun <get-extensions>(): kotlin.collections/Set<io.github.springmusk026.composdown.core/MarkdownExtension> // io.github.springmusk026.composdown.core/MarkdownParser.extensions.<get-extensions>|<get-extensions>(){}[0]
 
     final fun parse(kotlin/String): io.github.springmusk026.composdown.core.ast/MarkdownDocument // io.github.springmusk026.composdown.core/MarkdownParser.parse|parse(kotlin.String){}[0]
 }

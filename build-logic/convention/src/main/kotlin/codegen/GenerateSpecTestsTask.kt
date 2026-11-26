@@ -18,7 +18,7 @@ import org.gradle.api.tasks.TaskAction
  *
  * The examples are compiled into the test sources rather than read as resources at runtime, so
  * the same tests run unchanged on every Kotlin target. The generated code expects a hand-written
- * `SpecExample` class and an `assertSpecExample(example)` function in [packageName].
+ * `SpecExample` class and the function named by [assertion], taking a `SpecExample`, in [packageName].
  */
 @CacheableTask
 abstract class GenerateSpecTestsTask : DefaultTask() {
@@ -33,6 +33,10 @@ abstract class GenerateSpecTestsTask : DefaultTask() {
     @get:Input
     abstract val packageName: Property<String>
 
+    /** Name of the function each generated test calls with its example. */
+    @get:Input
+    abstract val assertion: Property<String>
+
     @get:OutputDirectory
     abstract val outputDirectory: DirectoryProperty
 
@@ -43,6 +47,7 @@ abstract class GenerateSpecTestsTask : DefaultTask() {
         val className = className.get()
         val packageName = packageName.get()
         val examplesObject = className.removeSuffix("Test") + "Examples"
+        val assertion = assertion.get()
 
         val source =
             buildString {
@@ -89,7 +94,7 @@ abstract class GenerateSpecTestsTask : DefaultTask() {
                     val section = identifier(example.getValue("section") as String)
                     if (index > 0) appendLine()
                     appendLine("    @Test")
-                    appendLine("    fun example${number}_$section() = assertSpecExample($examplesObject.all[$index])")
+                    appendLine("    fun example${number}_$section() = $assertion($examplesObject.all[$index])")
                 }
                 appendLine("}")
             }

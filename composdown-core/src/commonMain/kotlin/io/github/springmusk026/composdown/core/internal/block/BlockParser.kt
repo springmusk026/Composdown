@@ -1,5 +1,7 @@
 package io.github.springmusk026.composdown.core.internal.block
 
+import io.github.springmusk026.composdown.core.MarkdownExtension
+import io.github.springmusk026.composdown.core.internal.inline.FootnoteRegistry
 import io.github.springmusk026.composdown.core.internal.inline.LinkReferenceMap
 import io.github.springmusk026.composdown.core.internal.inline.parseLinkReferenceDefinition
 import io.github.springmusk026.composdown.core.internal.text.isAsciiDigit
@@ -9,6 +11,9 @@ import io.github.springmusk026.composdown.core.internal.text.isSpaceOrTab
 internal const val MAX_NESTING_DEPTH = 100
 
 private const val MAX_HEADING_LEVEL = 6
+
+/** Characters that cannot appear in a footnote definition label. */
+private const val FOOTNOTE_LABEL_TERMINATORS = "] \t\r\n"
 private const val MIN_FENCE_LENGTH = 3
 private const val MIN_THEMATIC_BREAK_MARKERS = 3
 
@@ -18,11 +23,18 @@ private const val MIN_THEMATIC_BREAK_MARKERS = 3
  * new blocks, and the rest of the line is added as text to the innermost open block.
  *
  * Feed lines with [addLine] (without line endings) and call [finish] once at the end. Link
- * reference definitions are recorded in [references] as paragraphs are finalized.
+ * reference definitions are recorded in [references] as paragraphs are finalized, and footnote
+ * definitions in [footnotes] as they start.
+ *
+ * @param footnotes where to record footnote definitions, or `null` if footnotes are disabled.
  */
 internal class BlockParser(
     private val references: LinkReferenceMap,
+    extensions: Set<MarkdownExtension>,
+    private val footnotes: FootnoteRegistry?,
 ) {
+    private val tables = MarkdownExtension.TABLES in extensions
+
     val document: DocumentNode = DocumentNode().also { it.startLine = 1 }
 
     private val cursor = LineCursor()
@@ -40,8 +52,6 @@ internal class BlockParser(
     /** Whether all blocks below [lastMatchedContainer] have been closed for the current line. */
     private var allClosed = true
 
-    private enum class ContinueResult { MATCHED, NOT_MATCHED, LINE_CONSUMED }
-
     private enum class StartResult { NONE, CONTAINER, LEAF }
 
     /** Adds one line of input, without its line ending. */
@@ -55,14 +65,9 @@ internal class BlockParser(
         lastMatchedContainer = container
 
         // Open new blocks until a leaf block starts or nothing more can start on this line.
-        var result =
-            if (container !is ParagraphNode &&
-                container.acceptsLines
-            ) {
-                StartResult.LEAF
-            } else {
-                StartResult.CONTAINER
-            }
+        // Paragraphs and tables accept lines but can still be interrupted by other blocks.
+        val isInterruptibleLeaf = container is ParagraphNode || container is TableNode
+        var result = if (!isInterruptibleLeaf && container.acceptsLines) StartResult.LEAF else StartResult.CONTAINER
         while (result == StartResult.CONTAINER) {
             cursor.findNextNonspace()
             val mayStart = cursor.indented || cursor.charAt(cursor.nextNonspace).mayStartBlock()
@@ -92,10 +97,19 @@ internal class BlockParser(
             val last = container.children.lastOrNull()
             if (last == null || !last.isOpen) return container
             cursor.findNextNonspace()
-            when (continueBlock(last)) {
-                ContinueResult.MATCHED -> container = last
-                ContinueResult.NOT_MATCHED -> return container
-                ContinueResult.LINE_CONSUMED -> return null
+            when (last.continueWith(cursor)) {
+                ContinueResult.MATCHED -> {
+                    container = last
+                }
+
+                ContinueResult.NOT_MATCHED -> {
+                    return container
+                }
+
+                ContinueResult.LINE_CONSUMED -> {
+                    finalize(last, lineNumber)
+                    return null
+                }
             }
         }
     }
@@ -119,97 +133,6 @@ internal class BlockParser(
         }
     }
 
-    private fun continueBlock(block: BlockNode): ContinueResult =
-        when (block) {
-            is DocumentNode, is ListNode -> {
-                ContinueResult.MATCHED
-            }
-
-            is BlockQuoteNode -> {
-                if (consumeBlockQuoteMarker()) ContinueResult.MATCHED else ContinueResult.NOT_MATCHED
-            }
-
-            is ItemNode -> {
-                continueItem(block)
-            }
-
-            is ParagraphNode -> {
-                if (cursor.blank) ContinueResult.NOT_MATCHED else ContinueResult.MATCHED
-            }
-
-            is HeadingNode, is ThematicBreakNode -> {
-                ContinueResult.NOT_MATCHED
-            }
-
-            is CodeBlockNode -> {
-                if (block.isFenced) continueFencedCode(block) else continueIndentedCode()
-            }
-
-            is HtmlBlockNode -> {
-                if (cursor.blank && block.type.endsAtBlankLine) ContinueResult.NOT_MATCHED else ContinueResult.MATCHED
-            }
-        }
-
-    /** Consumes `>` and one optional following space, if the line has a block quote marker. */
-    private fun consumeBlockQuoteMarker(): Boolean {
-        if (cursor.indented || cursor.charAt(cursor.nextNonspace) != '>') return false
-        cursor.advanceNextNonspace()
-        cursor.advanceChars(1)
-        if (cursor.charAt(cursor.offset).isSpaceOrTab()) cursor.advanceColumns(1)
-        return true
-    }
-
-    private fun continueItem(item: ItemNode): ContinueResult {
-        val contentIndent = item.data.markerOffset + item.data.padding
-        when {
-            cursor.blank -> {
-                // An item can begin with at most one blank line.
-                if (item.children.isEmpty()) return ContinueResult.NOT_MATCHED
-                cursor.advanceNextNonspace()
-            }
-
-            cursor.indent >= contentIndent -> {
-                cursor.advanceColumns(contentIndent)
-            }
-
-            else -> {
-                return ContinueResult.NOT_MATCHED
-            }
-        }
-        return ContinueResult.MATCHED
-    }
-
-    private fun continueIndentedCode(): ContinueResult {
-        when {
-            cursor.indent >= CODE_INDENT -> cursor.advanceColumns(CODE_INDENT)
-            cursor.blank -> cursor.advanceNextNonspace()
-            else -> return ContinueResult.NOT_MATCHED
-        }
-        return ContinueResult.MATCHED
-    }
-
-    private fun continueFencedCode(block: CodeBlockNode): ContinueResult {
-        if (isClosingFence(block)) {
-            finalize(block, lineNumber)
-            return ContinueResult.LINE_CONSUMED
-        }
-        // Remove up to the opening fence's indentation from content lines.
-        var remaining = block.fenceOffset
-        while (remaining > 0 && cursor.charAt(cursor.offset).isSpaceOrTab()) {
-            cursor.advanceColumns(1)
-            remaining--
-        }
-        return ContinueResult.MATCHED
-    }
-
-    /** A closing fence uses the opening fence character, is at least as long, and has nothing after it. */
-    private fun isClosingFence(block: CodeBlockNode): Boolean {
-        if (cursor.indented || cursor.charAt(cursor.nextNonspace) != block.fenceChar) return false
-        var end = cursor.nextNonspace
-        while (cursor.charAt(end) == block.fenceChar) end++
-        return end - cursor.nextNonspace >= block.fenceLength && cursor.isBlankFrom(end)
-    }
-
     /** Tries each kind of block start in the order the specification gives them precedence. */
     private fun startBlock(container: BlockNode): StartResult =
         when {
@@ -218,14 +141,16 @@ internal class BlockParser(
             startFencedCodeBlock() -> StartResult.LEAF
             startHtmlBlock(container) -> StartResult.LEAF
             startSetextHeading(container) -> StartResult.LEAF
+            startTable(container) -> StartResult.LEAF
             startThematicBreak() -> StartResult.LEAF
+            startFootnoteDefinition(container) -> StartResult.CONTAINER
             startListItem(container) -> StartResult.CONTAINER
             startIndentedCodeBlock() -> StartResult.LEAF
             else -> StartResult.NONE
         }
 
     private fun startBlockQuote(container: BlockNode): Boolean {
-        if (!canNestContainerIn(container) || !consumeBlockQuoteMarker()) return false
+        if (!canNestContainerIn(container) || !cursor.consumeBlockQuoteMarker()) return false
         closeUnmatchedBlocks()
         addChild(BlockQuoteNode())
         return true
@@ -305,6 +230,54 @@ internal class BlockParser(
         container.replaceWith(heading)
         tip = heading
         cursor.advanceToEnd()
+        return true
+    }
+
+    /**
+     * A GFM table starts at a delimiter row (`| --- | :-: |`) whose number of cells matches the header
+     * row: the last line of the paragraph being continued. Earlier lines remain a paragraph.
+     */
+    private fun startTable(container: BlockNode): Boolean {
+        if (!tables || cursor.indented || container !is ParagraphNode) return false
+        val alignments = parseDelimiterRow(splitTableRow(cursor.line, cursor.nextNonspace)) ?: return false
+        val content = container.content
+        val headerStart = content.lastIndexOf('\n', content.length - 2) + 1
+        val headerCells = splitTableRow(content.substring(headerStart, content.length - 1), 0)
+        if (headerCells.size != alignments.size) return false
+
+        closeUnmatchedBlocks()
+        val table = TableNode(alignments, headerCells)
+        if (headerStart == 0) {
+            table.startLine = container.startLine
+            container.replaceWith(table)
+            tip = table
+        } else {
+            content.setLength(headerStart)
+            finalize(container, lineNumber - 2)
+            addChild(table)
+            table.startLine = lineNumber - 1
+        }
+        cursor.advanceToEnd()
+        return true
+    }
+
+    /** `[^label]:` starts a footnote definition; the rest of the line is its first content. */
+    private fun startFootnoteDefinition(container: BlockNode): Boolean {
+        val footnotes = footnotes ?: return false
+        val start = cursor.nextNonspace
+        if (cursor.indented || !canNestContainerIn(container) || !cursor.line.startsWith("[^", start)) return false
+        var labelEnd = start + 2
+        while (labelEnd < cursor.line.length && cursor.line[labelEnd] !in FOOTNOTE_LABEL_TERMINATORS) labelEnd++
+        if (labelEnd == start + 2 || !cursor.line.startsWith("]:", labelEnd)) return false
+        var contentStart = labelEnd + 2
+        while (cursor.charAt(contentStart).isSpaceOrTab()) contentStart++
+
+        closeUnmatchedBlocks()
+        val label = cursor.line.substring(start + 2, labelEnd)
+        cursor.advanceNextNonspace()
+        cursor.advanceChars(contentStart - start)
+        addChild(FootnoteDefinitionNode(label))
+        footnotes.define(label)
         return true
     }
 
@@ -410,7 +383,11 @@ internal class BlockParser(
                 block.finalizeList()
             }
 
-            is DocumentNode, is BlockQuoteNode, is HeadingNode, is ThematicBreakNode -> {
+            is TableNode -> {
+                block.finalizeTable()
+            }
+
+            is DocumentNode, is BlockQuoteNode, is HeadingNode, is ThematicBreakNode, is FootnoteDefinitionNode -> {
                 // These blocks have no content to post-process.
             }
         }
@@ -429,7 +406,9 @@ internal class BlockParser(
     /** Fast check: only these characters can start a block when the line is not indented. */
     private fun Char.mayStartBlock(): Boolean =
         when (this) {
-            '#', '`', '~', '*', '+', '_', '=', '<', '>', '-' -> true
+            // `|`, `:` and `[` can start table delimiter rows and footnote definitions.
+            '#', '`', '~', '*', '+', '_', '=', '<', '>', '-', '|', ':', '[' -> true
+
             else -> isAsciiDigit()
         }
 }

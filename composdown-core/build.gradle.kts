@@ -22,7 +22,8 @@ val generateCommonMarkSpecTests by tasks.registering(GenerateSpecTestsTask::clas
     specJson.set(layout.projectDirectory.file("spec/commonmark-0.31.2.json"))
     className.set("CommonMarkSpecTest")
     packageName.set("io.github.springmusk026.composdown.core.spec")
-    outputDirectory.set(layout.buildDirectory.dir("generated/specTests/commonTest/kotlin"))
+    assertion.set("assertCommonMarkExample")
+    outputDirectory.set(layout.buildDirectory.dir("generated/commonMarkSpecTests/commonTest/kotlin"))
 }
 
 kotlin {

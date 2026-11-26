@@ -9,10 +9,37 @@ internal class InlineNode(
     val kind: Kind,
     var literal: String = "",
 ) {
-    enum class Kind { ROOT, TEXT, CODE, EMPHASIS, STRONG, LINK, IMAGE, HTML, SOFT_BREAK, HARD_BREAK }
+    enum class Kind {
+        ROOT,
+        TEXT,
+        CODE,
+        EMPHASIS,
+        STRONG,
+        STRIKETHROUGH,
+        LINK,
+        IMAGE,
+        HTML,
+        SOFT_BREAK,
+        HARD_BREAK,
 
+        /** [literal] holds the definition's label and [number] the footnote number. */
+        FOOTNOTE_REFERENCE,
+    }
+
+    /** Destination of a link or image. */
     var destination: String = ""
+
+    /** Title of a link or image. */
     var title: String? = null
+
+    /** Number of a footnote reference. */
+    var number: Int = 0
+
+    /**
+     * Whether this text node is a run of emphasis or strikethrough delimiters that may still be
+     * matched, and so must not be merged into an autolink.
+     */
+    var isActiveDelimiter: Boolean = false
 
     var parent: InlineNode? = null
         private set

@@ -51,6 +51,29 @@ public sealed interface Inline {
     ) : Inline
 
     /**
+     * Strikethrough (`~~text~~` or `~text~`, GFM), usually rendered with a line through the text.
+     *
+     * @property children the struck-through content.
+     */
+    @Poko
+    public class Strikethrough internal constructor(
+        public val children: ImmutableList<Inline>,
+    ) : Inline
+
+    /**
+     * A reference to a footnote (`[^label]`). Only references to defined footnotes become footnote
+     * references; others remain text.
+     *
+     * @property label the label of the referenced footnote's definition.
+     * @property number the number of the referenced footnote; see [FootnoteDefinition.number].
+     */
+    @Poko
+    public class FootnoteReference internal constructor(
+        public val label: String,
+        public val number: Int,
+    ) : Inline
+
+    /**
      * A link: inline (`[text](url "title")`), reference (`[text][label]`) or autolink (`<url>`).
      *
      * @property destination the link destination, with escapes and character references resolved.
@@ -111,6 +134,8 @@ private fun StringBuilder.appendPlainText(inlines: Iterable<Inline>) {
             is Inline.Code -> append(inline.literal)
             is Inline.Emphasis -> appendPlainText(inline.children)
             is Inline.Strong -> appendPlainText(inline.children)
+            is Inline.Strikethrough -> appendPlainText(inline.children)
+            is Inline.FootnoteReference -> append(inline.number)
             is Inline.Link -> appendPlainText(inline.children)
             is Inline.Image -> appendPlainText(inline.children)
             is Inline.HtmlInline -> Unit

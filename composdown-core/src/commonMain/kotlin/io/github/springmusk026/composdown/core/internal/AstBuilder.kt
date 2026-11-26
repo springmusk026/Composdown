@@ -1,140 +1,216 @@
 package io.github.springmusk026.composdown.core.internal
 
+import io.github.springmusk026.composdown.core.MarkdownExtension
+import io.github.springmusk026.composdown.core.ast.AlertType
 import io.github.springmusk026.composdown.core.ast.Block
-import io.github.springmusk026.composdown.core.ast.Inline
+import io.github.springmusk026.composdown.core.ast.FootnoteDefinition
 import io.github.springmusk026.composdown.core.ast.ListItem
 import io.github.springmusk026.composdown.core.ast.ListKind
+import io.github.springmusk026.composdown.core.ast.MarkdownDocument
+import io.github.springmusk026.composdown.core.ast.TableCell
+import io.github.springmusk026.composdown.core.ast.TableRow
+import io.github.springmusk026.composdown.core.ast.TaskState
 import io.github.springmusk026.composdown.core.internal.block.BlockNode
 import io.github.springmusk026.composdown.core.internal.block.BlockQuoteNode
 import io.github.springmusk026.composdown.core.internal.block.CodeBlockNode
 import io.github.springmusk026.composdown.core.internal.block.DocumentNode
+import io.github.springmusk026.composdown.core.internal.block.FootnoteDefinitionNode
 import io.github.springmusk026.composdown.core.internal.block.HeadingNode
 import io.github.springmusk026.composdown.core.internal.block.HtmlBlockNode
 import io.github.springmusk026.composdown.core.internal.block.ItemNode
 import io.github.springmusk026.composdown.core.internal.block.ListNode
-import io.github.springmusk026.composdown.core.internal.block.MAX_NESTING_DEPTH
 import io.github.springmusk026.composdown.core.internal.block.ParagraphNode
+import io.github.springmusk026.composdown.core.internal.block.TableNode
 import io.github.springmusk026.composdown.core.internal.block.ThematicBreakNode
-import io.github.springmusk026.composdown.core.internal.inline.InlineNode
-import io.github.springmusk026.composdown.core.internal.inline.InlineParser
+import io.github.springmusk026.composdown.core.internal.inline.FootnoteRegistry
+import io.github.springmusk026.composdown.core.internal.text.isSpaceOrTab
+import io.github.springmusk026.composdown.core.internal.text.normalizeLinkLabel
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
 /**
- * Converts finalized [BlockNode]s into the immutable public model, parsing inline content on the way.
+ * Converts finalized [BlockNode]s into the immutable public model, parsing inline content on the
+ * way. Blocks are converted in document order, so footnotes are numbered in the order in which they
+ * are first referenced.
+ *
+ * @param footnotes the document's footnote definitions, or `null` if footnotes are disabled.
  */
 internal class AstBuilder(
-    private val inlineParser: InlineParser,
+    private val inlines: InlineConverter,
+    extensions: Set<MarkdownExtension>,
+    private val footnotes: FootnoteRegistry?,
 ) {
-    fun blocks(nodes: List<BlockNode>): ImmutableList<Block> = nodes.map(::block).toImmutableList()
+    private val taskLists = MarkdownExtension.TASK_LISTS in extensions
+    private val alerts = MarkdownExtension.ALERTS in extensions
 
-    fun block(node: BlockNode): Block =
+    /** Converted footnote definitions by normalized label; the first definition of a label wins. */
+    private val footnoteDefinitions = LinkedHashMap<String, Pair<String, ImmutableList<Block>>>()
+
+    fun document(root: DocumentNode): MarkdownDocument {
+        val blocks = blocks(root.children, topLevel = true)
+        val referenced =
+            footnoteDefinitions.values
+                .mapNotNull { (label, children) ->
+                    footnotes?.numberOf(label)?.let { number -> FootnoteDefinition(label, number, children) }
+                }.sortedBy { it.number }
+        return MarkdownDocument(blocks, referenced.toImmutableList())
+    }
+
+    private fun blocks(
+        nodes: List<BlockNode>,
+        topLevel: Boolean = false,
+    ): ImmutableList<Block> = nodes.mapNotNull { block(it, topLevel) }.toImmutableList()
+
+    /** Converts [node], or returns `null` for blocks that are not part of the block flow. */
+    private fun block(
+        node: BlockNode,
+        topLevel: Boolean,
+    ): Block? =
         when (node) {
-            is ParagraphNode -> Block.Paragraph(inlines(node.content.toString()))
-            is HeadingNode -> Block.Heading(node.level, inlines(node.content.toString()))
-            is ThematicBreakNode -> Block.ThematicBreak
-            is BlockQuoteNode -> Block.BlockQuote(blocks(node.children))
-            is ListNode -> list(node)
-            is CodeBlockNode -> Block.CodeBlock(node.literal, node.info, node.isFenced)
-            is HtmlBlockNode -> Block.HtmlBlock(node.literal)
-            is ItemNode, is DocumentNode -> error("${node::class.simpleName} is not a standalone block")
+            is ParagraphNode -> {
+                Block.Paragraph(inlines.convert(node.content.toString()))
+            }
+
+            is HeadingNode -> {
+                Block.Heading(node.level, inlines.convert(node.content.toString()))
+            }
+
+            is ThematicBreakNode -> {
+                Block.ThematicBreak
+            }
+
+            is BlockQuoteNode -> {
+                (if (alerts && topLevel) alert(node) else null)
+                    ?: Block.BlockQuote(blocks(node.children))
+            }
+
+            is ListNode -> {
+                list(node)
+            }
+
+            is CodeBlockNode -> {
+                Block.CodeBlock(node.literal, node.info, node.isFenced)
+            }
+
+            is HtmlBlockNode -> {
+                Block.HtmlBlock(node.literal)
+            }
+
+            is TableNode -> {
+                table(node)
+            }
+
+            is FootnoteDefinitionNode -> {
+                collectFootnote(node)
+                null
+            }
+
+            is ItemNode, is DocumentNode -> {
+                error("${node::class.simpleName} is not a standalone block")
+            }
         }
 
     private fun list(node: ListNode): Block.ListBlock {
         val data = node.data
         val kind =
             if (data.isOrdered) {
-                ListKind.Ordered(data.start, data.delimiter)
+                ListKind.Ordered(
+                    data.start,
+                    data.delimiter,
+                )
             } else {
                 ListKind.Bullet(data.bulletChar)
             }
-        val items = node.children.map { ListItem(blocks(it.children)) }.toImmutableList()
+        val items = node.children.map { listItem(it as ItemNode) }.toImmutableList()
         return Block.ListBlock(kind, node.isTight, items)
     }
 
-    private fun inlines(content: String): ImmutableList<Inline> = inlines(inlineParser.parse(content), depth = 0)
+    /** A task list item starts with `[ ]`, `[x]` or `[X]` followed by a space or tab. */
+    private fun listItem(node: ItemNode): ListItem {
+        val first = node.children.firstOrNull() as? ParagraphNode
+        val content = first?.content
+        val taskState = if (taskLists && content != null) taskStateOf(content) else null
+        if (taskState == null || content == null) return ListItem(blocks(node.children), null)
+
+        val text = content.substring(TASK_MARKER_LENGTH).trimStart(' ', '\t')
+        val rest = blocks(node.children.drop(1))
+        val children =
+            if (text.isBlank()) {
+                rest
+            } else {
+                (
+                    listOf(
+                        Block.Paragraph(inlines.convert(text)),
+                    ) + rest
+                ).toImmutableList()
+            }
+        return ListItem(children, taskState)
+    }
+
+    private fun taskStateOf(content: CharSequence): TaskState? {
+        if (content.length <= TASK_MARKER_LENGTH || !content[TASK_MARKER_LENGTH].isSpaceOrTab()) return null
+        return when (content.substring(0, TASK_MARKER_LENGTH)) {
+            "[ ]" -> TaskState.UNCHECKED
+            "[x]", "[X]" -> TaskState.CHECKED
+            else -> null
+        }
+    }
+
+    private fun table(node: TableNode): Block.Table {
+        val columns = node.alignments.size
+
+        fun row(cells: List<String>) =
+            TableRow(
+                List(columns) {
+                    TableCell(inlines.convert(cells.getOrElse(it) { "" }))
+                }.toImmutableList(),
+            )
+        return Block.Table(
+            node.alignments.toImmutableList(),
+            row(node.headerCells),
+            node.rows.map(::row).toImmutableList(),
+        )
+    }
 
     /**
-     * Converts the children of [parent]. At [MAX_NESTING_DEPTH], nested elements are flattened to
-     * their text, so that hostile input cannot produce trees deep enough to exhaust the stack.
+     * Converts a top-level block quote whose first line is `[!TYPE]` into an alert, or returns `null`
+     * if it is an ordinary block quote.
      */
-    private fun inlines(
-        parent: InlineNode,
-        depth: Int,
-    ): ImmutableList<Inline> {
-        if (parent.firstChild == null) return persistentListOf()
-        if (depth >= MAX_NESTING_DEPTH) return persistentListOf(Inline.Text(plainTextOf(parent)))
-        val result = ArrayList<Inline>()
-        val pendingText = StringBuilder()
-        var child = parent.firstChild
-        while (child != null) {
-            if (child.kind == InlineNode.Kind.TEXT) {
-                pendingText.append(child.literal)
+    private fun alert(node: BlockQuoteNode): Block.Alert? {
+        val first = node.children.firstOrNull() as? ParagraphNode ?: return null
+        val content = first.content
+        val lineEnd = content.indexOf('\n').let { if (it < 0) content.length else it }
+        val marker = content.substring(0, lineEnd).trimEnd(' ', '\t')
+        if (!marker.startsWith("[!") || !marker.endsWith("]")) return null
+        val type =
+            AlertType.entries.firstOrNull { it.name.equals(marker.substring(2, marker.length - 1), ignoreCase = true) }
+                ?: return null
+
+        val text = content.substring(minOf(lineEnd + 1, content.length))
+        val rest = blocks(node.children.drop(1))
+        val children =
+            if (text.isBlank()) {
+                rest
             } else {
-                flushText(pendingText, result)
-                result.add(inline(child, depth))
+                (
+                    listOf(
+                        Block.Paragraph(inlines.convert(text)),
+                    ) + rest
+                ).toImmutableList()
             }
-            child = child.next
-        }
-        flushText(pendingText, result)
-        return result.toImmutableList()
+        return Block.Alert(type, children)
     }
 
-    /** Adjacent text nodes are merged, and empty ones (fully consumed delimiter runs) dropped. */
-    private fun flushText(
-        pendingText: StringBuilder,
-        result: MutableList<Inline>,
-    ) {
-        if (pendingText.isNotEmpty()) {
-            result.add(Inline.Text(pendingText.toString()))
-            pendingText.clear()
-        }
+    private fun collectFootnote(node: FootnoteDefinitionNode) {
+        // Every definition is converted, in document order, so references inside it are numbered
+        // where they appear; only the first definition of a label is kept.
+        val children = blocks(node.children)
+        val key = normalizeLinkLabel(node.label)
+        if (key !in footnoteDefinitions) footnoteDefinitions[key] = node.label to children
     }
 
-    private fun inline(
-        node: InlineNode,
-        depth: Int,
-    ): Inline =
-        when (node.kind) {
-            InlineNode.Kind.CODE -> Inline.Code(node.literal)
-            InlineNode.Kind.EMPHASIS -> Inline.Emphasis(inlines(node, depth + 1))
-            InlineNode.Kind.STRONG -> Inline.Strong(inlines(node, depth + 1))
-            InlineNode.Kind.LINK -> Inline.Link(node.destination, node.title.nullIfEmpty(), inlines(node, depth + 1))
-            InlineNode.Kind.IMAGE -> Inline.Image(node.destination, node.title.nullIfEmpty(), inlines(node, depth + 1))
-            InlineNode.Kind.HTML -> Inline.HtmlInline(node.literal)
-            InlineNode.Kind.SOFT_BREAK -> Inline.SoftBreak
-            InlineNode.Kind.HARD_BREAK -> Inline.HardBreak
-            InlineNode.Kind.TEXT -> Inline.Text(node.literal)
-            InlineNode.Kind.ROOT -> error("The root node is not an inline element")
-        }
-
-    /** The text of all descendants of [root], collected without recursion. */
-    private fun plainTextOf(root: InlineNode): String {
-        val text = StringBuilder()
-        var node = root.firstChild
-        while (node != null && node !== root) {
-            when (node.kind) {
-                InlineNode.Kind.TEXT, InlineNode.Kind.CODE -> text.append(node.literal)
-                InlineNode.Kind.SOFT_BREAK, InlineNode.Kind.HARD_BREAK -> text.append('\n')
-                else -> Unit
-            }
-            node = node.firstChild ?: nextInPreOrder(node, root)
-        }
-        return text.toString()
+    private companion object {
+        /** Length of `[ ]`, `[x]` and `[X]`. */
+        const val TASK_MARKER_LENGTH = 3
     }
-
-    private fun nextInPreOrder(
-        node: InlineNode,
-        root: InlineNode,
-    ): InlineNode? {
-        var current: InlineNode? = node
-        while (current != null && current !== root) {
-            current.next?.let { return it }
-            current = current.parent
-        }
-        return null
-    }
-
-    private fun String?.nullIfEmpty(): String? = this?.takeIf { it.isNotEmpty() }
 }

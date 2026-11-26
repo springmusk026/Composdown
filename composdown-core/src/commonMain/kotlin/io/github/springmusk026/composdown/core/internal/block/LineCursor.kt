@@ -135,6 +135,15 @@ internal class LineCursor {
         partiallyConsumedTab = false
     }
 
+    /** Consumes `>` and one optional following space, if the line has a block quote marker here. */
+    fun consumeBlockQuoteMarker(): Boolean {
+        if (indented || charAt(nextNonspace) != '>') return false
+        advanceNextNonspace()
+        advanceChars(1)
+        if (charAt(offset).isSpaceOrTab()) advanceColumns(1)
+        return true
+    }
+
     /** Whether the line contains only spaces and tabs from [index] to its end. */
     fun isBlankFrom(index: Int): Boolean {
         for (i in index until line.length) {

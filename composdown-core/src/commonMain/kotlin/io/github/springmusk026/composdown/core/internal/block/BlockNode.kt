@@ -1,6 +1,23 @@
 package io.github.springmusk026.composdown.core.internal.block
 
+import io.github.springmusk026.composdown.core.ast.TableAlignment
+import io.github.springmusk026.composdown.core.internal.text.isSpaceOrTab
 import io.github.springmusk026.composdown.core.internal.text.unescapeString
+
+/** Columns of indentation for footnote content after the first line. */
+private const val FOOTNOTE_CONTENT_INDENT = 4
+
+/** How a line relates to an open block. */
+internal enum class ContinueResult {
+    /** The line continues the block; the cursor has consumed the block's markers or indentation. */
+    MATCHED,
+
+    /** The line does not continue the block, which will be closed. */
+    NOT_MATCHED,
+
+    /** The line ends the block and nothing else on it needs parsing (a closing code fence). */
+    LINE_CONSUMED,
+}
 
 /**
  * Mutable block tree used while parsing. Blocks are open while lines can still be added to them and
@@ -26,6 +43,12 @@ internal sealed class BlockNode {
     open val acceptsLines: Boolean get() = false
 
     abstract fun canContain(child: BlockNode): Boolean
+
+    /**
+     * Checks whether the cursor's line continues this open block and, if so, consumes the block's
+     * markers or indentation. The cursor's next non-space position has been computed.
+     */
+    abstract fun continueWith(cursor: LineCursor): ContinueResult
 
     fun appendChild(child: BlockNode) {
         child.parent = this
@@ -61,10 +84,15 @@ internal sealed class LeafBlockNode : BlockNode() {
 
 internal class DocumentNode : BlockNode() {
     override fun canContain(child: BlockNode): Boolean = child !is ItemNode
+
+    override fun continueWith(cursor: LineCursor): ContinueResult = ContinueResult.MATCHED
 }
 
 internal class BlockQuoteNode : BlockNode() {
     override fun canContain(child: BlockNode): Boolean = child !is ItemNode
+
+    override fun continueWith(cursor: LineCursor): ContinueResult =
+        if (cursor.consumeBlockQuoteMarker()) ContinueResult.MATCHED else ContinueResult.NOT_MATCHED
 }
 
 /** Details of a list marker, shared by a list and its items. */
@@ -113,6 +141,8 @@ internal class ListNode(
         first: BlockNode,
         second: BlockNode,
     ): Boolean = first.endLine != second.startLine - 1
+
+    override fun continueWith(cursor: LineCursor): ContinueResult = ContinueResult.MATCHED
 }
 
 internal class ItemNode(
@@ -124,17 +154,39 @@ internal class ItemNode(
     fun finalizeItem() {
         endLine = children.lastOrNull()?.endLine ?: startLine
     }
+
+    override fun continueWith(cursor: LineCursor): ContinueResult {
+        val contentIndent = data.markerOffset + data.padding
+        return when {
+            // An item can begin with at most one blank line.
+            cursor.blank && children.isEmpty() -> ContinueResult.NOT_MATCHED
+
+            cursor.blank -> ContinueResult.MATCHED.also { cursor.advanceNextNonspace() }
+
+            cursor.indent >= contentIndent -> ContinueResult.MATCHED.also { cursor.advanceColumns(contentIndent) }
+
+            else -> ContinueResult.NOT_MATCHED
+        }
+    }
 }
 
 internal class ParagraphNode : LeafBlockNode() {
     override val acceptsLines: Boolean get() = true
+
+    override fun continueWith(cursor: LineCursor): ContinueResult =
+        if (cursor.blank) ContinueResult.NOT_MATCHED else ContinueResult.MATCHED
 }
 
 internal class HeadingNode(
     val level: Int,
-) : LeafBlockNode()
+) : LeafBlockNode() {
+    /** Headings are always a single line. */
+    override fun continueWith(cursor: LineCursor): ContinueResult = ContinueResult.NOT_MATCHED
+}
 
-internal class ThematicBreakNode : LeafBlockNode()
+internal class ThematicBreakNode : LeafBlockNode() {
+    override fun continueWith(cursor: LineCursor): ContinueResult = ContinueResult.NOT_MATCHED
+}
 
 internal class CodeBlockNode(
     val isFenced: Boolean,
@@ -172,6 +224,32 @@ internal class CodeBlockNode(
             literal = content.substring(0, end)
         }
     }
+
+    override fun continueWith(cursor: LineCursor): ContinueResult {
+        if (!isFenced) {
+            return when {
+                cursor.indent >= CODE_INDENT -> ContinueResult.MATCHED.also { cursor.advanceColumns(CODE_INDENT) }
+                cursor.blank -> ContinueResult.MATCHED.also { cursor.advanceNextNonspace() }
+                else -> ContinueResult.NOT_MATCHED
+            }
+        }
+        if (isClosingFence(cursor)) return ContinueResult.LINE_CONSUMED
+        // Remove up to the opening fence's indentation from content lines.
+        var remaining = fenceOffset
+        while (remaining > 0 && cursor.charAt(cursor.offset).isSpaceOrTab()) {
+            cursor.advanceColumns(1)
+            remaining--
+        }
+        return ContinueResult.MATCHED
+    }
+
+    /** A closing fence uses the opening fence character, is at least as long, and has nothing after it. */
+    private fun isClosingFence(cursor: LineCursor): Boolean {
+        if (cursor.indented || cursor.charAt(cursor.nextNonspace) != fenceChar) return false
+        var end = cursor.nextNonspace
+        while (cursor.charAt(end) == fenceChar) end++
+        return end - cursor.nextNonspace >= fenceLength && cursor.isBlankFrom(end)
+    }
 }
 
 internal class HtmlBlockNode(
@@ -180,4 +258,68 @@ internal class HtmlBlockNode(
     override val acceptsLines: Boolean get() = true
 
     var literal: String = ""
+
+    override fun continueWith(cursor: LineCursor): ContinueResult =
+        if (cursor.blank && type.endsAtBlankLine) ContinueResult.NOT_MATCHED else ContinueResult.MATCHED
+}
+
+/**
+ * A GFM table. The header and alignments come from the line that started it; body rows are collected
+ * as lines and split into cells when the table is finalized.
+ */
+internal class TableNode(
+    val alignments: List<TableAlignment>,
+    val headerCells: List<String>,
+) : LeafBlockNode() {
+    override val acceptsLines: Boolean get() = true
+
+    var rows: List<List<String>> = emptyList()
+
+    fun finalizeTable() {
+        rows =
+            content
+                .split('\n')
+                .filter { it.isNotEmpty() }
+                .map { splitTableRow(it, 0) }
+    }
+
+    /** A row continues the table if it has at least one cell (so a blank line ends it). */
+    override fun continueWith(cursor: LineCursor): ContinueResult =
+        if (splitTableRow(
+                cursor.line,
+                cursor.nextNonspace,
+            ).isEmpty()
+        ) {
+            ContinueResult.NOT_MATCHED
+        } else {
+            ContinueResult.MATCHED
+        }
+}
+
+/**
+ * A footnote definition (`[^label]: content`). Like a list item, it contains blocks; continuation
+ * lines are indented by four columns.
+ */
+internal class FootnoteDefinitionNode(
+    val label: String,
+) : BlockNode() {
+    override fun canContain(child: BlockNode): Boolean = child !is ItemNode
+
+    /** Footnote content is indented by four columns; blank lines continue the definition. */
+    override fun continueWith(cursor: LineCursor): ContinueResult =
+        when {
+            cursor.blank -> {
+                ContinueResult.MATCHED.also { cursor.advanceNextNonspace() }
+            }
+
+            cursor.indent >= FOOTNOTE_CONTENT_INDENT -> {
+                ContinueResult.MATCHED.also {
+                    cursor.advanceColumns(FOOTNOTE_CONTENT_INDENT)
+                }
+            }
+
+            else -> {
+                ContinueResult.NOT_MATCHED
+            }
+        }
 }

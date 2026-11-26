@@ -1,13 +1,11 @@
 package io.github.springmusk026.composdown.core.internal.inline
 
+import io.github.springmusk026.composdown.core.MarkdownExtension
 import io.github.springmusk026.composdown.core.internal.text.charAtOrEnd
 import io.github.springmusk026.composdown.core.internal.text.codePointAt
 import io.github.springmusk026.composdown.core.internal.text.codePointBefore
-import io.github.springmusk026.composdown.core.internal.text.isAsciiAlphanumeric
 import io.github.springmusk026.composdown.core.internal.text.isAsciiLetter
 import io.github.springmusk026.composdown.core.internal.text.isAsciiPunctuation
-import io.github.springmusk026.composdown.core.internal.text.isUnicodePunctuation
-import io.github.springmusk026.composdown.core.internal.text.isUnicodeWhitespace
 import io.github.springmusk026.composdown.core.internal.text.matchCharacterReference
 import io.github.springmusk026.composdown.core.internal.text.normalizeLinkLabel
 
@@ -15,15 +13,22 @@ import io.github.springmusk026.composdown.core.internal.text.normalizeLinkLabel
 private const val MAX_REFERENCE_LABEL_LENGTH = 1001
 
 /**
- * Parses the inline content of a paragraph or heading into an [InlineNode] tree, following the
- * CommonMark algorithm: a single left-to-right pass that records emphasis delimiters and link
- * openers on stacks, resolving emphasis when a link closes and at the end of the content.
+ * Parses the inline content of a paragraph, heading or table cell into an [InlineNode] tree,
+ * following the CommonMark algorithm: a single left-to-right pass that records emphasis delimiters
+ * and link openers on stacks, resolving emphasis when a link closes and at the end of the content.
  *
  * An instance can be reused for any number of [parse] calls, but not concurrently.
+ *
+ * @param footnotes the footnote definitions of the document, or `null` if footnotes are disabled.
  */
 internal class InlineParser(
     private val references: LinkReferenceMap,
+    extensions: Set<MarkdownExtension>,
+    private val footnotes: FootnoteRegistry?,
 ) {
+    private val strikethrough = MarkdownExtension.STRIKETHROUGH in extensions
+    private val autolinks = MarkdownExtension.AUTOLINKS in extensions
+
     private var subject: String = ""
     private var pos = 0
     private var delimiters: Delimiter? = null
@@ -48,21 +53,38 @@ internal class InlineParser(
     }
 
     private fun parseInline(block: InlineNode) {
+        val c = subject[pos]
         val handled =
-            when (subject[pos]) {
-                '\n' -> parseNewline(block)
-                '\\' -> parseBackslash(block)
-                '`' -> parseBackticks(block)
-                '*', '_' -> handleDelimiter(subject[pos], block)
-                '[' -> parseOpenBracket(block)
-                '!' -> parseBang(block)
-                ']' -> parseCloseBracket(block)
-                '<' -> parseAutolink(block) || parseHtmlTag(block)
-                '&' -> parseEntity(block)
+            when {
+                c == '\n' -> parseNewline(block)
+
+                c == '\\' -> parseBackslash(block)
+
+                c == '`' -> parseBackticks(block)
+
+                c == '*' || c == '_' || (c == '~' && strikethrough) -> handleDelimiter(c, block)
+
+                c == '[' -> parseOpenBracket(block)
+
+                c == '!' -> parseBang(block)
+
+                c == ']' -> parseCloseBracket(block)
+
+                c == '<' -> parseAutolink(block) || parseHtmlTag(block)
+
+                c == '&' -> parseEntity(block)
+
+                // Extended autolinks are not recognized inside link text.
+                autolinks && brackets == null && c == ':' -> consumeAutolink(parseUrlAutolink(block, subject, pos))
+
+                autolinks && brackets == null && c == '@' -> consumeAutolink(parseEmailAutolink(block, subject, pos))
+
+                autolinks && brackets == null && c == 'w' -> consumeAutolink(parseWwwAutolink(block, subject, pos))
+
                 else -> parseString(block)
             }
         if (!handled) {
-            block.appendChild(text(subject[pos].toString()))
+            block.appendChild(text(c.toString()))
             pos++
         }
     }
@@ -71,15 +93,19 @@ internal class InlineParser(
 
     private fun parseString(block: InlineNode): Boolean {
         val start = pos
-        while (pos < subject.length && !subject[pos].isSpecial()) pos++
+        while (pos < subject.length && !isSpecial(pos)) pos++
         if (pos == start) return false
         block.appendChild(text(subject.substring(start, pos)))
         return true
     }
 
-    private fun Char.isSpecial(): Boolean =
-        when (this) {
+    /** Whether the character at [index] may start an inline construct, so plain text stops there. */
+    private fun isSpecial(index: Int): Boolean =
+        when (subject[index]) {
             '\n', '`', '[', ']', '\\', '!', '<', '&', '*', '_' -> true
+            '~' -> strikethrough
+            ':', '@' -> autolinks
+            'w' -> autolinks && ExtendedAutolinks.mayStartWwwAt(subject, index)
             else -> false
         }
 
@@ -152,6 +178,7 @@ internal class InlineParser(
             val delimiter = Delimiter(delimiterChar, count, node, run.canOpen, run.canClose, previous = delimiters)
             delimiters?.next = delimiter
             delimiters = delimiter
+            node.isActiveDelimiter = true
         }
         return true
     }
@@ -190,24 +217,28 @@ internal class InlineParser(
         pos++
         val afterBracket = pos
         val opener = brackets
-        if (opener == null) {
+        if (opener == null || !opener.active) {
             block.appendChild(text("]"))
-            return true
-        }
-        if (!opener.active) {
-            block.appendChild(text("]"))
-            brackets = opener.previous
+            if (opener != null) brackets = opener.previous
             return true
         }
 
         val target = parseInlineLinkTarget() ?: parseReferenceLinkTarget(opener, afterBracket)
-        if (target == null) {
+        if (target != null) {
+            closeLink(block, opener, target)
+        } else if (!parseFootnoteReference(block, opener, afterBracket)) {
             brackets = opener.previous
             pos = afterBracket
             block.appendChild(text("]"))
-            return true
         }
+        return true
+    }
 
+    private fun closeLink(
+        block: InlineNode,
+        opener: Bracket,
+        target: LinkReference,
+    ) {
         val link = InlineNode(if (opener.image) InlineNode.Kind.IMAGE else InlineNode.Kind.LINK)
         link.destination = target.destination
         link.title = target.title
@@ -230,7 +261,6 @@ internal class InlineParser(
                 earlier = earlier.previous
             }
         }
-        return true
     }
 
     /** Parses `(destination "title")` at [pos]. On success advances [pos] past `)`. */
@@ -285,6 +315,48 @@ internal class InlineParser(
         return reference
     }
 
+    /**
+     * Turns `[^label]` into a footnote reference, as cmark-gfm does when no link matched. A reference
+     * to an undefined footnote becomes the literal text `[^label]`. Returns false if the brackets do
+     * not hold a footnote label or footnotes are disabled.
+     */
+    private fun parseFootnoteReference(
+        block: InlineNode,
+        opener: Bracket,
+        afterBracket: Int,
+    ): Boolean {
+        val footnotes = footnotes ?: return false
+        val first = opener.node.next ?: return false
+        val isLabel =
+            first.kind == InlineNode.Kind.TEXT && first.literal.startsWith('^') &&
+                (first.literal.length > 1 || first.next != null)
+        if (!isLabel) return false
+
+        val rawLabel = subject.substring(opener.index + 2, afterBracket - 1)
+        processEmphasis(opener.previousDelimiter)
+        brackets = opener.previous
+        while (true) {
+            val node = opener.node.next ?: break
+            node.unlink()
+        }
+        opener.node.unlink()
+        // For `![^label]`, the `!` is plain text.
+        if (opener.image) block.appendChild(text("!"))
+        val reference = footnotes.reference(rawLabel)
+        if (reference != null) {
+            block.appendChild(
+                InlineNode(InlineNode.Kind.FOOTNOTE_REFERENCE, reference.first).also {
+                    it.number =
+                        reference.second
+                },
+            )
+        } else {
+            block.appendChild(text("[^$rawLabel]"))
+        }
+        pos = afterBracket
+        return true
+    }
+
     private fun parseAutolink(block: InlineNode): Boolean {
         val end = scanUriAutolink(subject, pos)
         val isEmail: Boolean
@@ -298,11 +370,15 @@ internal class InlineParser(
             isEmail = true
         }
         val address = subject.substring(pos + 1, linkEnd - 1)
-        val link = InlineNode(InlineNode.Kind.LINK)
-        link.destination = if (isEmail) "mailto:$address" else address
-        link.appendChild(text(address))
-        block.appendChild(link)
+        block.appendLink(if (isEmail) "mailto:$address" else address, address)
         pos = linkEnd
+        return true
+    }
+
+    /** Advances past an extended autolink that ends at [end], if one was found (`end >= 0`). */
+    private fun consumeAutolink(end: Int): Boolean {
+        if (end < 0) return false
+        pos = end
         return true
     }
 
@@ -327,8 +403,8 @@ internal class InlineParser(
     }
 
     /**
-     * Resolves emphasis between the delimiters above [stackBottom], then removes them from the stack.
-     * This is the "process emphasis" procedure from the CommonMark specification.
+     * Resolves emphasis and strikethrough between the delimiters above [stackBottom], then removes
+     * them from the stack. This is the "process emphasis" procedure from the CommonMark specification.
      */
     private fun processEmphasis(stackBottom: Delimiter?) {
         // Lower bounds for opener searches, per closer type, so failed searches are not repeated.
@@ -344,14 +420,21 @@ internal class InlineParser(
                 continue
             }
             val bottomIndex = openersBottomIndex(closer)
-            val opener = findOpener(closer, stackBottom, openersBottom[bottomIndex])
+            val opener = if (bottomIndex < 0) null else findOpener(closer, stackBottom, openersBottom[bottomIndex])
 
             val currentCloser: Delimiter = closer
             if (opener != null) {
-                closer = applyEmphasis(opener, currentCloser)
+                closer =
+                    if (currentCloser.char ==
+                        '~'
+                    ) {
+                        applyStrikethrough(opener, currentCloser)
+                    } else {
+                        applyEmphasis(opener, currentCloser)
+                    }
             } else {
                 closer = currentCloser.next
-                openersBottom[bottomIndex] = currentCloser.previous
+                if (bottomIndex >= 0) openersBottom[bottomIndex] = currentCloser.previous
                 // A closer that cannot open has no further use once no opener matched it.
                 if (!currentCloser.canOpen) removeDelimiter(currentCloser)
             }
@@ -361,9 +444,9 @@ internal class InlineParser(
     }
 
     /**
-     * Searches back from [closer] for the nearest delimiter that can open emphasis with it, stopping at
-     * [stackBottom] or [searchBottom]. Implements the "multiple of 3" rule for runs that can both open
-     * and close.
+     * Searches back from [closer] for the nearest delimiter that can open with it, stopping at
+     * [stackBottom] or [searchBottom]. Emphasis follows the "multiple of 3" rule for runs that can
+     * both open and close; strikethrough needs runs of equal length.
      */
     private fun findOpener(
         closer: Delimiter,
@@ -372,14 +455,22 @@ internal class InlineParser(
     ): Delimiter? {
         var opener = closer.previous
         while (opener != null && opener !== stackBottom && opener !== searchBottom) {
-            val oddMatch =
-                (closer.canOpen || opener.canClose) &&
-                    closer.originalCount % RUN_LENGTH_MODULUS != 0 &&
-                    (opener.originalCount + closer.originalCount) % RUN_LENGTH_MODULUS == 0
-            if (opener.char == closer.char && opener.canOpen && !oddMatch) return opener
+            if (opener.char == closer.char && opener.canOpen && canPair(opener, closer)) return opener
             opener = opener.previous
         }
         return null
+    }
+
+    private fun canPair(
+        opener: Delimiter,
+        closer: Delimiter,
+    ): Boolean {
+        if (closer.char == '~') return opener.count == closer.count
+        val oddMatch =
+            (closer.canOpen || opener.canClose) &&
+                closer.originalCount % RUN_LENGTH_MODULUS != 0 &&
+                (opener.originalCount + closer.originalCount) % RUN_LENGTH_MODULUS == 0
+        return !oddMatch
     }
 
     /** Wraps the nodes between [opener] and [closer] in emphasis; returns the next closer to process. */
@@ -393,20 +484,7 @@ internal class InlineParser(
         opener.node.literal = opener.node.literal.dropLast(used)
         closer.node.literal = closer.node.literal.dropLast(used)
 
-        val emphasis = InlineNode(if (used == 1) InlineNode.Kind.EMPHASIS else InlineNode.Kind.STRONG)
-        var child = opener.node.next
-        while (child != null && child !== closer.node) {
-            val next = child.next
-            emphasis.appendChild(child)
-            child = next
-        }
-        opener.node.insertAfter(emphasis)
-
-        // Delimiters between the opener and closer can no longer match anything.
-        if (opener.next !== closer) {
-            opener.next = closer
-            closer.previous = opener
-        }
+        wrapBetween(opener, closer, InlineNode(if (used == 1) InlineNode.Kind.EMPHASIS else InlineNode.Kind.STRONG))
         if (opener.count == 0) {
             opener.node.unlink()
             removeDelimiter(opener)
@@ -420,12 +498,64 @@ internal class InlineParser(
         return closer
     }
 
-    private fun openersBottomIndex(closer: Delimiter): Int {
-        val base = if (closer.char == '_') UNDERSCORE_SLOTS_START else ASTERISK_SLOTS_START
-        return base + (if (closer.canOpen) RUN_LENGTH_MODULUS else 0) + closer.originalCount % RUN_LENGTH_MODULUS
+    /** Wraps the nodes between [opener] and [closer] in strikethrough; both delimiters are consumed. */
+    private fun applyStrikethrough(
+        opener: Delimiter,
+        closer: Delimiter,
+    ): Delimiter? {
+        wrapBetween(opener, closer, InlineNode(InlineNode.Kind.STRIKETHROUGH))
+        opener.node.unlink()
+        removeDelimiter(opener)
+        closer.node.unlink()
+        val next = closer.next
+        removeDelimiter(closer)
+        return next
     }
 
+    /** Moves the nodes between the delimiters into [container], placed after the opener's node. */
+    private fun wrapBetween(
+        opener: Delimiter,
+        closer: Delimiter,
+        container: InlineNode,
+    ) {
+        var child = opener.node.next
+        while (child != null && child !== closer.node) {
+            val next = child.next
+            container.appendChild(child)
+            child = next
+        }
+        opener.node.insertAfter(container)
+
+        // Delimiters between the opener and closer can no longer match anything.
+        if (opener.next !== closer) {
+            var between = opener.next
+            while (between != null && between !== closer) {
+                between.node.isActiveDelimiter = false
+                between = between.next
+            }
+            opener.next = closer
+            closer.previous = opener
+        }
+    }
+
+    /**
+     * The slot in the openers-bottom table for this kind of closer, or -1 if the closer can never
+     * match (a strikethrough run longer than two tildes).
+     */
+    private fun openersBottomIndex(closer: Delimiter): Int =
+        when (closer.char) {
+            '~' -> {
+                if (closer.count <= 2) TILDE_SLOTS_START + closer.count - 1 else -1
+            }
+
+            else -> {
+                val base = if (closer.char == '_') UNDERSCORE_SLOTS_START else ASTERISK_SLOTS_START
+                base + (if (closer.canOpen) RUN_LENGTH_MODULUS else 0) + closer.originalCount % RUN_LENGTH_MODULUS
+            }
+        }
+
     private fun removeDelimiter(delimiter: Delimiter) {
+        delimiter.node.isActiveDelimiter = false
         delimiter.previous?.next = delimiter.next
         val next = delimiter.next
         if (next == null) {
@@ -465,10 +595,14 @@ internal class InlineParser(
         /** The "multiple of 3" rule: run lengths are compared modulo 3 when matching emphasis. */
         const val RUN_LENGTH_MODULUS = 3
 
-        /** Two closer characters, each with (can open: 2) x (length mod 3: 3) combinations. */
-        const val OPENERS_BOTTOM_SLOTS = 12
+        /**
+         * `_` and `*` closers each use 6 slots: (can open: 2) x (length mod 3: 3). `~` closers use one
+         * slot per run length (1 or 2), since only runs of equal length pair.
+         */
+        const val OPENERS_BOTTOM_SLOTS = 14
         const val UNDERSCORE_SLOTS_START = 0
         const val ASTERISK_SLOTS_START = 6
+        const val TILDE_SLOTS_START = 12
     }
 }
 

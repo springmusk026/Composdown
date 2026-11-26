@@ -1,29 +1,46 @@
 package io.github.springmusk026.composdown.core.html
 
 import io.github.springmusk026.composdown.core.ast.Block
+import io.github.springmusk026.composdown.core.ast.FootnoteDefinition
 import io.github.springmusk026.composdown.core.ast.Inline
 import io.github.springmusk026.composdown.core.ast.ListKind
 import io.github.springmusk026.composdown.core.ast.MarkdownDocument
+import io.github.springmusk026.composdown.core.ast.TableAlignment
+import io.github.springmusk026.composdown.core.ast.TableRow
+import io.github.springmusk026.composdown.core.ast.TaskState
 
 /**
- * Renders a [MarkdownDocument] to HTML exactly as the CommonMark reference implementations do, so
- * that parser output can be compared with the specification examples.
+ * Renders a [MarkdownDocument] to HTML exactly as the CommonMark reference implementations
+ * (commonmark.js, and cmark-gfm for GFM extensions) do, so that parser output can be compared with
+ * the specification examples.
  */
 internal object HtmlRenderer {
-    fun render(document: MarkdownDocument): String =
-        Writer().apply { blocks(document.blocks, tight = false) }.toString()
+    fun render(document: MarkdownDocument): String = Writer(document).render()
 
-    private class Writer {
+    private class Writer(
+        private val document: MarkdownDocument,
+    ) {
         private val out = StringBuilder()
 
-        override fun toString(): String = out.toString()
+        /** Total references per footnote label, for the back-references of each definition. */
+        private val referenceCounts = HashMap<String, Int>()
+
+        /** References rendered so far per footnote label, for unique reference ids. */
+        private val renderedReferences = HashMap<String, Int>()
+
+        fun render(): String {
+            countFootnoteReferences()
+            blocks(document.blocks, tight = false)
+            if (document.footnotes.isNotEmpty()) footnotes()
+            return out.toString()
+        }
 
         /** Starts a new line unless the output already ends with one (or is empty). */
         private fun cr() {
             if (out.isNotEmpty() && out.last() != '\n') out.append('\n')
         }
 
-        fun blocks(
+        private fun blocks(
             blocks: List<Block>,
             tight: Boolean,
         ) {
@@ -36,15 +53,7 @@ internal object HtmlRenderer {
         ) {
             when (block) {
                 is Block.Paragraph -> {
-                    if (tight) {
-                        inlines(block.content)
-                    } else {
-                        cr()
-                        out.append("<p>")
-                        inlines(block.content)
-                        out.append("</p>")
-                        cr()
-                    }
+                    paragraph(block, tight, suffix = null)
                 }
 
                 is Block.Heading -> {
@@ -56,19 +65,19 @@ internal object HtmlRenderer {
                 }
 
                 Block.ThematicBreak -> {
-                    cr()
-                    out.append("<hr />")
-                    cr()
+                    line("<hr />")
                 }
 
                 is Block.BlockQuote -> {
-                    cr()
-                    out.append("<blockquote>")
-                    cr()
-                    blocks(block.children, tight = false)
-                    cr()
-                    out.append("</blockquote>")
-                    cr()
+                    container("<blockquote>", "</blockquote>") { blocks(block.children, tight = false) }
+                }
+
+                is Block.Alert -> {
+                    val name = block.type.name.lowercase()
+                    container("<div class=\"markdown-alert markdown-alert-$name\">", "</div>") {
+                        line("<p class=\"markdown-alert-title\">${name.replaceFirstChar(Char::uppercaseChar)}</p>")
+                        blocks(block.children, tight = false)
+                    }
                 }
 
                 is Block.ListBlock -> {
@@ -76,44 +85,147 @@ internal object HtmlRenderer {
                 }
 
                 is Block.CodeBlock -> {
-                    cr()
-                    out.append("<pre><code")
-                    block.info?.split(' ', '\t', '\n')?.first()?.takeIf { it.isNotEmpty() }?.let {
-                        out.append(" class=\"language-").append(escape(it)).append('"')
-                    }
-                    out.append('>').append(escape(block.literal)).append("</code></pre>")
-                    cr()
+                    codeBlock(block)
                 }
 
                 is Block.HtmlBlock -> {
-                    cr()
-                    out.append(block.literal)
-                    cr()
+                    line(block.literal)
+                }
+
+                is Block.Table -> {
+                    table(block)
                 }
             }
         }
 
-        private fun list(list: Block.ListBlock) {
-            val tag = if (list.kind is ListKind.Ordered) "ol" else "ul"
+        private fun line(html: String) {
             cr()
-            out.append('<').append(tag)
-            val kind = list.kind
-            if (kind is ListKind.Ordered &&
-                kind.startNumber != 1
-            ) {
-                out.append(" start=\"").append(kind.startNumber).append('"')
+            out.append(html)
+            cr()
+        }
+
+        private inline fun container(
+            open: String,
+            close: String,
+            content: () -> Unit,
+        ) {
+            line(open)
+            content()
+            line(close)
+        }
+
+        /** Renders a paragraph, appending [suffix] (raw HTML) inside it if given. */
+        private fun paragraph(
+            paragraph: Block.Paragraph,
+            tight: Boolean,
+            suffix: String?,
+        ) {
+            if (!tight) {
+                cr()
+                out.append("<p>")
             }
-            out.append('>')
+            inlines(paragraph.content)
+            suffix?.let { out.append(' ').append(it) }
+            if (!tight) {
+                out.append("</p>")
+                cr()
+            }
+        }
+
+        private fun codeBlock(block: Block.CodeBlock) {
             cr()
+            out.append("<pre><code")
+            block.info?.split(' ', '\t', '\n')?.first()?.takeIf { it.isNotEmpty() }?.let {
+                out.append(" class=\"language-").append(escape(it)).append('"')
+            }
+            out.append('>').append(escape(block.literal)).append("</code></pre>")
+            cr()
+        }
+
+        private fun list(list: Block.ListBlock) {
+            val kind = list.kind
+            val tag = if (kind is ListKind.Ordered) "ol" else "ul"
+            val start = if (kind is ListKind.Ordered && kind.startNumber != 1) " start=\"${kind.startNumber}\"" else ""
+            line("<$tag$start>")
             for (item in list.items) {
                 out.append("<li>")
+                when (item.taskState) {
+                    TaskState.CHECKED -> out.append("<input type=\"checkbox\" checked=\"\" disabled=\"\" /> ")
+                    TaskState.UNCHECKED -> out.append("<input type=\"checkbox\" disabled=\"\" /> ")
+                    null -> Unit
+                }
                 blocks(item.children, tight = list.isTight)
                 out.append("</li>")
                 cr()
             }
-            cr()
-            out.append("</").append(tag).append('>')
-            cr()
+            line("</$tag>")
+        }
+
+        private fun table(table: Block.Table) {
+            line("<table>")
+            line("<thead>")
+            tableRow(table.header, "th", table.columns)
+            line("</thead>")
+            if (table.rows.isNotEmpty()) {
+                line("<tbody>")
+                for (row in table.rows) tableRow(row, "td", table.columns)
+                line("</tbody>")
+            }
+            line("</table>")
+        }
+
+        private fun tableRow(
+            row: TableRow,
+            tag: String,
+            columns: List<TableAlignment>,
+        ) {
+            line("<tr>")
+            row.cells.forEachIndexed { index, cell ->
+                out.append('<').append(tag)
+                when (columns[index]) {
+                    TableAlignment.LEFT -> out.append(" align=\"left\"")
+                    TableAlignment.CENTER -> out.append(" align=\"center\"")
+                    TableAlignment.RIGHT -> out.append(" align=\"right\"")
+                    TableAlignment.NONE -> Unit
+                }
+                out.append('>')
+                inlines(cell.content)
+                out.append("</").append(tag).append('>')
+                cr()
+            }
+            line("</tr>")
+        }
+
+        private fun footnotes() {
+            line("<section class=\"footnotes\" data-footnotes>")
+            line("<ol>")
+            for (footnote in document.footnotes) {
+                line("<li id=\"fn-${hrefEscape(footnote.label)}\">")
+                val backReferences = backReferences(footnote)
+                val last = footnote.children.lastOrNull()
+                if (last is Block.Paragraph) {
+                    blocks(footnote.children.dropLast(1), tight = false)
+                    paragraph(last, tight = false, suffix = backReferences)
+                } else {
+                    blocks(footnote.children, tight = false)
+                    line(backReferences)
+                }
+                line("</li>")
+            }
+            line("</ol>")
+            line("</section>")
+        }
+
+        private fun backReferences(footnote: FootnoteDefinition): String {
+            val label = hrefEscape(footnote.label)
+            val count = referenceCounts[footnote.label] ?: 1
+            return (1..count).joinToString(" ") { occurrence ->
+                val suffix = if (occurrence == 1) "" else "-$occurrence"
+                val index = "${footnote.number}$suffix"
+                val superscript = if (occurrence == 1) "" else "<sup class=\"footnote-ref\">$occurrence</sup>"
+                "<a href=\"#fnref-$label$suffix\" class=\"footnote-backref\" data-footnote-backref " +
+                    "data-footnote-backref-idx=\"$index\" aria-label=\"Back to reference $index\">↩$superscript</a>"
+            }
         }
 
         private fun inlines(inlines: List<Inline>) {
@@ -131,15 +243,15 @@ internal object HtmlRenderer {
                 }
 
                 is Inline.Emphasis -> {
-                    out.append("<em>")
-                    inlines(inline.children)
-                    out.append("</em>")
+                    wrap("em", inline.children)
                 }
 
                 is Inline.Strong -> {
-                    out.append("<strong>")
-                    inlines(inline.children)
-                    out.append("</strong>")
+                    wrap("strong", inline.children)
+                }
+
+                is Inline.Strikethrough -> {
+                    wrap("del", inline.children)
                 }
 
                 is Inline.Link -> {
@@ -158,6 +270,10 @@ internal object HtmlRenderer {
                     out.append(" />")
                 }
 
+                is Inline.FootnoteReference -> {
+                    footnoteReference(inline)
+                }
+
                 is Inline.HtmlInline -> {
                     out.append(inline.literal)
                 }
@@ -172,6 +288,26 @@ internal object HtmlRenderer {
             }
         }
 
+        private fun wrap(
+            tag: String,
+            children: List<Inline>,
+        ) {
+            out.append('<').append(tag).append('>')
+            inlines(children)
+            out.append("</").append(tag).append('>')
+        }
+
+        private fun footnoteReference(reference: Inline.FootnoteReference) {
+            val occurrence = (renderedReferences[reference.label] ?: 0) + 1
+            renderedReferences[reference.label] = occurrence
+            val label = hrefEscape(reference.label)
+            val id = if (occurrence == 1) "fnref-$label" else "fnref-$label-$occurrence"
+            out
+                .append("<sup class=\"footnote-ref\"><a href=\"#fn-$label\" id=\"$id\" data-footnote-ref>")
+                .append(reference.number)
+                .append("</a></sup>")
+        }
+
         /** Image descriptions are rendered as text only, without tags. */
         private fun altText(inlines: List<Inline>) {
             for (inline in inlines) {
@@ -180,14 +316,53 @@ internal object HtmlRenderer {
                     is Inline.Code -> out.append(escape(inline.literal))
                     is Inline.Emphasis -> altText(inline.children)
                     is Inline.Strong -> altText(inline.children)
+                    is Inline.Strikethrough -> altText(inline.children)
                     is Inline.Link -> altText(inline.children)
                     is Inline.Image -> altText(inline.children)
+                    is Inline.FootnoteReference -> out.append(inline.number)
                     is Inline.HtmlInline -> out.append(inline.literal)
                     Inline.SoftBreak, Inline.HardBreak -> out.append('\n')
                 }
             }
         }
+
+        private fun countFootnoteReferences() {
+            val pending = ArrayDeque<Any>()
+            pending.addAll(document.blocks)
+            document.footnotes.forEach { pending.addAll(it.children) }
+            while (pending.isNotEmpty()) {
+                when (val node = pending.removeFirst()) {
+                    is Inline.FootnoteReference -> referenceCounts[node.label] = (referenceCounts[node.label] ?: 0) + 1
+                    is Block -> pending.addAll(node.childrenForCounting())
+                    is Inline -> pending.addAll(node.childrenForCounting())
+                }
+            }
+        }
+
+        private fun Block.childrenForCounting(): List<Any> =
+            when (this) {
+                is Block.Paragraph -> content
+                is Block.Heading -> content
+                is Block.BlockQuote -> children
+                is Block.Alert -> children
+                is Block.ListBlock -> items.flatMap { it.children }
+                is Block.Table -> (listOf(header) + rows).flatMap { row -> row.cells.flatMap { it.content } }
+                Block.ThematicBreak, is Block.CodeBlock, is Block.HtmlBlock -> emptyList()
+            }
+
+        private fun Inline.childrenForCounting(): List<Any> =
+            when (this) {
+                is Inline.Emphasis -> children
+                is Inline.Strong -> children
+                is Inline.Strikethrough -> children
+                is Inline.Link -> children
+                is Inline.Image -> children
+                else -> emptyList()
+            }
     }
+
+    /** Escapes a footnote label for use in an `href` or `id` attribute, as cmark-gfm does. */
+    fun hrefEscape(label: String): String = escape(normalizeUri(label))
 
     fun escape(text: String): String {
         if (text.none { it in "&<>\"" }) return text

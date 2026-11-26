@@ -55,6 +55,7 @@ without further configuration is safe.
 | **Stack exhaustion** through deep nesting | Nesting deeper than 100 levels is flattened. |
 | **Crashes** on malformed input | Every string is valid Markdown; the parser has no failure path for any input, verified by fuzzing in the streaming tests. |
 | **Unsafe HTML output** from `toHtml()` | Raw HTML is escaped and `javascript:`, `vbscript:`, `file:` and non-image `data:` destinations are removed unless the application opts out (`HtmlOptions.CommonMark`). |
+| **DOM clobbering** through heading ids (`toHtml(HtmlOptions(headingIds = true))`) | Heading ids are off by default; when enabled for untrusted Markdown, set `headingIdPrefix` (for example `"user-content-"`, as GitHub does) so that content cannot choose ids used by the page. |
 | **Invalid characters** | Null and invalid code points in character references are replaced with U+FFFD. |
 
 The parser does no I/O, evaluates no expressions, and has no dependency other than the Kotlin standard

@@ -39,8 +39,8 @@ public fun MarkdownDocument.allInlines(): Sequence<Inline> =
  * @property level the heading level, 1 to 6.
  * @property text the heading's text without formatting.
  * @property anchor an identifier for links to the heading (`#anchor`), computed as GitHub does: the
- *   text in lower case, without punctuation, with spaces replaced by hyphens, and with `-1`, `-2`,
- *   ... appended to repeated anchors.
+ *   text in lower case (image descriptions excluded), without punctuation and emoji, with spaces
+ *   replaced by hyphens, and with `-1`, `-2`, ... appended to repeated anchors.
  * @property block the heading block.
  */
 @Poko
@@ -53,7 +53,8 @@ public class DocumentHeading internal constructor(
 
 /**
  * The headings of this document in document order, including those inside block quotes, alerts and
- * lists, with GitHub-compatible anchors. Use it to build a table of contents, or to resolve links
+ * lists, followed by those inside [footnotes][MarkdownDocument.footnotes], with GitHub-compatible
+ * anchors. Use it to build a table of contents, or to resolve links
  * such as `[Installation](#installation)`.
  *
  * ```
@@ -64,13 +65,15 @@ public class DocumentHeading internal constructor(
  */
 public fun MarkdownDocument.headings(): List<DocumentHeading> {
     val anchors = AnchorGenerator()
-    return blocks
-        .asSequence()
-        .flatMap { block -> sequence { yieldBlock(block) } }
+    return allBlocks()
         .filterIsInstance<Block.Heading>()
         .map { heading ->
-            val text = heading.content.plainText()
-            DocumentHeading(heading.level, text, anchors.next(text), heading)
+            DocumentHeading(
+                heading.level,
+                heading.content.plainText(),
+                anchors.next(heading.content.anchorText()),
+                heading,
+            )
         }.toList()
 }
 
@@ -122,6 +125,24 @@ private suspend fun SequenceScope<Inline>.yieldInline(inline: Inline) {
     }
 }
 
+/** The text a heading's anchor is made from: its plain text without image descriptions. */
+private fun List<Inline>.anchorText(): String =
+    buildString {
+        fun visit(inlines: List<Inline>) {
+            for (inline in inlines) {
+                when (inline) {
+                    is Inline.Image -> Unit
+                    is Inline.Emphasis -> visit(inline.children)
+                    is Inline.Strong -> visit(inline.children)
+                    is Inline.Strikethrough -> visit(inline.children)
+                    is Inline.Link -> visit(inline.children)
+                    else -> append(listOf(inline).plainText())
+                }
+            }
+        }
+        visit(this@anchorText)
+    }
+
 /** The inline content held directly by this block: one list per paragraph, heading or table cell. */
 private fun Block.inlineContent(): List<List<Inline>> =
     when (this) {
@@ -159,7 +180,11 @@ private fun Block.plainText(): String? =
         }
 
         is Block.ListBlock -> {
-            items.joinToString("\n") { item -> item.children.plainText(separator = "\n") }
+            items
+                .map { item ->
+                    item.children.plainText(separator = "\n")
+                }.filter { it.isNotEmpty() }
+                .joinToString("\n")
         }
 
         is Block.Table -> {
@@ -204,16 +229,52 @@ private class AnchorGenerator {
 
     private fun slug(text: String): String =
         buildString {
-            for (c in text.lowercase()) {
+            val lower = text.lowercase()
+            var i = 0
+            while (i < lower.length) {
+                val c = lower[i]
+                if (c.isHighSurrogate() && i + 1 < lower.length && lower[i + 1].isLowSurrogate()) {
+                    // Letters and digits outside the Basic Multilingual Plane are kept; emoji and other
+                    // symbols there are removed, as GitHub does.
+                    if (!isSupplementarySymbol(c, lower[i + 1])) append(lower, i, i + 2)
+                    i += 2
+                    continue
+                }
                 when {
                     c == ' ' -> append('-')
-                    c.isLetterOrDigit() || c == '_' || c == '-' || c.category in MARKS -> append(c)
+                    c == '-' || c.isLetterOrDigit() || c.category in KEPT_CATEGORIES -> append(c)
                 }
+                i++
             }
         }
 
+    private fun isSupplementarySymbol(
+        high: Char,
+        low: Char,
+    ): Boolean {
+        val codePoint =
+            SUPPLEMENTARY_BASE + ((high.code - HIGH_SURROGATE_START) shl SURROGATE_BITS) +
+                (low.code - LOW_SURROGATE_START)
+        return SUPPLEMENTARY_SYMBOLS.any { codePoint in it }
+    }
+
     private companion object {
-        val MARKS =
-            setOf(CharCategory.NON_SPACING_MARK, CharCategory.COMBINING_SPACING_MARK, CharCategory.ENCLOSING_MARK)
+        /** Categories kept besides letters and digits: marks, connector punctuation and letter numbers. */
+        val KEPT_CATEGORIES =
+            setOf(
+                CharCategory.NON_SPACING_MARK,
+                CharCategory.COMBINING_SPACING_MARK,
+                CharCategory.ENCLOSING_MARK,
+                CharCategory.CONNECTOR_PUNCTUATION,
+                CharCategory.LETTER_NUMBER,
+            )
+
+        /** Emoji, pictographs, playing cards, mahjong and domino tiles, and tag characters. */
+        val SUPPLEMENTARY_SYMBOLS = listOf(0x1F000..0x1FAFF, 0xE0000..0xE007F)
+
+        const val SUPPLEMENTARY_BASE = 0x10000
+        const val HIGH_SURROGATE_START = 0xD800
+        const val LOW_SURROGATE_START = 0xDC00
+        const val SURROGATE_BITS = 10
     }
 }

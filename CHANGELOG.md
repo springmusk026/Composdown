@@ -65,6 +65,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `MarkdownDocument.toHtml()` renders HTML: safe for untrusted input by default (raw HTML escaped,
   dangerous link schemes removed), with options for raw HTML, heading ids and soft breaks, and
   `HtmlOptions.CommonMark` for output identical to the reference implementations.
+- `HtmlOptions.headingIdPrefix` to namespace heading ids in pages that show untrusted Markdown.
 - `MarkdownDocument.headings()` with GitHub-compatible anchors, `plainText()` for whole documents, and
   `allBlocks()` and `allInlines()` to traverse every node of a document.
 - Links to a heading of the document (`[Installation](#installation)`) scroll to it in `Composdown`.
@@ -75,6 +76,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `toHtml(HtmlOptions(headingIds = true))` threw when a footnote contained a heading; `headings()`
+  now includes headings in footnotes.
+- Heading anchors ignored letters outside the Basic Multilingual Plane and included image
+  descriptions; they now match GitHub's.
+- `plainText()` produced blank lines for empty list items.
+- Footnote references inside image descriptions produced back-links to reference ids that are not
+  written.
 - Right-to-left paragraphs and headings were placed at the left edge when the layout direction was
   left to right; they now end at the right edge.
 - Right-aligned and centered table columns rendered their cells left-aligned when the column was wider

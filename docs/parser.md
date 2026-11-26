@@ -130,6 +130,7 @@ val forDocsSite = document.toHtml(HtmlOptions(headingIds = true, softBreak = "<b
 | `rawHtml` | `RawHtml.ESCAPE` | Raw HTML in the Markdown is escaped (`ESCAPE`), left out (`OMIT`), or passed through (`ALLOW`) |
 | `safeLinks` | `true` | Removes `javascript:`, `vbscript:`, `file:` and non-image `data:` destinations |
 | `headingIds` | `false` | Adds GitHub-compatible `id` attributes to headings |
+| `headingIdPrefix` | `""` | Text before each heading id, such as `"user-content-"` as GitHub uses. Set it when embedding untrusted Markdown in a page, so that headings cannot take over the page's own ids (DOM clobbering) |
 | `softBreak` | `"\n"` | The HTML written for a soft line break |
 
 The defaults are safe for untrusted Markdown. `HtmlOptions.CommonMark` reproduces the reference

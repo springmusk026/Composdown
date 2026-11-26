@@ -16,6 +16,9 @@ import io.github.springmusk026.composdown.core.internal.Poko
  * @property headingIds whether to give headings an `id` attribute with their
  *   [anchor][io.github.springmusk026.composdown.core.ast.DocumentHeading.anchor], so that `#anchor`
  *   links work as on GitHub.
+ * @property headingIdPrefix text put before each heading id, such as `"user-content-"` as GitHub does.
+ *   Without a prefix, untrusted Markdown chooses element ids in the page, which can collide with the
+ *   page's own ids (and with footnote ids) or shadow global variables in scripts (DOM clobbering).
  * @property softBreak the HTML written for a soft line break: a line feed by default (displayed as a
  *   space by browsers), or for example `<br />` to keep the source's line breaks.
  */
@@ -24,6 +27,7 @@ public class HtmlOptions(
     public val rawHtml: RawHtml = RawHtml.ESCAPE,
     public val safeLinks: Boolean = true,
     public val headingIds: Boolean = false,
+    public val headingIdPrefix: String = "",
     public val softBreak: String = "\n",
 ) {
     /** Predefined options. */

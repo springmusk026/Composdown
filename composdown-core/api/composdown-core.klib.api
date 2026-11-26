@@ -402,8 +402,10 @@ final class io.github.springmusk026.composdown.core.ast/TableRow { // io.github.
 }
 
 final class io.github.springmusk026.composdown.core.html/HtmlOptions { // io.github.springmusk026.composdown.core.html/HtmlOptions|null[0]
-    constructor <init>(io.github.springmusk026.composdown.core.html/RawHtml = ..., kotlin/Boolean = ..., kotlin/Boolean = ..., kotlin/String = ...) // io.github.springmusk026.composdown.core.html/HtmlOptions.<init>|<init>(io.github.springmusk026.composdown.core.html.RawHtml;kotlin.Boolean;kotlin.Boolean;kotlin.String){}[0]
+    constructor <init>(io.github.springmusk026.composdown.core.html/RawHtml = ..., kotlin/Boolean = ..., kotlin/Boolean = ..., kotlin/String = ..., kotlin/String = ...) // io.github.springmusk026.composdown.core.html/HtmlOptions.<init>|<init>(io.github.springmusk026.composdown.core.html.RawHtml;kotlin.Boolean;kotlin.Boolean;kotlin.String;kotlin.String){}[0]
 
+    final val headingIdPrefix // io.github.springmusk026.composdown.core.html/HtmlOptions.headingIdPrefix|{}headingIdPrefix[0]
+        final fun <get-headingIdPrefix>(): kotlin/String // io.github.springmusk026.composdown.core.html/HtmlOptions.headingIdPrefix.<get-headingIdPrefix>|<get-headingIdPrefix>(){}[0]
     final val headingIds // io.github.springmusk026.composdown.core.html/HtmlOptions.headingIds|{}headingIds[0]
         final fun <get-headingIds>(): kotlin/Boolean // io.github.springmusk026.composdown.core.html/HtmlOptions.headingIds.<get-headingIds>|<get-headingIds>(){}[0]
     final val rawHtml // io.github.springmusk026.composdown.core.html/HtmlOptions.rawHtml|{}rawHtml[0]

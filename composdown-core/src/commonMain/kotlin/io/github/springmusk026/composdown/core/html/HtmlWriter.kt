@@ -62,7 +62,7 @@ internal class HtmlWriter(
             is Block.Heading -> {
                 cr()
                 out.append("<h").append(block.level)
-                anchors?.next()?.let { out.append(" id=\"").append(escape(it)).append('"') }
+                anchors?.next()?.let { out.append(" id=\"").append(escape(options.headingIdPrefix + it)).append('"') }
                 out.append('>')
                 inlines(block.content)
                 out.append("</h").append(block.level).append('>')
@@ -409,10 +409,14 @@ internal class HtmlWriter(
     private fun Inline.childrenForCounting(): List<Any> =
         when (this) {
             is Inline.Emphasis -> children
+
             is Inline.Strong -> children
+
             is Inline.Strikethrough -> children
+
             is Inline.Link -> children
-            is Inline.Image -> children
+
+            // Image descriptions are written as plain text, without reference ids to link back to.
             else -> emptyList()
         }
 

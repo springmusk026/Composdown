@@ -16,7 +16,7 @@ font size settings.
 |---|---|
 | Headings | Marked as headings, so screen reader users can navigate by heading |
 | Links | Focusable and activatable; announced as links |
-| Task list items | Expose checked or unchecked state |
+| Task list items | Expose checked or unchecked state, announced by the platform in the user's language |
 | Bullets | Decorative: drawn, but hidden from assistive technologies |
 | Ordered list numbers | Read as text |
 | Tables | Expose collection semantics: number of rows and columns, and each cell's position |
@@ -39,6 +39,9 @@ follows the Unicode bidirectional algorithm.
 
 ## Responsibilities of the application
 
+- **Localization.** Alert titles and the footnote back-link label default to English. Translate them
+  with `ComposdownDefaults.theme(strings = ComposdownDefaults.strings(...))`.
+
 - **Color contrast.** The default colors come from your Material color scheme. If you override colors,
   verify that text, links and code meet WCAG contrast (4.5:1 for body text).
 - **Custom components.** Components you supply through `ComposdownComponents` must provide their own
@@ -54,7 +57,6 @@ follows the Unicode bidirectional algorithm.
 
 ## Known limitations
 
-- The checked and unchecked state descriptions of task items are in English.
 - Math is exposed as its TeX source, which screen readers read character by character. A `mathBlock`
   component that typesets formulas should also provide a spoken description.
 - Raw HTML is exposed as its source text.

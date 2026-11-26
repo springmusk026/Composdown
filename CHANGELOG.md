@@ -65,6 +65,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `MarkdownDocument.toHtml()` renders HTML: safe for untrusted input by default (raw HTML escaped,
   dangerous link schemes removed), with options for raw HTML, heading ids and soft breaks, and
   `HtmlOptions.CommonMark` for output identical to the reference implementations.
+- `ComposdownStrings` (`ComposdownDefaults.strings`) to localize alert titles and the footnote back
+  link label.
 - `HtmlOptions.headingIdPrefix` to namespace heading ids in pages that show untrusted Markdown.
 - `MarkdownDocument.headings()` with GitHub-compatible anchors, `plainText()` for whole documents, and
   `allBlocks()` and `allInlines()` to traverse every node of a document.
@@ -76,6 +78,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `ComposdownState` parsed every queued chunk separately; chunks that arrive while a parse runs are
+  now combined into one update, as documented. Text sent after its scope is cancelled is dropped
+  instead of being buffered forever.
+- `CoilImageRenderer` stretched small images to the full width; images are now no wider than their
+  natural size. A zero-width image or a non-positive `placeholderAspectRatio` no longer crashes, and
+  failed images no longer announce their description twice.
+- `ComposdownColors.blockQuoteText` had no effect; it now colors text inside block quotes.
+- Task list items announced "Checked" and "Not checked" in English; the platform now announces the
+  state in the user's language.
+- Items of `composdownItems` recomposed on every streamed update although their configuration was
+  unchanged.
 - `toHtml(HtmlOptions(headingIds = true))` threw when a footnote contained a heading; `headings()`
   now includes headings in footnotes.
 - Heading anchors ignored letters outside the Basic Multilingual Plane and included image

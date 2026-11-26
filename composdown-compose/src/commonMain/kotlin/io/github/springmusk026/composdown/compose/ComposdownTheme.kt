@@ -19,7 +19,7 @@ import io.github.springmusk026.composdown.core.MarkdownExtension
 import io.github.springmusk026.composdown.core.ast.AlertType
 
 /**
- * The visual style of rendered Markdown: [colors], [typography] and [spacing].
+ * The style of rendered Markdown: [colors], [typography], [spacing], and the [strings] Composdown adds.
  *
  * Create one with [ComposdownDefaults.theme], which derives every value from the current
  * [MaterialTheme], and override what you need.
@@ -33,6 +33,8 @@ public class ComposdownTheme internal constructor(
     public val typography: ComposdownTypography,
     /** Spacing between and inside rendered elements. */
     public val spacing: ComposdownSpacing,
+    /** Text that Composdown adds to documents, such as alert titles, for localization. */
+    public val strings: ComposdownStrings,
 )
 
 /** Colors of rendered Markdown elements. Create with [ComposdownDefaults.colors]. */
@@ -59,7 +61,7 @@ public class ComposdownColors internal constructor(
     public val tableHeaderBackground: Color,
     /** List bullets and numbers. */
     public val listMarker: Color,
-    /** Accent color of each kind of alert (bar, icon and title). */
+    /** Accent color of each kind of alert (bar and title). */
     public val alerts: Map<AlertType, Color>,
 )
 
@@ -122,6 +124,19 @@ public class ComposdownSpacing internal constructor(
     public val tableCellPadding: Dp,
 )
 
+/**
+ * Text that Composdown adds to rendered documents. The defaults are English; supply translations to
+ * localize them. Create with [ComposdownDefaults.strings].
+ */
+@Immutable
+@Poko
+public class ComposdownStrings internal constructor(
+    /** The title shown at the top of each kind of alert. */
+    public val alertTitles: Map<AlertType, String>,
+    /** The accessibility label of a footnote's link back to its reference, followed by its number. */
+    public val backToReference: String,
+)
+
 /** Default values for Composdown, derived from [MaterialTheme]. */
 public object ComposdownDefaults {
     /**
@@ -140,7 +155,21 @@ public object ComposdownDefaults {
         colors: ComposdownColors = colors(),
         typography: ComposdownTypography = typography(),
         spacing: ComposdownSpacing = spacing(),
-    ): ComposdownTheme = ComposdownTheme(colors, typography, spacing)
+        strings: ComposdownStrings = strings(),
+    ): ComposdownTheme = ComposdownTheme(colors, typography, spacing, strings)
+
+    /** English strings; any of them can be replaced. */
+    public fun strings(
+        alertTitles: Map<AlertType, String> =
+            mapOf(
+                AlertType.NOTE to "Note",
+                AlertType.TIP to "Tip",
+                AlertType.IMPORTANT to "Important",
+                AlertType.WARNING to "Warning",
+                AlertType.CAUTION to "Caution",
+            ),
+        backToReference: String = "Back to reference",
+    ): ComposdownStrings = ComposdownStrings(alertTitles, backToReference)
 
     /** Colors from the current [MaterialTheme.colorScheme]; any of them can be replaced. */
     @Composable

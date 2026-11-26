@@ -67,6 +67,30 @@ Composdown(markdown = markdown, theme = theme)
 Text styles for prose use `TextDirection.Content`, so right-to-left paragraphs align correctly. Keep
 that when you supply your own styles: `myStyle.copy(textDirection = TextDirection.Content)`.
 
+### Strings (`ComposdownDefaults.strings`)
+
+Text that Composdown adds to documents, in English by default:
+
+```kotlin
+val theme = ComposdownDefaults.theme(
+    strings = ComposdownDefaults.strings(
+        alertTitles = mapOf(
+            AlertType.NOTE to "Hinweis",
+            AlertType.TIP to "Tipp",
+            AlertType.IMPORTANT to "Wichtig",
+            AlertType.WARNING to "Warnung",
+            AlertType.CAUTION to "Vorsicht",
+        ),
+        backToReference = "Zurück zum Verweis",
+    ),
+)
+```
+
+| Value | Default | Used for |
+|---|---|---|
+| `alertTitles` | Note, Tip, Important, Warning, Caution | The title of each kind of alert |
+| `backToReference` | Back to reference | The accessibility label of a footnote's back link, followed by its number |
+
 ### Spacing (`ComposdownDefaults.spacing`)
 
 | Value | Default |

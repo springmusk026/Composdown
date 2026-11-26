@@ -67,7 +67,9 @@ public final class io/github/springmusk026/composdown/compose/ComposdownDefaults
 	public final fun getExtensions ()Ljava/util/Set;
 	public final fun spacing-oRJhP44 (FFFFFFF)Lio/github/springmusk026/composdown/compose/ComposdownSpacing;
 	public static synthetic fun spacing-oRJhP44$default (Lio/github/springmusk026/composdown/compose/ComposdownDefaults;FFFFFFFILjava/lang/Object;)Lio/github/springmusk026/composdown/compose/ComposdownSpacing;
-	public final fun theme (Lio/github/springmusk026/composdown/compose/ComposdownColors;Lio/github/springmusk026/composdown/compose/ComposdownTypography;Lio/github/springmusk026/composdown/compose/ComposdownSpacing;Landroidx/compose/runtime/Composer;II)Lio/github/springmusk026/composdown/compose/ComposdownTheme;
+	public final fun strings (Ljava/util/Map;Ljava/lang/String;)Lio/github/springmusk026/composdown/compose/ComposdownStrings;
+	public static synthetic fun strings$default (Lio/github/springmusk026/composdown/compose/ComposdownDefaults;Ljava/util/Map;Ljava/lang/String;ILjava/lang/Object;)Lio/github/springmusk026/composdown/compose/ComposdownStrings;
+	public final fun theme (Lio/github/springmusk026/composdown/compose/ComposdownColors;Lio/github/springmusk026/composdown/compose/ComposdownTypography;Lio/github/springmusk026/composdown/compose/ComposdownSpacing;Lio/github/springmusk026/composdown/compose/ComposdownStrings;Landroidx/compose/runtime/Composer;II)Lio/github/springmusk026/composdown/compose/ComposdownTheme;
 	public final fun typography (Landroidx/compose/ui/text/TextStyle;Ljava/util/List;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/SpanStyle;Landroidx/compose/ui/text/SpanStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/SpanStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/runtime/Composer;III)Lio/github/springmusk026/composdown/compose/ComposdownTypography;
 }
 
@@ -108,11 +110,21 @@ public final class io/github/springmusk026/composdown/compose/ComposdownStateKt 
 	public static final fun rememberComposdownState (Ljava/lang/String;Ljava/util/Set;Lio/github/springmusk026/composdown/core/StreamingPolicy;Landroidx/compose/runtime/Composer;II)Lio/github/springmusk026/composdown/compose/ComposdownState;
 }
 
+public final class io/github/springmusk026/composdown/compose/ComposdownStrings {
+	public static final field $stable I
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAlertTitles ()Ljava/util/Map;
+	public final fun getBackToReference ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
 public final class io/github/springmusk026/composdown/compose/ComposdownTheme {
 	public static final field $stable I
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getColors ()Lio/github/springmusk026/composdown/compose/ComposdownColors;
 	public final fun getSpacing ()Lio/github/springmusk026/composdown/compose/ComposdownSpacing;
+	public final fun getStrings ()Lio/github/springmusk026/composdown/compose/ComposdownStrings;
 	public final fun getTypography ()Lio/github/springmusk026/composdown/compose/ComposdownTypography;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;

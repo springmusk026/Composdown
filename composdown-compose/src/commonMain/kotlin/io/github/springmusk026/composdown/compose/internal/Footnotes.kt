@@ -88,7 +88,7 @@ private fun BackToReference(
         modifier =
             Modifier.padding(start = theme.spacing.tightListItem).semantics {
                 contentDescription =
-                    "Back to reference $number"
+                    "${theme.strings.backToReference} $number"
             },
         style = theme.typography.footnote,
     )

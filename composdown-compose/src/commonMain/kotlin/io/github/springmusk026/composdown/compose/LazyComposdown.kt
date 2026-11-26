@@ -4,6 +4,7 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import io.github.springmusk026.composdown.compose.internal.Footnotes
+import io.github.springmusk026.composdown.compose.internal.Poko
 import io.github.springmusk026.composdown.core.ast.Block
 import io.github.springmusk026.composdown.core.ast.MarkdownDocument
 
@@ -56,7 +57,11 @@ public fun LazyListScope.composdownItems(
     }
 }
 
-/** The configuration shared by all items of one document. */
+/**
+ * The configuration shared by all items of one document. Value equality lets items skip
+ * recomposition when the list is rebuilt with an equal configuration, as on every streamed update.
+ */
+@Poko
 private class ItemConfig(
     val theme: ComposdownTheme?,
     val components: ComposdownComponents,

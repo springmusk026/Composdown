@@ -37,6 +37,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import io.github.springmusk026.composdown.compose.internal.DefaultParagraph
 import io.github.springmusk026.composdown.core.MarkdownExtension
+import io.github.springmusk026.composdown.core.ast.AlertType
 import io.github.springmusk026.composdown.core.ast.Block
 import io.github.springmusk026.composdown.core.ast.plainText
 import kotlinx.coroutines.CoroutineScope
@@ -233,6 +234,28 @@ class ComposdownUiTest {
             assertEquals(container.right, onNodeWithText("כותרת").getUnclippedBoundsInRoot().right)
             assertEquals(container.right, onNodeWithText("שלום עולם").getUnclippedBoundsInRoot().right)
             assertEquals(container.left, onNodeWithText("Hello").getUnclippedBoundsInRoot().left)
+        }
+
+    @Test
+    fun addedTextCanBeLocalized() =
+        runComposeUiTest {
+            setContent {
+                Box(Modifier.height(300.dp).verticalScroll(rememberScrollState())) {
+                    Composdown(
+                        "> [!WARNING]\n> Achtung\n\nText[^1]\n\n[^1]: Fußnote\n",
+                        theme =
+                            ComposdownDefaults.theme(
+                                strings =
+                                    ComposdownDefaults.strings(
+                                        alertTitles = mapOf(AlertType.WARNING to "Warnung"),
+                                        backToReference = "Zurück zum Verweis",
+                                    ),
+                            ),
+                    )
+                }
+            }
+            onNodeWithText("Warnung").assertExists()
+            onNodeWithContentDescription("Zurück zum Verweis 1").assertExists()
         }
 
     @Test

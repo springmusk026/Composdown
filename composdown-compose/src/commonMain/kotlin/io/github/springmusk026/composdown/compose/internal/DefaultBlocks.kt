@@ -178,9 +178,12 @@ internal fun DefaultBlockQuote(
     block: Block.BlockQuote,
     modifier: Modifier = Modifier,
 ) {
-    val theme = currentEnvironment().theme
-    QuoteLayout(barColor = theme.colors.blockQuoteBar, modifier = modifier) {
-        BlockColumn(block.children)
+    val environment = currentEnvironment()
+    val quoted = remember(environment) { environment.withTextColor(environment.theme.colors.blockQuoteText) }
+    QuoteLayout(barColor = environment.theme.colors.blockQuoteBar, modifier = modifier) {
+        CompositionLocalProvider(LocalComposdownEnvironment provides quoted) {
+            BlockColumn(block.children)
+        }
     }
 }
 
@@ -194,10 +197,7 @@ internal fun DefaultAlert(
     QuoteLayout(barColor = color, modifier = modifier) {
         // The title belongs to the content below it, so it sits closer than separate blocks.
         Column(verticalArrangement = Arrangement.spacedBy(theme.spacing.tightListItem)) {
-            val title =
-                block.type.name
-                    .lowercase()
-                    .replaceFirstChar(Char::uppercaseChar)
+            val title = theme.strings.alertTitles[block.type] ?: block.type.name
             Text(text = title, style = theme.typography.alertTitle.merge(color = color))
             BlockColumn(block.children)
         }

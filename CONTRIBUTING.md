@@ -97,7 +97,7 @@ Every pull request must pass these checks in CI, on Linux and macOS:
 | Gate | Standard |
 |---|---|
 | Formatting | ktlint (`ktlint_official`) with Compose rules, through Spotless |
-| Static analysis | detekt with the configuration in `config/detekt`; Android Lint |
+| Static analysis | detekt with the configuration in `config/detekt`; Android Lint on the Android sample (the Kotlin Multiplatform library plugin does not provide Lint for library modules) |
 | Compiler | Warnings are errors |
 | Public API | Explicit API mode: explicit visibility, explicit return types and KDoc on every public declaration |
 | Binary compatibility | `apiCheck` against the committed dumps |

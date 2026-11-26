@@ -18,7 +18,7 @@ env:
 
 jobs:
   lint:
-    name: Lint (Spotless, detekt)
+    name: Lint (Spotless, detekt, Android Lint)
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -30,14 +30,18 @@ jobs:
       - uses: gradle/actions/setup-gradle@v6
       - name: Spotless and detekt
         run: ./gradlew spotlessCheck detekt
+      - name: Android Lint
+        run: ./gradlew lint
       - name: API reference (Dokka)
         run: ./gradlew dokkaGenerate
       - name: Upload detekt reports
         if: failure()
         uses: actions/upload-artifact@v7
         with:
-          name: detekt-reports
-          path: '**/build/reports/detekt/'
+          name: lint-reports
+          path: |
+            **/build/reports/detekt/
+            **/build/reports/lint-results-*.html
 
   test-jvm-android:
     name: Tests (Desktop JVM, Android host, web)

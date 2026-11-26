@@ -35,6 +35,7 @@ internal fun Project.configureKmpLibrary(includeIosX64: Boolean) {
     pluginManager.apply(libs.pluginId("composdown-quality"))
 
     group = COMPOSDOWN_GROUP
+    configurePublishing()
 
     extensions.getByType<KotlinMultiplatformExtension>().apply {
         explicitApi()

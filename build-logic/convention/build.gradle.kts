@@ -11,6 +11,8 @@ dependencies {
     compileOnly(libs.gradlePlugin.android)
     compileOnly(libs.gradlePlugin.spotless)
     compileOnly(libs.gradlePlugin.detekt)
+    compileOnly(libs.gradlePlugin.dokka)
+    compileOnly(libs.gradlePlugin.maven.publish)
 }
 
 tasks.validatePlugins {

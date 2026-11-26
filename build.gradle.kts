@@ -12,6 +12,8 @@ plugins {
     alias(libs.plugins.detekt) apply false
     alias(libs.plugins.poko) apply false
     alias(libs.plugins.roborazzi) apply false
+    alias(libs.plugins.maven.publish) apply false
+    alias(libs.plugins.dokka)
     alias(libs.plugins.spotless)
     alias(libs.plugins.binary.compatibility.validator)
 }
@@ -40,4 +42,24 @@ spotless {
         targetExclude("**/build/**")
         ktlint(ktlintVersion)
     }
+}
+
+// API reference for all library modules in one site: ./gradlew dokkaGenerate (build/dokka/html).
+dokka {
+    moduleName.set("Composdown")
+    dokkaPublications.html {
+        includes.from("docs/api-reference.md")
+    }
+    pluginsConfiguration.html {
+        // Replaces Dokka's default logo with Composdown's (the file name is what Dokka's styles expect).
+        customAssets.from("config/dokka/logo-icon.svg")
+        footerMessage.set("Copyright 2026 Composdown contributors. Licensed under the Apache License 2.0.")
+    }
+}
+
+dependencies {
+    dokka(projects.composdownCore)
+    dokka(projects.composdownCompose)
+    dokka(projects.composdownCoil)
+    dokka(projects.composdownHighlight)
 }

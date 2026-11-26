@@ -174,7 +174,8 @@ internal fun DefaultAlert(
     val theme = currentEnvironment().theme
     val color = theme.colors.alerts[block.type] ?: theme.colors.blockQuoteBar
     QuoteLayout(barColor = color, modifier = modifier) {
-        Column(verticalArrangement = Arrangement.spacedBy(theme.spacing.block)) {
+        // The title belongs to the content below it, so it sits closer than separate blocks.
+        Column(verticalArrangement = Arrangement.spacedBy(theme.spacing.tightListItem)) {
             val title =
                 block.type.name
                     .lowercase()

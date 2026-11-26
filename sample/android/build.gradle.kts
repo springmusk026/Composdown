@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.androidx.baselineprofile)
     alias(libs.plugins.composdown.quality)
 }
 
@@ -41,4 +42,7 @@ dependencies {
     implementation(projects.sample.shared)
     implementation(libs.androidx.activity.compose)
     implementation(libs.compose.foundation)
+    // Installs the Baseline Profile on devices where it is not installed from the Play Store.
+    implementation(libs.androidx.profileinstaller)
+    baselineProfile(projects.benchmarks.macrobenchmark)
 }

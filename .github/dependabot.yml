@@ -1,0 +1,31 @@
+version: 2
+updates:
+  - package-ecosystem: gradle
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      kotlin-and-compose:
+        patterns:
+          - "org.jetbrains.kotlin*"
+          - "org.jetbrains.compose*"
+          - "org.jetbrains.kotlinx*"
+      android-gradle-plugin:
+        patterns:
+          - "com.android*"
+          - "androidx*"
+      quality-tooling:
+        patterns:
+          - "com.diffplug*"
+          - "com.pinterest*"
+          - "io.nlopez*"
+          - "io.gitlab.arturbosch*"
+    commit-message:
+      prefix: build
+      include: scope
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: ci

@@ -22,7 +22,8 @@ import kotlin.coroutines.CoroutineContext
  * Markdown text that can grow while it is displayed, such as a response streamed from a language
  * model, together with its parsed [document].
  *
- * [append], [setText] and [finish] return immediately and can be called from any thread. Parsing
+ * [append], [setText] and [finish] return immediately and can be called from any thread. Text sent
+ * after [scope] is cancelled is ignored. Parsing
  * runs in [scope] on [parsingContext] (a background dispatcher by default), one update at a time;
  * text that arrives while an update is being parsed is combined into the next one. Only the open end
  * of the document is parsed again on each update, and completed blocks keep the same instances, so
@@ -57,6 +58,41 @@ public class ComposdownState(
     }
 
     private val parser = IncrementalMarkdownParser(extensions, streamingPolicy)
+
+    /**
+     * The commands that have the same effect as [commands] applied in order, with as few parses as
+     * possible: consecutive appends are joined, and text replaced by [Command.SetText] is dropped.
+     */
+    private fun coalesce(commands: List<Command>): List<Command> {
+        val result = ArrayList<Command>(commands.size)
+        for (command in commands) {
+            val last = result.lastOrNull()
+            when {
+                command is Command.SetText -> {
+                    result.clear()
+                    result += command
+                }
+
+                command is Command.Append && last is Command.Append -> {
+                    result[result.lastIndex] = Command.Append(last.chunk + command.chunk)
+                }
+
+                command is Command.Append && last is Command.SetText -> {
+                    result[result.lastIndex] = Command.SetText(last.text + command.chunk)
+                }
+
+                command is Command.Finish && last is Command.Finish -> {
+                    // Finishing twice is the same as finishing once.
+                }
+
+                else -> {
+                    result += command
+                }
+            }
+        }
+        return result
+    }
+
     private val commands = Channel<Command>(Channel.UNLIMITED)
 
     /** The document for the text parsed so far. */
@@ -73,24 +109,26 @@ public class ComposdownState(
         private set
 
     init {
-        scope.launch(parsingContext) {
-            for (first in commands) {
-                apply(first)
-                // Apply everything that arrived meanwhile, then publish once.
-                while (true) {
-                    val next = commands.tryReceive().getOrNull() ?: break
-                    apply(next)
-                }
-                val parsed = parser.document
-                val parsedText = parser.text
-                val finished = parser.isFinished
-                Snapshot.withMutableSnapshot {
-                    document = parsed
-                    this@ComposdownState.parsedText = parsedText
-                    isFinished = finished
+        val worker =
+            scope.launch(parsingContext) {
+                for (first in commands) {
+                    // Everything that arrived meanwhile is combined with the first command, so that a
+                    // fast producer costs one parse per update rather than one per chunk.
+                    val pending = mutableListOf(first)
+                    while (true) pending += commands.tryReceive().getOrNull() ?: break
+                    for (command in coalesce(pending)) apply(command)
+                    val parsed = parser.document
+                    val parsedText = parser.text
+                    val finished = parser.isFinished
+                    Snapshot.withMutableSnapshot {
+                        document = parsed
+                        this@ComposdownState.parsedText = parsedText
+                        isFinished = finished
+                    }
                 }
             }
-        }
+        // Once parsing stops, text sent afterwards is dropped instead of being kept forever.
+        worker.invokeOnCompletion { commands.close() }
     }
 
     private fun apply(command: Command) {

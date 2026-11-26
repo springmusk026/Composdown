@@ -1,0 +1,5 @@
+# Baseline Profile of composdown-compose, packaged into the AAR and merged into applications'
+# profiles. Every class takes part in rendering a document, so all of them are precompiled.
+# See docs/performance.md.
+Lio/github/springmusk026/composdown/compose/**;
+HSPLio/github/springmusk026/composdown/compose/**->**(**)**

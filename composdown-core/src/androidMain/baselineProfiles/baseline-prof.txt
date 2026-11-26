@@ -1,0 +1,5 @@
+# Baseline Profile of composdown-core, packaged into the AAR and merged into applications' profiles.
+# Parsing runs whenever Markdown is shown, including on the first frame of a screen, so all of the
+# parser is precompiled. See docs/performance.md.
+Lio/github/springmusk026/composdown/core/**;
+HSPLio/github/springmusk026/composdown/core/**->**(**)**

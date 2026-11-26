@@ -21,4 +21,4 @@ ktlint_code_style = ktlint_official
 ktlint_function_naming_ignore_when_annotated_with = Composable
 # Compose rules (io.nlopez.compose.rules): the CompositionLocals Composdown uses internally to pass
 # rendering configuration to nested blocks.
-compose_allowed_composition_locals = LocalComposdownEnvironment,LocalHeadingAnchors,LocalListDepth
+compose_allowed_composition_locals = LocalComposdownEnvironment,LocalNavigationTargets,LocalListDepth

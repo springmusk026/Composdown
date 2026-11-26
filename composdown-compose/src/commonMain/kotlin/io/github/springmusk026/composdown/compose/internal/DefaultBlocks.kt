@@ -53,16 +53,27 @@ internal fun InlineContent(
     val environment = currentEnvironment()
     val uriHandler = LocalUriHandler.current
     val onLinkClick = environment.onLinkClick
-    val anchors = LocalHeadingAnchors.current
+    val targets = LocalNavigationTargets.current
     val scope = rememberCoroutineScope()
     val text =
-        remember(inlines, environment.theme, onLinkClick, uriHandler, anchors, scope) {
+        remember(inlines, environment.theme, onLinkClick, uriHandler, targets, scope) {
             val openExternal: (String) -> Unit = onLinkClick ?: { url -> if (isSafeLink(url)) uriHandler.openUri(url) }
             // Links to a heading of the document scroll to it; any other link goes to the handler.
-            val openLink: (String) -> Unit = { url -> if (anchors?.scrollTo(url, scope) != true) openExternal(url) }
-            buildInlineText(inlines, environment.theme, openLink)
+            val openLink: (String) -> Unit = { url ->
+                if (targets?.scrollToHeading(url, scope) !=
+                    true
+                ) {
+                    openExternal(url)
+                }
+            }
+            val openFootnote: ((String) -> Unit)? = targets?.let { { label -> it.scrollToFootnote(label, scope) } }
+            buildInlineText(inlines, environment.theme, openLink, openFootnote)
         }
-    Text(text = text, modifier = modifier, style = style.merge(color = environment.theme.colors.text))
+    Text(
+        text = text,
+        modifier = modifier.then(rememberReferenceTarget(inlines)),
+        style = style.merge(color = environment.theme.colors.text),
+    )
 }
 
 @Composable

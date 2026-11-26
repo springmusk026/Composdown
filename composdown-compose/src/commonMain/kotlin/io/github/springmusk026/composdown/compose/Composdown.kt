@@ -21,9 +21,9 @@ import io.github.springmusk026.composdown.compose.internal.DefaultParagraph
 import io.github.springmusk026.composdown.compose.internal.DefaultTable
 import io.github.springmusk026.composdown.compose.internal.DefaultThematicBreak
 import io.github.springmusk026.composdown.compose.internal.Footnotes
-import io.github.springmusk026.composdown.compose.internal.HeadingAnchors
 import io.github.springmusk026.composdown.compose.internal.LocalComposdownEnvironment
-import io.github.springmusk026.composdown.compose.internal.LocalHeadingAnchors
+import io.github.springmusk026.composdown.compose.internal.LocalNavigationTargets
+import io.github.springmusk026.composdown.compose.internal.NavigationTargets
 import io.github.springmusk026.composdown.compose.internal.contentDirection
 import io.github.springmusk026.composdown.compose.internal.currentEnvironment
 import io.github.springmusk026.composdown.compose.internal.rememberHeadingTarget
@@ -100,7 +100,7 @@ public fun Composdown(
     onLinkClick: ((String) -> Unit)? = null,
     selectable: Boolean = true,
 ) {
-    val anchors = remember { HeadingAnchors() }
+    val anchors = remember { NavigationTargets() }
     anchors.update(document)
     ProvideComposdown(theme, components, imageRenderer, codeHighlighter, onLinkClick, anchors) {
         val content: @Composable () -> Unit = {
@@ -216,7 +216,7 @@ internal fun ProvideComposdown(
     imageRenderer: ImageRenderer?,
     codeHighlighter: CodeHighlighter?,
     onLinkClick: ((String) -> Unit)?,
-    anchors: HeadingAnchors?,
+    anchors: NavigationTargets?,
     content: @Composable () -> Unit,
 ) {
     val environment =
@@ -225,7 +225,7 @@ internal fun ProvideComposdown(
         }
     CompositionLocalProvider(
         LocalComposdownEnvironment provides environment,
-        LocalHeadingAnchors provides anchors,
+        LocalNavigationTargets provides anchors,
         content = content,
     )
 }

@@ -23,14 +23,16 @@ private const val FOOTNOTE_REFERENCE_SIZE = 0.75f
 /**
  * Builds the styled text for inline content. Links become [LinkAnnotation]s, which are clickable and
  * exposed to accessibility services; [openLink] is called with a link's destination when activated.
+ * Footnote references are clickable when [openFootnote] is given, which is called with their label.
  */
 internal fun buildInlineText(
     inlines: List<Inline>,
     theme: ComposdownTheme,
     openLink: (String) -> Unit,
+    openFootnote: ((String) -> Unit)? = null,
 ): AnnotatedString =
     buildAnnotatedString {
-        val builder = InlineTextBuilder(this, theme, openLink)
+        val builder = InlineTextBuilder(this, theme, openLink, openFootnote)
         builder.append(inlines)
     }
 
@@ -38,6 +40,7 @@ private class InlineTextBuilder(
     private val out: AnnotatedString.Builder,
     private val theme: ComposdownTheme,
     private val openLink: (String) -> Unit,
+    private val openFootnote: ((String) -> Unit)?,
 ) {
     private val linkStyles =
         TextLinkStyles(style = theme.typography.link.merge(SpanStyle(color = theme.colors.link)))
@@ -82,7 +85,7 @@ private class InlineTextBuilder(
             }
 
             is Inline.FootnoteReference -> {
-                out.withStyle(footnoteReferenceStyle()) { append(inline.number.toString()) }
+                appendFootnoteReference(inline)
             }
 
             // TeX source in the math style; a block component can render formulas.
@@ -113,6 +116,22 @@ private class InlineTextBuilder(
         }
         val listener = LinkInteractionListener { openLink(link.destination) }
         out.withLink(LinkAnnotation.Url(link.destination, linkStyles, listener)) { append(link.children) }
+    }
+
+    private fun appendFootnoteReference(reference: Inline.FootnoteReference) {
+        val number = reference.number.toString()
+        val open = openFootnote
+        if (open == null) {
+            out.withStyle(footnoteReferenceStyle()) { append(number) }
+        } else {
+            val link =
+                LinkAnnotation.Clickable(
+                    tag = "footnote:${reference.label}",
+                    styles = TextLinkStyles(style = footnoteReferenceStyle()),
+                    linkInteractionListener = { open(reference.label) },
+                )
+            out.withLink(link) { append(number) }
+        }
     }
 
     private fun inlineCodeStyle(): SpanStyle =

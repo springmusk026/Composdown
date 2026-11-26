@@ -22,6 +22,7 @@ import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isHeading
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -195,6 +196,23 @@ class ComposdownUiTest {
             // Links to anchors that are not headings of the document go to the handler.
             onNodeWithText("Missing").performScrollTo().performClick()
             assertEquals(listOf("#missing"), clicked)
+        }
+
+    @Test
+    fun footnoteReferencesAndFootnotesLinkToEachOther() =
+        runComposeUiTest {
+            val filler = (1..60).joinToString("\n\n") { "Paragraph $it" }
+            setContent {
+                Box(Modifier.height(300.dp).verticalScroll(rememberScrollState())) {
+                    Composdown("[^note]\n\n$filler\n\n[^note]: The footnote text.\n")
+                }
+            }
+            onNodeWithText("The footnote text.").assertIsNotDisplayed()
+            onNodeWithText("1").performClick()
+            onNodeWithText("The footnote text.").assertIsDisplayed()
+            onNodeWithText("1").assertIsNotDisplayed()
+            onNodeWithContentDescription("Back to reference 1").performClick()
+            onNodeWithText("1").assertIsDisplayed()
         }
 
     @Test

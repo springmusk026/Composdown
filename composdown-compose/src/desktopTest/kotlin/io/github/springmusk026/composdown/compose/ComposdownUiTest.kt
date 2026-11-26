@@ -2,12 +2,14 @@ package io.github.springmusk026.composdown.compose
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.UriHandler
 import androidx.compose.ui.platform.testTag
@@ -16,9 +18,11 @@ import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
+import androidx.compose.ui.test.click
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isHeading
@@ -27,6 +31,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
@@ -55,7 +60,7 @@ class ComposdownUiTest {
         runComposeUiTest {
             val clicked = mutableListOf<String>()
             setContent { Composdown("[docs](https://example.com/docs)", onLinkClick = { clicked += it }) }
-            onNodeWithText("docs").performClick()
+            onNodeWithText("docs").clickTextStart()
             assertEquals(listOf("https://example.com/docs"), clicked)
         }
 
@@ -74,8 +79,8 @@ class ComposdownUiTest {
                     Composdown("[web](https://example.com)\n\n[file](file:///etc/passwd)")
                 }
             }
-            onNodeWithText("web").performClick()
-            onNodeWithText("file").performClick()
+            onNodeWithText("web").clickTextStart()
+            onNodeWithText("file").clickTextStart()
             assertEquals(listOf("https://example.com"), opened)
         }
 
@@ -190,11 +195,11 @@ class ComposdownUiTest {
                 }
             }
             onNodeWithText("The target").assertIsNotDisplayed()
-            onNodeWithText("Go").performClick()
+            onNodeWithText("Go").clickTextStart()
             onNodeWithText("The target").assertIsDisplayed()
             assertEquals(emptyList(), clicked)
             // Links to anchors that are not headings of the document go to the handler.
-            onNodeWithText("Missing").performScrollTo().performClick()
+            onNodeWithText("Missing").performScrollTo().clickTextStart()
             assertEquals(listOf("#missing"), clicked)
         }
 
@@ -208,11 +213,26 @@ class ComposdownUiTest {
                 }
             }
             onNodeWithText("The footnote text.").assertIsNotDisplayed()
-            onNodeWithText("1").performClick()
+            onNodeWithText("1").clickTextStart()
             onNodeWithText("The footnote text.").assertIsDisplayed()
             onNodeWithText("1").assertIsNotDisplayed()
             onNodeWithContentDescription("Back to reference 1").performClick()
             onNodeWithText("1").assertIsDisplayed()
+        }
+
+    @Test
+    fun rightToLeftParagraphsAreAlignedToTheRight() =
+        runComposeUiTest {
+            setContent {
+                Box(Modifier.width(400.dp).testTag("container")) {
+                    Composdown("# כותרת\n\nשלום עולם\n\nHello")
+                }
+            }
+            val container = onNodeWithTag("container").getUnclippedBoundsInRoot()
+            // Right-to-left blocks end at the container's right edge; left-to-right ones start at its left.
+            assertEquals(container.right, onNodeWithText("כותרת").getUnclippedBoundsInRoot().right)
+            assertEquals(container.right, onNodeWithText("שלום עולם").getUnclippedBoundsInRoot().right)
+            assertEquals(container.left, onNodeWithText("Hello").getUnclippedBoundsInRoot().left)
         }
 
     @Test
@@ -280,3 +300,13 @@ class ComposdownUiTest {
             assertEquals(1, compositions["First paragraph."])
         }
 }
+
+/**
+ * Clicks the start of a (left-to-right) text node. Block text fills the width of its block, so the
+ * center of the node may be past the end of a short link.
+ */
+private fun SemanticsNodeInteraction.clickTextStart() {
+    performTouchInput { click(centerLeft + Offset(CLICK_INSET_PX, 0f)) }
+}
+
+private const val CLICK_INSET_PX = 4f

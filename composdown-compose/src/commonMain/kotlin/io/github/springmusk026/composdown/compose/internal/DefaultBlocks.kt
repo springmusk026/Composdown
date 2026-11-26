@@ -71,7 +71,9 @@ internal fun InlineContent(
         }
     Text(
         text = text,
-        modifier = modifier.then(rememberReferenceTarget(inlines)),
+        // The text fills the block, so that it is aligned to the start of its own direction: a
+        // right-to-left paragraph inside a left-to-right layout ends at the right edge.
+        modifier = modifier.fillMaxWidth().then(rememberReferenceTarget(inlines)),
         style = style.merge(color = environment.theme.colors.text),
     )
 }

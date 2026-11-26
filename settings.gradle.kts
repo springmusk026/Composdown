@@ -33,4 +33,5 @@ enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 include(":composdown-core")
 include(":composdown-compose")
+include(":composdown-coil")
 include(":benchmarks")

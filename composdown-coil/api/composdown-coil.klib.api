@@ -1,0 +1,17 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <io.github.springmusk026:composdown-coil>
+final class io.github.springmusk026.composdown.coil/CoilImageRenderer : io.github.springmusk026.composdown.compose/ImageRenderer { // io.github.springmusk026.composdown.coil/CoilImageRenderer|null[0]
+    constructor <init>(coil3/ImageLoader? = ..., kotlin/Float = ..., kotlin/Function1<kotlin/String, kotlin/Boolean> = ...) // io.github.springmusk026.composdown.coil/CoilImageRenderer.<init>|<init>(coil3.ImageLoader?;kotlin.Float;kotlin.Function1<kotlin.String,kotlin.Boolean>){}[0]
+
+    final fun Image(io.github.springmusk026.composdown.core.ast/Inline.Image, androidx.compose.ui/Modifier, androidx.compose.runtime/Composer?, kotlin/Int) // io.github.springmusk026.composdown.coil/CoilImageRenderer.Image|Image(io.github.springmusk026.composdown.core.ast.Inline.Image;androidx.compose.ui.Modifier;androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+}
+
+final val io.github.springmusk026.composdown.coil/io_github_springmusk026_composdown_coil_CoilImageRenderer$stableprop // io.github.springmusk026.composdown.coil/io_github_springmusk026_composdown_coil_CoilImageRenderer$stableprop|#static{}io_github_springmusk026_composdown_coil_CoilImageRenderer$stableprop[0]
+
+final fun io.github.springmusk026.composdown.coil/io_github_springmusk026_composdown_coil_CoilImageRenderer$stableprop_getter(): kotlin/Int // io.github.springmusk026.composdown.coil/io_github_springmusk026_composdown_coil_CoilImageRenderer$stableprop_getter|io_github_springmusk026_composdown_coil_CoilImageRenderer$stableprop_getter(){}[0]

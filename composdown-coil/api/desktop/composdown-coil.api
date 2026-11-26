@@ -1,0 +1,9 @@
+public final class io/github/springmusk026/composdown/coil/CoilImageRenderer : io/github/springmusk026/composdown/compose/ImageRenderer {
+	public static final field $stable I
+	public static final field DEFAULT_PLACEHOLDER_ASPECT_RATIO F
+	public fun <init> ()V
+	public fun <init> (Lcoil3/ImageLoader;FLkotlin/jvm/functions/Function1;)V
+	public synthetic fun <init> (Lcoil3/ImageLoader;FLkotlin/jvm/functions/Function1;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun Image (Lio/github/springmusk026/composdown/core/ast/Inline$Image;Landroidx/compose/ui/Modifier;Landroidx/compose/runtime/Composer;I)V
+}
+

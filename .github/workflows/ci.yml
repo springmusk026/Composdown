@@ -52,6 +52,8 @@ jobs:
         run: ./gradlew desktopTest testAndroidHostTest
       - name: Screenshot tests (Desktop)
         run: ./gradlew verifyRoborazziDesktop
+      - name: Build the Android sample (with its Baseline Profile) and the macrobenchmarks
+        run: ./gradlew :sample:android:assembleRelease :benchmarks:macrobenchmark:assemble
       - name: Upload test reports and screenshot diffs
         if: failure()
         uses: actions/upload-artifact@v7

@@ -1,0 +1,53 @@
+name: Android performance
+
+# Runs the Macrobenchmarks and regenerates the sample's Baseline Profile on an Android emulator.
+# Emulator timings are noisy and only useful for comparing runs on the same runner type; record
+# reference numbers on a physical device (see docs/performance.md).
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  GRADLE_OPTS: -Dorg.gradle.daemon=false
+
+jobs:
+  macrobenchmark:
+    name: Macrobenchmarks and Baseline Profile (emulator)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@v6
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Build
+        run: ./gradlew :sample:android:assembleBenchmarkRelease :benchmarks:macrobenchmark:assembleBenchmarkRelease
+      - name: Generate the Baseline Profile and run the Macrobenchmarks
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          disable-animations: true
+          script: |
+            ./gradlew :sample:android:generateBaselineProfile
+            ./gradlew :benchmarks:macrobenchmark:connectedBenchmarkReleaseAndroidTest -Pandroid.testInstrumentationRunnerArguments.androidx.benchmark.suppressErrors=EMULATOR
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: android-performance
+          path: |
+            sample/android/src/release/generated/baselineProfiles/
+            benchmarks/macrobenchmark/build/outputs/connected_android_test_additional_output/
+            benchmarks/macrobenchmark/build/reports/androidTests/

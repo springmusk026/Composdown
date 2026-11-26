@@ -75,6 +75,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Right-to-left paragraphs and headings were placed at the left edge when the layout direction was
+  left to right; they now end at the right edge.
 - Right-aligned and centered table columns rendered their cells left-aligned when the column was wider
   than the cell's text.
 

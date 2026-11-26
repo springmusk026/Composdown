@@ -118,7 +118,9 @@ on, so bundle the fonts your content needs as Compose resources:
 - a monospace font for code and math, set through `ComposdownDefaults.typography(codeBlock = ...,
   inlineCode = ..., math = ..., mathBlock = ...)`, as the sample's `SampleTheme.kt` does;
 - fonts for scripts other than Latin, Greek and Cyrillic (for example Noto Sans Hebrew or Arabic), if
-  your content uses them.
+  your content uses them. Preload them with `preloadFont` and `LocalFontFamilyResolver.current.preload`
+  to make them fallback fonts for all text, as the web sample's
+  [`Main.kt`](../sample/web/src/wasmJsMain/kotlin/io/github/springmusk026/composdown/sample/Main.kt) does.
 
 Remote images need `coil-network-ktor3` with the `ktor-client-js` engine, and the image server must
 allow cross-origin requests.

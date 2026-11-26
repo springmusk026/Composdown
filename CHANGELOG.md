@@ -40,6 +40,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `composdown-coil`: `CoilImageRenderer`, which reserves space while images load, remembers their
   sizes so they do not resize again, and loads only HTTPS images by default.
 - Sample app for Android, iOS and Desktop: a simulated streaming chat and a showcase of every element.
+- `MarkdownExtension.MATH`: inline and display math (`$...$`, `$$...$$`, `\(...\)`, `\[...\]`) and
+  math blocks (`$$` or `\[` lines and ```` ```math ```` code blocks), with rules that keep amounts such
+  as "$5 and $10" as text. Rendered as TeX source by default, with a `mathBlock` component slot.
+- `CodeHighlighter` for syntax-colored code blocks, and `composdown-highlight` with
+  `HighlightsCodeHighlighter`, based on the pure Kotlin Highlights library.
 - GitHub alerts (`> [!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]`, `[!CAUTION]`) as an opt-in
   extension.
 - Protection against hostile input: parsing runs in linear time on known pathological inputs, and

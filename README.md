@@ -54,8 +54,7 @@ Compose-based modules cannot support it. The pure-Kotlin `composdown-core` parse
 | `composdown-core` | Markdown AST and incremental parser. Pure Kotlin, no UI dependencies. |
 | `composdown-compose` | Compose Multiplatform renderer, Material 3 theme, streaming state holder and `LazyColumn` integration. |
 | `composdown-coil` | `CoilImageRenderer`: image loading with Coil 3. |
-| `composdown-highlight` | Syntax-highlighted code blocks (planned). |
-| `composdown-math` | Inline and block math (planned). |
+| `composdown-highlight` | `HighlightsCodeHighlighter`: syntax colors for 17 languages, pure Kotlin. |
 
 ## Installation
 
@@ -156,6 +155,9 @@ Use `ComposdownBlock(block)` inside a custom component to render nested blocks.
 - **Images** are drawn by an `ImageRenderer` you provide (see `composdown-coil`); without one,
   images show their description. Composdown has no image-loading dependency of its own.
 - **Raw HTML** is never interpreted; its source is shown as code.
+- **Code highlighting** is pluggable with a `CodeHighlighter` (see `composdown-highlight`).
+- **Math** (`MarkdownExtension.MATH`: `$...$`, `$$...$$`, `\(...\)`, `\[...\]` and math blocks)
+  is shown as TeX source by default; replace the `mathBlock` component to render formulas.
 - **Text selection** works across blocks (`selectable = true` by default).
 - **Right-to-left text**: each block is laid out in the direction of its own text, so Hebrew or
   Arabic paragraphs, lists and quotes put their markers on the right.

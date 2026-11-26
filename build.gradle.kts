@@ -20,7 +20,7 @@ plugins {
 
 apiValidation {
     // Benchmarks and samples are not published.
-    ignoredProjects += listOf("benchmarks", "shared", "desktop", "android", "screenshots", "macrobenchmark")
+    ignoredProjects += listOf("benchmarks", "shared", "desktop", "android", "screenshots", "macrobenchmark", "web")
 
     @OptIn(kotlinx.validation.ExperimentalBCVApi::class)
     klib {
@@ -62,4 +62,17 @@ dependencies {
     dokka(projects.composdownCompose)
     dokka(projects.composdownCoil)
     dokka(projects.composdownHighlight)
+}
+
+// The wasmJs tool distributions come from the repositories declared in settings.gradle.kts.
+allprojects {
+    plugins.withType<org.jetbrains.kotlin.gradle.targets.wasm.nodejs.WasmNodeJsPlugin> {
+        the<org.jetbrains.kotlin.gradle.targets.wasm.nodejs.WasmNodeJsEnvSpec>().downloadBaseUrl.set(null as String?)
+    }
+    plugins.withType<org.jetbrains.kotlin.gradle.targets.wasm.yarn.WasmYarnPlugin> {
+        the<org.jetbrains.kotlin.gradle.targets.wasm.yarn.WasmYarnRootEnvSpec>().downloadBaseUrl.set(null as String?)
+    }
+    plugins.withType<org.jetbrains.kotlin.gradle.targets.wasm.binaryen.BinaryenPlugin> {
+        the<org.jetbrains.kotlin.gradle.targets.wasm.binaryen.BinaryenEnvSpec>().downloadBaseUrl.set(null as String?)
+    }
 }

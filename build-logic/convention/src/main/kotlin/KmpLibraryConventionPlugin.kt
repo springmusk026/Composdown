@@ -4,17 +4,18 @@ import org.gradle.api.Project
 import org.gradle.api.plugins.ExtensionAware
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.getByType
+import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
 /**
  * Shared configuration for every pure-Kotlin Composdown multiplatform library module (no Compose).
  *
- * Targets: Android, Desktop (JVM), iosArm64, iosSimulatorArm64 and iosX64.
+ * Targets: Android, Desktop (JVM), iosArm64, iosSimulatorArm64, iosX64 and wasmJs.
  */
 class KmpLibraryConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {
-        target.configureKmpLibrary(includeIosX64 = true)
+        target.configureKmpLibrary(usesCompose = false)
     }
 }
 
@@ -25,10 +26,10 @@ class KmpLibraryConventionPlugin : Plugin<Project> {
  * function. Source sets follow Kotlin's default hierarchy template. Every library module uses
  * explicit API mode and treats compiler warnings as errors.
  *
- * @param includeIosX64 whether to build for Intel-Mac iOS simulators. Compose Multiplatform stopped
- *   publishing `iosX64` artifacts after 1.11.0-alpha01, so modules that depend on Compose can't target it.
+ * @param usesCompose whether the module depends on Compose Multiplatform, which does not support
+ *   Intel-Mac iOS simulators (`iosX64`) and needs a browser on the web.
  */
-internal fun Project.configureKmpLibrary(includeIosX64: Boolean) {
+internal fun Project.configureKmpLibrary(usesCompose: Boolean) {
     val libs = libs
     pluginManager.apply(libs.pluginId("kotlin-multiplatform"))
     pluginManager.apply(libs.pluginId("android-kmp-library"))
@@ -54,7 +55,20 @@ internal fun Project.configureKmpLibrary(includeIosX64: Boolean) {
 
         iosArm64()
         iosSimulatorArm64()
-        if (includeIosX64) iosX64()
+        // Compose Multiplatform stopped publishing iosX64 after 1.11.0-alpha01.
+        if (!usesCompose) iosX64()
+
+        @OptIn(ExperimentalWasmDsl::class)
+        wasmJs {
+            if (usesCompose) {
+                // Compose needs a browser (Skia runs on a canvas). Rendering is tested on the JVM,
+                // Android and iOS, so the module's tests do not also run in a headless browser.
+                browser { testTask { enabled = false } }
+            } else {
+                // Pure Kotlin code is tested on Node.js, which needs no browser.
+                nodejs()
+            }
+        }
 
         compilerOptions {
             allWarningsAsErrors.set(true)

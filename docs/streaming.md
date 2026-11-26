@@ -150,8 +150,8 @@ a time.
 ## Performance characteristics
 
 Measured on the JVM (see [`benchmarks/BASELINE.md`](../benchmarks/BASELINE.md)): streaming 2,000 tokens
-and producing a document after every token takes 6.3 ms in total, against 110 ms when re-parsing the
+and producing a document after every token takes 4.8 ms in total, against 89 ms when re-parsing the
 whole text each time. Appending the same 2,000 tokens after 73 KB of existing content takes
-11.8 ms: the document that came before adds little, because completed blocks are not parsed again.
+9.9 ms: the document that came before adds little, because completed blocks are not parsed again.
 The cost does grow with the size of the open block itself, so a single
 paragraph or code block of many kilobytes costs more per update than many small blocks.

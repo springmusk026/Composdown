@@ -13,7 +13,7 @@ page describes what makes it fast, how performance is measured, and what applica
 
 | Technique | Effect |
 |---|---|
-| Linear-time parser with no regular expressions on hot paths | Parsing a 73 KB document takes about 2 ms on a desktop JVM |
+| Linear-time parser with no regular expressions on hot paths | Parsing a 73 KB document takes about 1.7 ms on a desktop JVM |
 | Incremental parsing of growing text | Each update re-parses only the unfinished block, so its cost does not depend on document length |
 | Stable block instances and value-equal configuration | Compose skips completed blocks entirely while text is appended |
 | One `Text` per block for inline content | Layout node count grows with blocks, not with inline elements |
@@ -40,6 +40,8 @@ after.
 | `streamTokensIncrementally` | 2,000 tokens appended one at a time, with a document produced after each |
 | `streamTokensAfterLongDocument` | The same stream appended after the 73 KB document |
 | `streamTokensWithFullReparse` | The same stream, re-parsing the whole text on every token (the naive approach, for reference) |
+| `renderHtml`, `renderHtmlWithHeadingIds` | `toHtml()` of the 73 KB document |
+| `extractPlainText`, `listHeadings` | `plainText()` and `headings()` of the 73 KB document |
 
 ## Android Macrobenchmarks
 

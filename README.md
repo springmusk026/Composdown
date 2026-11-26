@@ -94,7 +94,7 @@ from a language model.
       <p>Text that is still arriving is parsed incrementally on a background thread. Completed blocks
       are never re-parsed or recomposed, and half-written syntax such as <code>**bold</code> or an
       unfinished code fence is shown in its final form instead of flashing as raw characters.</p>
-      <p>Streaming 2,000 tokens costs 6.3 ms in total, compared with 110 ms for re-parsing on every token.</p>
+      <p>Streaming 2,000 tokens costs 4.8 ms in total, compared with 89 ms for re-parsing on every token.</p>
       <p><a href="docs/streaming.md">Live content guide →</a></p>
       <h4>Right-to-left aware</h4>
       <img src="docs/images/rtl.png" alt="Hebrew list items and an Arabic quote laid out right to left, with bullets and the quote bar on the right, next to left-to-right English paragraphs">
@@ -275,9 +275,10 @@ Measured on the JVM with JMH (OpenJDK 21, 4 vCPUs). See [`benchmarks/BASELINE.md
 
 | Scenario | Time |
 |---|---|
-| Parse a 73 KB document | 1.9 ms |
-| Stream 2,000 tokens, document produced after every token | 6.3 ms total (about 3 µs per token) |
-| The same stream, re-parsing the whole text each time | 110 ms |
+| Parse a 73 KB document | 1.7 ms |
+| Stream 2,000 tokens, document produced after every token | 4.8 ms total (about 2.4 µs per token) |
+| The same stream, re-parsing the whole text each time | 89 ms |
+| Render the 73 KB document as HTML | 1.1 ms |
 
 The cost of a streaming update depends on the size of the unfinished block, not on the length of the
 document, so it stays constant as a conversation grows.

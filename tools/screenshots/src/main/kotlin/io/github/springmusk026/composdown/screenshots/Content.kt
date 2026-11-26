@@ -55,8 +55,8 @@ internal object Content {
 
         | Approach | 2,000 tokens |
         | :------- | -----------: |
-        | Re-parse everything | 110 ms |
-        | Composdown | 6.3 ms |
+        | Re-parse everything | 89 ms |
+        | Composdown | 4.8 ms |
 
         > [!NOTE]
         > Half-written syntax like `**bold` never flickers.

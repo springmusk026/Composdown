@@ -30,6 +30,8 @@ jobs:
       - uses: gradle/actions/setup-gradle@v6
       - name: Spotless and detekt
         run: ./gradlew spotlessCheck detekt
+      - name: API reference (Dokka)
+        run: ./gradlew dokkaGenerate
       - name: Upload detekt reports
         if: failure()
         uses: actions/upload-artifact@v7

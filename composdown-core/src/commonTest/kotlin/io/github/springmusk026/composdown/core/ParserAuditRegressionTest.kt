@@ -10,8 +10,10 @@ import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeSource
+import kotlin.time.measureTime
 
 /** Regression tests for parser defects found by the code audit. */
 class ParserAuditRegressionTest {
@@ -25,6 +27,24 @@ class ParserAuditRegressionTest {
         block()
         val elapsed = start.elapsedNow()
         assertTrue(elapsed < limit, "Took $elapsed")
+    }
+
+    /**
+     * Asserts that [work] grows linearly: doubling the size must take less than [MAX_DOUBLING_RATIO]
+     * times as long (linear work takes about 2 times, quadratic about 4). Unlike a fixed time limit,
+     * this holds on fast and slow platforms alike, such as debug builds on an iOS simulator.
+     */
+    private fun assertLinear(
+        size: Int,
+        work: (Int) -> Unit,
+    ) {
+        work(size) // Warm-up.
+        val single = measureTime { work(size) }
+        val double = measureTime { work(size * 2) }
+        assertTrue(
+            double < single * MAX_DOUBLING_RATIO + NOISE,
+            "Size $size took $single, size ${size * 2} took $double",
+        )
     }
 
     @Test
@@ -91,7 +111,7 @@ class ParserAuditRegressionTest {
 
     @Test
     fun manyLinkReferenceDefinitionsParseInLinearTime() =
-        timed(limit = 1.seconds) { parser.parse((0 until N).joinToString("\n") { "[r$it]: /u$it" }) }
+        assertLinear(N) { size -> parser.parse((0 until size).joinToString("\n") { "[r$it]: /u$it" }) }
 
     @Test
     fun longRunsOfQuoteMarkersStreamInLinearTime() = timed { IncrementalMarkdownParser().append(">".repeat(N * 2)) }
@@ -118,9 +138,9 @@ class ParserAuditRegressionTest {
 
     @Test
     fun streamingCostDoesNotGrowWithTheNumberOfBlocks() =
-        timed(limit = 2.seconds) {
+        assertLinear(N) { size ->
             val incremental = IncrementalMarkdownParser()
-            for (i in 0 until N) incremental.append("Paragraph $i with some words.\n\n")
+            for (i in 0 until size) incremental.append("Paragraph $i with some words.\n\n")
             incremental.finish()
         }
 
@@ -142,5 +162,9 @@ class ParserAuditRegressionTest {
     private companion object {
         const val N = 30_000
         val TIME_LIMIT = 5.seconds
+        const val MAX_DOUBLING_RATIO = 3
+
+        /** Absorbs timer and garbage collection noise for fast runs. */
+        val NOISE = 100.milliseconds
     }
 }

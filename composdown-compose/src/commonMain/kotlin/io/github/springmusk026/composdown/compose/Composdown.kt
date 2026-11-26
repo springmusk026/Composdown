@@ -21,9 +21,12 @@ import io.github.springmusk026.composdown.compose.internal.DefaultParagraph
 import io.github.springmusk026.composdown.compose.internal.DefaultTable
 import io.github.springmusk026.composdown.compose.internal.DefaultThematicBreak
 import io.github.springmusk026.composdown.compose.internal.Footnotes
+import io.github.springmusk026.composdown.compose.internal.HeadingAnchors
 import io.github.springmusk026.composdown.compose.internal.LocalComposdownEnvironment
+import io.github.springmusk026.composdown.compose.internal.LocalHeadingAnchors
 import io.github.springmusk026.composdown.compose.internal.contentDirection
 import io.github.springmusk026.composdown.compose.internal.currentEnvironment
+import io.github.springmusk026.composdown.compose.internal.rememberHeadingTarget
 import io.github.springmusk026.composdown.core.MarkdownExtension
 import io.github.springmusk026.composdown.core.MarkdownParser
 import io.github.springmusk026.composdown.core.ast.Block
@@ -39,7 +42,10 @@ import io.github.springmusk026.composdown.core.ast.MarkdownDocument
  * @param imageRenderer loads and draws images, or `null` to show images as their description.
  * @param codeHighlighter adds syntax colors to code blocks, or `null` for plain code.
  * @param onLinkClick called with the destination of a clicked link. If `null`, web, email and phone
- *   links are opened with the platform's URI handler and other links are ignored.
+ *   links are opened with the platform's URI handler and other links are ignored. Links to a heading
+ *   of the document (`[Installation](#installation)`, see
+ *   [headings][io.github.springmusk026.composdown.core.ast.headings]) scroll it into view instead,
+ *   when the document is in a scrollable container.
  * @param selectable whether the text can be selected (across blocks).
  */
 @Composable
@@ -94,7 +100,9 @@ public fun Composdown(
     onLinkClick: ((String) -> Unit)? = null,
     selectable: Boolean = true,
 ) {
-    ProvideComposdown(theme, components, imageRenderer, codeHighlighter, onLinkClick) {
+    val anchors = remember { HeadingAnchors() }
+    anchors.update(document)
+    ProvideComposdown(theme, components, imageRenderer, codeHighlighter, onLinkClick, anchors) {
         val content: @Composable () -> Unit = {
             Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(theme.spacing.block)) {
                 document.blocks.forEachIndexed { index, block ->
@@ -134,7 +142,8 @@ public fun ComposdownBlock(
             }
 
             is Block.Heading -> {
-                BlockOrDefault(block, components.heading, modifier) { b, m -> DefaultHeading(b, m) }
+                val target = rememberHeadingTarget(block)
+                BlockOrDefault(block, components.heading, modifier.then(target)) { b, m -> DefaultHeading(b, m) }
             }
 
             is Block.CodeBlock -> {
@@ -207,11 +216,16 @@ internal fun ProvideComposdown(
     imageRenderer: ImageRenderer?,
     codeHighlighter: CodeHighlighter?,
     onLinkClick: ((String) -> Unit)?,
+    anchors: HeadingAnchors?,
     content: @Composable () -> Unit,
 ) {
     val environment =
         remember(theme, components, imageRenderer, codeHighlighter, onLinkClick) {
             ComposdownEnvironment(theme, components, imageRenderer, codeHighlighter, onLinkClick)
         }
-    CompositionLocalProvider(LocalComposdownEnvironment provides environment, content = content)
+    CompositionLocalProvider(
+        LocalComposdownEnvironment provides environment,
+        LocalHeadingAnchors provides anchors,
+        content = content,
+    )
 }

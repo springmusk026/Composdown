@@ -77,7 +77,9 @@ private fun Item(
             imageRenderer,
             codeHighlighter,
             onLinkClick,
-            content,
+            // Headings outside the visible items are not composed, so they cannot be scrolled to here.
+            anchors = null,
+            content = content,
         )
     }
 }

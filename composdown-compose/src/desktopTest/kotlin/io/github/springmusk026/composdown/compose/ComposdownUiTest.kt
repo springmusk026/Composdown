@@ -1,6 +1,9 @@
 package io.github.springmusk026.composdown.compose
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
@@ -14,14 +17,18 @@ import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isHeading
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.unit.dp
 import io.github.springmusk026.composdown.compose.internal.DefaultParagraph
 import io.github.springmusk026.composdown.core.MarkdownExtension
 import io.github.springmusk026.composdown.core.ast.Block
@@ -166,6 +173,28 @@ class ComposdownUiTest {
                 right.right - right.left > (right.bottom - right.top) * 2,
                 "The right-aligned cell should span its column",
             )
+        }
+
+    @Test
+    fun linksToHeadingsScrollToThem() =
+        runComposeUiTest {
+            val clicked = mutableListOf<String>()
+            val filler = (1..60).joinToString("\n\n") { "Paragraph $it" }
+            setContent {
+                Box(Modifier.height(300.dp).verticalScroll(rememberScrollState())) {
+                    Composdown(
+                        "[Missing](#missing)\n\n[Go](#the-target)\n\n$filler\n\n## The *target*\n",
+                        onLinkClick = { clicked += it },
+                    )
+                }
+            }
+            onNodeWithText("The target").assertIsNotDisplayed()
+            onNodeWithText("Go").performClick()
+            onNodeWithText("The target").assertIsDisplayed()
+            assertEquals(emptyList(), clicked)
+            // Links to anchors that are not headings of the document go to the handler.
+            onNodeWithText("Missing").performScrollTo().performClick()
+            assertEquals(listOf("#missing"), clicked)
         }
 
     @Test

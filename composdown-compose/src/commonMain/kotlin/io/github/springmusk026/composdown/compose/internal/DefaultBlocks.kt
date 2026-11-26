@@ -20,6 +20,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -52,9 +53,13 @@ internal fun InlineContent(
     val environment = currentEnvironment()
     val uriHandler = LocalUriHandler.current
     val onLinkClick = environment.onLinkClick
+    val anchors = LocalHeadingAnchors.current
+    val scope = rememberCoroutineScope()
     val text =
-        remember(inlines, environment.theme, onLinkClick, uriHandler) {
-            val openLink: (String) -> Unit = onLinkClick ?: { url -> if (isSafeLink(url)) uriHandler.openUri(url) }
+        remember(inlines, environment.theme, onLinkClick, uriHandler, anchors, scope) {
+            val openExternal: (String) -> Unit = onLinkClick ?: { url -> if (isSafeLink(url)) uriHandler.openUri(url) }
+            // Links to a heading of the document scroll to it; any other link goes to the handler.
+            val openLink: (String) -> Unit = { url -> if (anchors?.scrollTo(url, scope) != true) openExternal(url) }
             buildInlineText(inlines, environment.theme, openLink)
         }
     Text(text = text, modifier = modifier, style = style.merge(color = environment.theme.colors.text))

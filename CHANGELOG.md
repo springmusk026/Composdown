@@ -18,6 +18,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (`MarkdownDocument`, `Block`, `Inline`) with structural equality. The 652 specification examples run
   as tests on every platform.
 - `plainText()` to extract the text of inline content, for example for image descriptions.
+- GitHub Flavored Markdown, enabled by default and selectable per extension with
+  `MarkdownExtension`: tables, task lists, strikethrough, extended autolinks (`www.`, `http(s)://`,
+  `ftp://`, email, `mailto:` and `xmpp:`) and footnotes. The GFM specification's extension examples
+  and cmark-gfm's extension tests run on every platform.
+- GitHub alerts (`> [!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]`, `[!CAUTION]`) as an opt-in
+  extension.
 - Protection against hostile input: parsing runs in linear time on known pathological inputs, and
   block quotes, lists and inline elements nested deeper than 100 levels are flattened instead of
   exhausting the stack.

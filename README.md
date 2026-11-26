@@ -24,8 +24,10 @@ Composdown treats streaming as the main use case:
   rows received so far, and unterminated emphasis does not flicker.
 - **Stable identity.** Every block has a stable key, so it works with `LazyColumn` and unchanged
   content is skipped by Compose.
-- **Correctness.** Full CommonMark compliance, verified by the official spec test suite on every
-  platform, plus GitHub Flavored Markdown (tables, task lists, strikethrough, autolinks, footnotes).
+- **Correctness.** Full CommonMark 0.31.2 compliance, verified by the official spec test suite on every
+  platform, plus GitHub Flavored Markdown (tables, task lists, strikethrough, autolinks, footnotes)
+  verified against the GFM spec and cmark-gfm's extension tests. GitHub alerts are available as an
+  opt-in extension.
 
 ## Demo
 

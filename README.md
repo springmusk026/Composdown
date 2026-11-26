@@ -75,6 +75,9 @@ from a language model.
 - **Safe with untrusted input.** Raw HTML is never interpreted, links with unexpected schemes are not
   opened by default, remote images are restricted to HTTPS, and the parser runs in linear time on
   adversarial input.
+- **A toolkit, not only a renderer.** The parser works on its own anywhere Kotlin runs: render HTML
+  (safe by default, verified against every specification example), extract plain text, build a table
+  of contents with GitHub-compatible anchors, or query any element of the document tree.
 - **Lean.** The parser is pure Kotlin with no dependencies beyond the standard library and
   kotlinx-collections-immutable. Image loading and highlighting live in optional modules.
 
@@ -215,14 +218,19 @@ Composdown(
 )
 ```
 
-### Parse without Compose
+### Use the parser on its own
 
-`composdown-core` produces an immutable, structurally comparable document tree that can be rendered
-by any UI toolkit, inspected, or transformed:
+`composdown-core` is a complete Markdown toolkit with no UI dependencies, for any Kotlin Multiplatform
+code, including servers. It produces an immutable, structurally comparable document tree, and renders
+it as safe HTML or plain text:
 
 ```kotlin
 val document = MarkdownParser().parse(markdown)
-val headings = document.blocks.filterIsInstance<Block.Heading>().map { it.content.plainText() }
+
+val html = document.toHtml()                       // safe by default, spec-exact on request
+val preview = document.plainText().take(200)       // for notifications and search
+val toc = document.headings().map { "${it.text} → #${it.anchor}" }
+val links = document.allInlines().filterIsInstance<Inline.Link>().map { it.destination }
 ```
 
 See the [guides](#documentation) for complete coverage of each topic.

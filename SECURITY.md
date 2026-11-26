@@ -54,6 +54,7 @@ without further configuration is safe.
 | **Denial of service** through inputs that make parsing slow | The parser runs in linear time on known pathological inputs, verified by tests with time limits. |
 | **Stack exhaustion** through deep nesting | Nesting deeper than 100 levels is flattened. |
 | **Crashes** on malformed input | Every string is valid Markdown; the parser has no failure path for any input, verified by fuzzing in the streaming tests. |
+| **Unsafe HTML output** from `toHtml()` | Raw HTML is escaped and `javascript:`, `vbscript:`, `file:` and non-image `data:` destinations are removed unless the application opts out (`HtmlOptions.CommonMark`). |
 | **Invalid characters** | Null and invalid code points in character references are replaced with U+FFFD. |
 
 The parser does no I/O, evaluates no expressions, and has no dependency other than the Kotlin standard

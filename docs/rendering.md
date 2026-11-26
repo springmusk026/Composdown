@@ -94,6 +94,13 @@ Composdown(
 When `onLinkClick` is set, Composdown performs no filtering of its own; validate destinations before
 acting on them.
 
+Links to a heading of the same document, such as `[Installation](#installation)`, scroll that heading
+into view instead of calling the handler, as on GitHub. Anchors are computed like GitHub's (see
+[headings](parser.md#headings-and-anchors)). This works when the `Composdown` is inside a scrollable
+container such as `verticalScroll`. In a lazy list (`composdownItems`), headings outside the visible
+items are not composed, so anchor links go to `onLinkClick`; resolve them with `document.headings()`
+and scroll the `LazyListState` to the heading's item.
+
 ## Images
 
 Composdown has no image loader of its own, so the core library carries no networking dependency.

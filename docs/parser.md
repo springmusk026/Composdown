@@ -8,7 +8,9 @@ validating content on a server.
 - [Parsing](#parsing)
 - [The document model](#the-document-model)
 - [Walking a document](#walking-a-document)
+- [Headings and anchors](#headings-and-anchors)
 - [Extracting text](#extracting-text)
+- [Rendering HTML](#rendering-html)
 - [Incremental parsing](#incremental-parsing)
 - [Threading](#threading)
 - [Robustness](#robustness)
@@ -72,42 +74,67 @@ are included, numbered in order of first reference, like GitHub.
 
 ## Walking a document
 
-The model is a sealed hierarchy, so `when` expressions are checked for exhaustiveness:
+`allBlocks()` and `allInlines()` return every node of a document as a lazy sequence, in document order
+and depth first, including the content of quotes, lists, table cells and footnotes:
 
 ```kotlin
-fun Block.links(): List<String> = when (this) {
-    is Block.Paragraph -> content.links()
-    is Block.Heading -> content.links()
-    is Block.BlockQuote -> children.flatMap { it.links() }
-    is Block.Alert -> children.flatMap { it.links() }
-    is Block.ListBlock -> items.flatMap { item -> item.children.flatMap { it.links() } }
-    is Block.Table -> (listOf(header) + rows).flatMap { row -> row.cells.flatMap { it.content.links() } }
-    is Block.CodeBlock, is Block.HtmlBlock, is Block.MathBlock, Block.ThematicBreak -> emptyList()
-}
+val links = document.allInlines().filterIsInstance<Inline.Link>().map { it.destination }.toList()
+val languages = document.allBlocks().filterIsInstance<Block.CodeBlock>().mapNotNull { it.language }.toSet()
+val hasTables = document.allBlocks().any { it is Block.Table }
+```
 
-fun List<Inline>.links(): List<String> = flatMap { inline ->
-    when (inline) {
-        is Inline.Link -> listOf(inline.destination) + inline.children.links()
-        is Inline.Emphasis -> inline.children.links()
-        is Inline.Strong -> inline.children.links()
-        is Inline.Strikethrough -> inline.children.links()
-        else -> emptyList()
-    }
+For transformations that need the tree structure, the model is a sealed hierarchy, so `when`
+expressions over `Block` and `Inline` are checked for exhaustiveness.
+
+## Headings and anchors
+
+`headings()` returns every heading with its level, plain text and an anchor computed exactly as GitHub
+computes heading ids (lower case, punctuation removed, spaces to hyphens, `-1`, `-2` for repeats):
+
+```kotlin
+val toc = document.headings().joinToString("\n") { heading ->
+    "  ".repeat(heading.level - 1) + "- [${heading.text}](#${heading.anchor})"
 }
 ```
+
+The same anchors are used by `toHtml(HtmlOptions(headingIds = true))` and by the Compose renderer, where
+a link such as `[Installation](#installation)` scrolls to its heading.
 
 ## Extracting text
 
-`Iterable<Inline>.plainText()` returns the visible text of inline content, without markup: useful for
-titles, previews, search indexing and accessibility descriptions.
+`MarkdownDocument.plainText()` returns the text of a whole document without markup, for previews,
+notifications, search indexing or copying. Blocks are separated by blank lines, list items and table
+rows by line breaks, and table cells by tabs.
+
+`Iterable<Inline>.plainText()` does the same for inline content, such as a heading or a link's text:
 
 ```kotlin
-val title = document.blocks
-    .filterIsInstance<Block.Heading>()
-    .firstOrNull { it.level == 1 }
-    ?.content
-    ?.plainText()
+val title = document.headings().firstOrNull { it.level == 1 }?.text
+val preview = document.plainText().take(200)
 ```
+
+## Rendering HTML
+
+`toHtml()` renders a document as an HTML fragment, for example for a web view, an email, or
+server-side rendering. The markup follows the CommonMark reference implementations and, for extensions,
+GitHub (task list checkboxes, footnote sections, alert `div`s); math is written as TeX source in
+`math inline` and `math display` elements for a client-side renderer such as KaTeX.
+
+```kotlin
+val html = document.toHtml()
+val forDocsSite = document.toHtml(HtmlOptions(headingIds = true, softBreak = "<br />"))
+```
+
+| Option | Default | Effect |
+|---|---|---|
+| `rawHtml` | `RawHtml.ESCAPE` | Raw HTML in the Markdown is escaped (`ESCAPE`), left out (`OMIT`), or passed through (`ALLOW`) |
+| `safeLinks` | `true` | Removes `javascript:`, `vbscript:`, `file:` and non-image `data:` destinations |
+| `headingIds` | `false` | Adds GitHub-compatible `id` attributes to headings |
+| `softBreak` | `"\n"` | The HTML written for a soft line break |
+
+The defaults are safe for untrusted Markdown. `HtmlOptions.CommonMark` reproduces the reference
+implementations exactly, including raw HTML, and is what the specification test suites run with: the
+public renderer is verified against all 702 specification examples. Use it only for trusted input.
 
 ## Incremental parsing
 

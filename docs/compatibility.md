@@ -18,7 +18,7 @@ behavior differs from other renderers.
 | GitHub footnotes, as implemented by cmark-gfm | | Complete | cmark-gfm's extension tests |
 | [GitHub alerts](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax#alerts) | | Complete | Unit tests |
 
-Conformance is checked by rendering the parsed document to HTML in the test suite and comparing it with
+Conformance is checked by rendering the parsed document to HTML with the public `toHtml()` renderer and comparing it with
 each example's expected output after normalization, as the reference implementation's test runner does.
 The examples are generated into common tests from the specification files in
 [`composdown-core/spec`](../composdown-core/spec), so the suite runs on the JVM, Android and

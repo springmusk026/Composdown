@@ -12,27 +12,30 @@ poko {
     pokoAnnotation.set("io/github/springmusk026/composdown/core/internal/Poko")
 }
 
-val generateHtmlEntities by tasks.registering(GenerateHtmlEntitiesTask::class) {
-    entitiesJson.set(layout.projectDirectory.file("data/html-entities.json"))
-    packageName.set("io.github.springmusk026.composdown.core.internal.text")
-    outputDirectory.set(layout.buildDirectory.dir("generated/htmlEntities/commonMain/kotlin"))
-}
+val generateHtmlEntities =
+    tasks.register<GenerateHtmlEntitiesTask>("generateHtmlEntities") {
+        entitiesJson.set(layout.projectDirectory.file("data/html-entities.json"))
+        packageName.set("io.github.springmusk026.composdown.core.internal.text")
+        outputDirectory.set(layout.buildDirectory.dir("generated/htmlEntities/commonMain/kotlin"))
+    }
 
-val generateCommonMarkSpecTests by tasks.registering(GenerateSpecTestsTask::class) {
-    specJson.set(layout.projectDirectory.file("spec/commonmark-0.31.2.json"))
-    className.set("CommonMarkSpecTest")
-    packageName.set("io.github.springmusk026.composdown.core.spec")
-    assertion.set("assertCommonMarkExample")
-    outputDirectory.set(layout.buildDirectory.dir("generated/commonMarkSpecTests/commonTest/kotlin"))
-}
+val generateCommonMarkSpecTests =
+    tasks.register<GenerateSpecTestsTask>("generateCommonMarkSpecTests") {
+        specJson.set(layout.projectDirectory.file("spec/commonmark-0.31.2.json"))
+        className.set("CommonMarkSpecTest")
+        packageName.set("io.github.springmusk026.composdown.core.spec")
+        assertion.set("assertCommonMarkExample")
+        outputDirectory.set(layout.buildDirectory.dir("generated/commonMarkSpecTests/commonTest/kotlin"))
+    }
 
-val generateGfmSpecTests by tasks.registering(GenerateSpecTestsTask::class) {
-    specJson.set(layout.projectDirectory.file("spec/gfm-0.29.0.gfm.14.json"))
-    className.set("GfmSpecTest")
-    packageName.set("io.github.springmusk026.composdown.core.spec")
-    assertion.set("assertGfmExample")
-    outputDirectory.set(layout.buildDirectory.dir("generated/gfmSpecTests/commonTest/kotlin"))
-}
+val generateGfmSpecTests =
+    tasks.register<GenerateSpecTestsTask>("generateGfmSpecTests") {
+        specJson.set(layout.projectDirectory.file("spec/gfm-0.29.0.gfm.14.json"))
+        className.set("GfmSpecTest")
+        packageName.set("io.github.springmusk026.composdown.core.spec")
+        assertion.set("assertGfmExample")
+        outputDirectory.set(layout.buildDirectory.dir("generated/gfmSpecTests/commonTest/kotlin"))
+    }
 
 kotlin {
     sourceSets {

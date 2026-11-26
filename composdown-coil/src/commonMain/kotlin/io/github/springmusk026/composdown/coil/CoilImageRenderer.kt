@@ -3,6 +3,7 @@ package io.github.springmusk026.composdown.coil
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.MaterialTheme
@@ -17,6 +18,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.geometry.isSpecified
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import coil3.ImageLoader
@@ -52,6 +54,10 @@ public class CoilImageRenderer(
     private val placeholderAspectRatio: Float = DEFAULT_PLACEHOLDER_ASPECT_RATIO,
     private val canLoad: (String) -> Boolean = { it.startsWith("https://", ignoreCase = true) },
 ) : ImageRenderer {
+    init {
+        require(placeholderAspectRatio > 0f) { "placeholderAspectRatio must be positive, was $placeholderAspectRatio" }
+    }
+
     /** Natural sizes, in pixels, of images that loaded, by URL. */
     private val sizes = mutableStateMapOf<String, Size>()
 
@@ -69,28 +75,36 @@ public class CoilImageRenderer(
         val painter = rememberAsyncImagePainter(model = image.destination, imageLoader = loader)
         val state by painter.state.collectAsState()
         val size = sizes[image.destination]
+        // The width limit comes before fillMaxWidth, so that an image is never wider than its natural
+        // size; fillMaxWidth then takes the available width up to that limit.
         val sizeModifier =
             if (size != null) {
                 Modifier
-                    .widthIn(
-                        max = with(LocalDensity.current) { size.width.toDp() },
-                    ).aspectRatio(size.width / size.height)
+                    .widthIn(max = with(LocalDensity.current) { size.width.toDp() })
+                    .fillMaxWidth()
+                    .aspectRatio(size.width / size.height)
             } else {
-                Modifier.aspectRatio(placeholderAspectRatio)
+                Modifier.fillMaxWidth().aspectRatio(placeholderAspectRatio)
             }
         Box(
-            modifier = modifier.fillMaxWidth().then(sizeModifier).semantics { contentDescription = description },
+            modifier = modifier.then(sizeModifier).semantics { contentDescription = description },
             contentAlignment = Alignment.Center,
         ) {
             when (val current = state) {
                 is AsyncImagePainter.State.Success -> {
                     val loaded = current.painter.intrinsicSize
-                    if (loaded.isSpecified && loaded.height > 0f) sizes[image.destination] = loaded
-                    Image(painter = painter, contentDescription = null, contentScale = ContentScale.Fit)
+                    if (loaded.isSpecified && loaded.width > 0f && loaded.height > 0f) sizes[image.destination] = loaded
+                    Image(
+                        painter = painter,
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Fit,
+                    )
                 }
 
                 is AsyncImagePainter.State.Error -> {
-                    Description(description)
+                    // The box already carries the description for accessibility services.
+                    Description(description, Modifier.clearAndSetSemantics {})
                 }
 
                 is AsyncImagePainter.State.Loading, AsyncImagePainter.State.Empty -> {

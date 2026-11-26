@@ -27,6 +27,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import io.github.springmusk026.composdown.compose.CodeHighlighter
 import io.github.springmusk026.composdown.compose.ComposdownState
+import io.github.springmusk026.composdown.compose.ComposdownTheme
 import io.github.springmusk026.composdown.compose.ImageRenderer
 import io.github.springmusk026.composdown.compose.composdownItems
 import kotlinx.coroutines.CoroutineScope
@@ -45,6 +46,7 @@ private class ChatMessage(
  */
 @Composable
 internal fun ChatScreen(
+    theme: ComposdownTheme,
     imageRenderer: ImageRenderer,
     codeHighlighter: CodeHighlighter,
     modifier: Modifier = Modifier,
@@ -71,6 +73,7 @@ internal fun ChatScreen(
                 composdownItems(
                     message.response.document,
                     keyPrefix = message.id.toString(),
+                    theme = theme,
                     imageRenderer = imageRenderer,
                     codeHighlighter = codeHighlighter,
                 )

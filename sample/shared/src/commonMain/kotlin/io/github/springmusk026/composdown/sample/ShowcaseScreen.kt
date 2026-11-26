@@ -9,11 +9,13 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import io.github.springmusk026.composdown.compose.CodeHighlighter
 import io.github.springmusk026.composdown.compose.Composdown
+import io.github.springmusk026.composdown.compose.ComposdownTheme
 import io.github.springmusk026.composdown.compose.ImageRenderer
 
 /** Static content: the whole showcase document in a scrolling column. */
 @Composable
 internal fun ShowcaseScreen(
+    theme: ComposdownTheme,
     imageRenderer: ImageRenderer,
     codeHighlighter: CodeHighlighter,
     modifier: Modifier = Modifier,
@@ -26,6 +28,7 @@ internal fun ShowcaseScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp),
         extensions = SampleExtensions,
+        theme = theme,
         imageRenderer = imageRenderer,
         codeHighlighter = codeHighlighter,
     )

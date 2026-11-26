@@ -19,6 +19,11 @@ kotlin {
                 .toInt()
     }
     jvm("desktop")
+    @OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class)
+    wasmJs {
+        // The sample has no tests.
+        browser { testTask { enabled = false } }
+    }
     listOf(iosArm64(), iosSimulatorArm64()).forEach { target ->
         target.binaries.framework {
             baseName = "ComposdownSample"
@@ -36,6 +41,7 @@ kotlin {
             implementation(projects.composdownCoil)
             implementation(projects.composdownHighlight)
             implementation(libs.compose.material3)
+            implementation(libs.compose.components.resources)
             implementation(libs.coil.network.ktor3)
             implementation(libs.kotlinx.coroutines.core)
         }
@@ -48,5 +54,15 @@ kotlin {
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
         }
+        wasmJsMain.dependencies {
+            implementation(libs.ktor.client.js)
+        }
     }
 }
+
+compose.resources {
+    packageOfResClass = "io.github.springmusk026.composdown.sample.resources"
+}
+
+// The sample has no browser tests, so the check of their configuration does not apply.
+tasks.matching { it.name == "checkComposeUiTestConfigurationForWasmJs" }.configureEach { enabled = false }

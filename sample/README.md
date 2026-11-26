@@ -1,7 +1,7 @@
 # Composdown sample
 
-A Compose Multiplatform application that demonstrates every Composdown feature on Android, iOS and
-Desktop from one shared UI. Use it to evaluate the library, to reproduce issues, and to verify
+A Compose Multiplatform application that demonstrates every Composdown feature on Android, iOS,
+Desktop and the web from one shared UI. Use it to evaluate the library, to reproduce issues, and to verify
 rendering and accessibility by hand.
 
 ## Screens
@@ -25,6 +25,7 @@ Both screens follow the system's light or dark mode.
 | `sample/desktop` | Desktop (JVM) | Window host |
 | `sample/android` | Android | Activity host |
 | `sample/ios` | iOS | SwiftUI host and XcodeGen project specification |
+| `sample/web` | Web (Kotlin/Wasm) | Browser host |
 
 ## Running
 
@@ -39,6 +40,16 @@ Both screens follow the system's light or dark mode.
 ```bash
 ./gradlew :sample:android:installDebug
 ```
+
+**Web**, served locally with live reload:
+
+```bash
+./gradlew :sample:web:wasmJsBrowserDevelopmentRun
+```
+
+The static site is built with `./gradlew :sample:web:wasmJsBrowserDistribution` into
+`sample/web/build/dist/wasmJs/productionExecutable`, and published as the
+[live demo](https://springmusk026.github.io/Composdown/demo/) with each release.
 
 **iOS** (macOS with Xcode). The Xcode project is generated with
 [XcodeGen](https://github.com/yonaskolb/XcodeGen):
@@ -57,7 +68,9 @@ builds the Kotlin framework for the selected simulator or device.
 ## Configuration used
 
 The sample renders with `ComposdownDefaults.Extensions` plus `MarkdownExtension.MATH`,
-`CoilImageRenderer` for images and `HighlightsCodeHighlighter` for code. See
+`CoilImageRenderer` for images, `HighlightsCodeHighlighter` for code, and JetBrains Mono (bundled as a
+Compose resource, see [`SampleTheme.kt`](shared/src/commonMain/kotlin/io/github/springmusk026/composdown/sample/SampleTheme.kt))
+for code and math, so that code is monospaced on the web too. See
 [`SampleContent.kt`](shared/src/commonMain/kotlin/io/github/springmusk026/composdown/sample/SampleContent.kt)
 for the content and [`ChatScreen.kt`](shared/src/commonMain/kotlin/io/github/springmusk026/composdown/sample/ChatScreen.kt)
 for the streaming setup.

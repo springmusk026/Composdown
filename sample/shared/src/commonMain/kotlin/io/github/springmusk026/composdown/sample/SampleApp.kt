@@ -45,9 +45,10 @@ fun SampleApp(modifier: Modifier = Modifier) {
                         modifier = Modifier.testTag(SampleTags.SHOWCASE_TAB),
                     )
                 }
+                val theme = sampleTheme()
                 when (tab) {
-                    0 -> ChatScreen(imageRenderer, codeHighlighter)
-                    else -> ShowcaseScreen(imageRenderer, codeHighlighter)
+                    0 -> ChatScreen(theme, imageRenderer, codeHighlighter)
+                    else -> ShowcaseScreen(theme, imageRenderer, codeHighlighter)
                 }
             }
         }

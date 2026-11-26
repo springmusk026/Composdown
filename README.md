@@ -1,64 +1,75 @@
 # Composdown
 
-**A streaming-first Markdown renderer for Compose Multiplatform, built for AI chat and real-time apps.**
+**Complete, spec-compliant Markdown rendering for Compose Multiplatform.**
 
-> **Status: in development.** Composdown is not published yet. The first release will be `0.1.0`,
-> and the API may still change before then.
+Composdown parses and renders Markdown natively on Android, iOS and Desktop, from a single shared
+codebase. It covers the full CommonMark specification and GitHub Flavored Markdown, renders with
+Material 3, can be themed and customized down to individual elements, and stays fast and stable
+whether the content is a static document, a long scrolling feed, or text that is still arriving
+from a language model.
 
-## Why Composdown?
+[![CI](https://github.com/springmusk026/Composdown/actions/workflows/ci.yml/badge.svg)](https://github.com/springmusk026/Composdown/actions/workflows/ci.yml)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
+![Kotlin](https://img.shields.io/badge/kotlin-2.4-7F52FF.svg?logo=kotlin)
+![Platforms](https://img.shields.io/badge/platforms-Android%20%7C%20iOS%20%7C%20Desktop-555.svg)
 
-Rendering Markdown that arrives token by token (from a language model, for example) is a different
-problem from rendering a finished document. Most Markdown renderers parse the whole text again on every
-change. During streaming that leads to:
+> **Status:** pre-release. The first public version will be `0.1.0`. Until then, the API may change
+> between commits; breaking changes are recorded in the [changelog](CHANGELOG.md).
 
-- Work that grows with the length of the message on every token.
-- Flicker and layout jumps as content above the streaming tail is rebuilt.
-- Incomplete syntax rendered badly: unclosed code fences, half-written tables, and emphasis that
-  flips between literal `**` and bold.
+---
 
-Composdown treats streaming as the main use case:
+## Contents
 
-- **Incremental parsing.** Appended text is parsed from the last stable block boundary onward.
-  Completed blocks are never parsed or recomposed again.
-- **Graceful partial input.** Unclosed code fences render as open code blocks, partial tables show the
-  rows received so far, and unterminated emphasis does not flicker.
-- **Stable identity.** Every block has a stable key, so it works with `LazyColumn` and unchanged
-  content is skipped by Compose.
-- **Correctness.** Full CommonMark 0.31.2 compliance, verified by the official spec test suite on every
-  platform, plus GitHub Flavored Markdown (tables, task lists, strikethrough, autolinks, footnotes)
-  verified against the GFM spec and cmark-gfm's extension tests. GitHub alerts are available as an
-  opt-in extension.
+- [Highlights](#highlights)
+- [Platform support](#platform-support)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Feature coverage](#feature-coverage)
+- [Quality and verification](#quality-and-verification)
+- [Performance](#performance)
+- [Documentation](#documentation)
+- [Comparison with other libraries](#comparison-with-other-libraries)
+- [Roadmap](#roadmap)
+- [Contributing](#contributing) · [Security](#security) · [License](#license)
 
-## Demo
+## Highlights
 
-<!-- A recording of the streaming chat sample will be added with the 0.1.0 release. -->
+- **Standards-compliant.** All 652 examples of the CommonMark 0.31.2 specification pass, together
+  with the GitHub Flavored Markdown extension examples and cmark-gfm's extension tests. The suites run
+  on every target platform, not only the JVM.
+- **Everything GitHub renders.** Tables with alignment, task lists, strikethrough, extended autolinks,
+  footnotes and alerts (`> [!NOTE]`), plus optional TeX math.
+- **Native Compose rendering.** No WebView. Text is real Compose text: selectable across blocks,
+  accessible to screen readers, laid out right to left where the content requires it, and themed
+  with Material 3.
+- **Customizable at every level.** Change colors, typography and spacing per element, or replace the
+  composable for any kind of block. Images and syntax highlighting are pluggable, with ready-made
+  adapters for Coil and the Highlights library.
+- **Built for live content.** An incremental parser re-parses only the unfinished end of a document,
+  completed blocks keep their identity so Compose skips them, and incomplete syntax is presented
+  without flicker. The finished result is always identical to a one-shot parse.
+- **Safe with untrusted input.** Raw HTML is never interpreted, links with unexpected schemes are not
+  opened by default, remote images are restricted to HTTPS, and the parser runs in linear time on
+  adversarial input.
+- **Lean.** The parser is pure Kotlin with no dependencies beyond the standard library and
+  kotlinx-collections-immutable. Image loading and highlighting live in optional modules.
 
-_A streaming demo recording will be added here with the first release._
+## Platform support
 
-## Supported platforms
+| Platform | Targets | Minimum |
+|---|---|---|
+| Android | `android` | API 23 |
+| iOS | `iosArm64`, `iosSimulatorArm64` | iOS 15 for the sample app |
+| Desktop | `jvm` | JVM 17 |
+| Web | `wasmJs` | Planned |
 
-| Platform | Targets |
-|---|---|
-| Android | API 23+ |
-| iOS | `iosArm64`, `iosSimulatorArm64` (and `iosX64` for `composdown-core` only, see below) |
-| Desktop | JVM 17+ |
-| Web | `wasmJs` is planned |
-
-Compose Multiplatform no longer publishes artifacts for `iosX64` (Intel-Mac iOS simulators), so the
-Compose-based modules cannot support it. The pure-Kotlin `composdown-core` parser still does.
-
-## Modules
-
-| Module | Description |
-|---|---|
-| `composdown-core` | Markdown AST and incremental parser. Pure Kotlin, no UI dependencies. |
-| `composdown-compose` | Compose Multiplatform renderer, Material 3 theme, streaming state holder and `LazyColumn` integration. |
-| `composdown-coil` | `CoilImageRenderer`: image loading with Coil 3. |
-| `composdown-highlight` | `HighlightsCodeHighlighter`: syntax colors for 17 languages, pure Kotlin. |
+`composdown-core` additionally targets `iosX64`. Compose Multiplatform no longer publishes `iosX64`
+artifacts, so the Compose-based modules cannot support Intel-Mac iOS simulators.
 
 ## Installation
 
-Not yet published. Once `0.1.0` is released:
+Composdown is not yet published to Maven Central. Once `0.1.0` is released, add the modules you need
+to your shared source set:
 
 ```kotlin
 // build.gradle.kts
@@ -66,20 +77,57 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation("io.github.springmusk026:composdown-compose:0.1.0")
+            // Optional:
+            implementation("io.github.springmusk026:composdown-coil:0.1.0")      // images
+            implementation("io.github.springmusk026:composdown-highlight:0.1.0") // code colors
         }
     }
 }
 ```
 
-## Quick start
+| Module | Purpose | Depends on |
+|---|---|---|
+| `composdown-core` | Markdown parser and immutable document model. No UI dependencies. | Kotlin stdlib, kotlinx-collections-immutable |
+| `composdown-compose` | Compose Multiplatform renderer, theme, state holder, lazy list integration | `composdown-core`, Compose Multiplatform, Material 3 |
+| `composdown-coil` | `CoilImageRenderer` for images | `composdown-compose`, Coil 3 |
+| `composdown-highlight` | `HighlightsCodeHighlighter` for code blocks | `composdown-compose`, Highlights |
 
-Static content:
+## Usage
+
+### Render a document
 
 ```kotlin
-Composdown(markdown = "# Hello\n\nThis is **Composdown**.")
+@Composable
+fun ArticleScreen(markdown: String) {
+    Composdown(
+        markdown = markdown,
+        modifier = Modifier.verticalScroll(rememberScrollState()).padding(16.dp),
+    )
+}
 ```
 
-## Streaming usage
+Parsing happens when the text changes. Rendering follows the current `MaterialTheme`.
+
+### Long content in a lazy list
+
+For long documents or feeds of many documents, render each top-level block as a `LazyColumn` item so
+only visible content is composed:
+
+```kotlin
+LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    for (post in posts) {
+        composdownItems(post.document, keyPrefix = post.id)
+    }
+}
+```
+
+Parse documents once, for example in a view model, with `MarkdownParser().parse(text)`.
+
+### Content that is still arriving
+
+For text produced incrementally, such as a response streamed from a language model, use a
+`ComposdownState`. Parsing runs on a background dispatcher, and only the unfinished end of the
+document is parsed again on each update:
 
 ```kotlin
 val state = rememberComposdownState()
@@ -89,103 +137,135 @@ LaunchedEffect(response) {
     state.finish()
 }
 
-Composdown(state = state, onLinkClick = { url -> openUrl(url) })
+Composdown(state = state)
 ```
 
-Parsing runs on a background dispatcher. Completed blocks keep the same instances, so they are not
-recomposed while text streams in, and content above the streaming end does not move.
-
-In a chat, render each message's blocks as items of the surrounding `LazyColumn`, so only visible
-blocks are composed:
-
-```kotlin
-LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-    for (message in messages) {
-        composdownItems(message.state.document, keyPrefix = message.id)
-    }
-}
-```
-
-### Parsing without Compose
-
-`composdown-core` has no UI dependencies and can be used on its own:
-
-```kotlin
-// One-shot
-val document = MarkdownParser().parse(markdown)
-
-// Streaming: completed blocks keep the same instances; only the open end is re-parsed.
-val parser = IncrementalMarkdownParser()
-tokens.forEach { token -> render(parser.append(token)) }
-render(parser.finish()) // identical to MarkdownParser().parse(parser.text)
-```
-
-While text is arriving, `StreamingPolicy.OPTIMISTIC` (the default) shows unfinished emphasis, code
-spans and links in their likely final form and holds back half-written block markers, so the
-rendered output does not flicker. See [`benchmarks/BASELINE.md`](benchmarks/BASELINE.md) for
-measured parser performance.
-
-## Customization
-
-Composdown uses Material 3 defaults. Every color, text style and spacing can be replaced:
+### Customize
 
 ```kotlin
 Composdown(
-    markdown = text,
+    markdown = markdown,
     theme = ComposdownDefaults.theme(
         colors = ComposdownDefaults.colors(link = Color(0xFF0B57D0)),
         spacing = ComposdownDefaults.spacing(block = 16.dp),
     ),
+    components = ComposdownComponents(
+        codeBlock = BlockComponent { block, modifier -> CodeBlockWithCopyButton(block, modifier) },
+    ),
+    imageRenderer = remember { CoilImageRenderer() },
+    codeHighlighter = remember { HighlightsCodeHighlighter() },
+    onLinkClick = { url -> navigator.open(url) },
 )
 ```
 
-The rendering of any kind of block can be replaced, for example to add a copy button to code blocks:
+### Parse without Compose
+
+`composdown-core` produces an immutable, structurally comparable document tree that can be rendered
+by any UI toolkit, inspected, or transformed:
 
 ```kotlin
-val components = ComposdownComponents(
-    codeBlock = BlockComponent { block, modifier -> CodeBlockWithCopyButton(block, modifier) },
-)
-Composdown(markdown = text, components = components)
+val document = MarkdownParser().parse(markdown)
+val headings = document.blocks.filterIsInstance<Block.Heading>().map { it.content.plainText() }
 ```
 
-Use `ComposdownBlock(block)` inside a custom component to render nested blocks.
+See the [guides](#documentation) for complete coverage of each topic.
 
-- **Links** call `onLinkClick` with their destination. Without a handler, only `http`, `https`,
-  `mailto` and `tel` links are opened, because Markdown from a model is untrusted input.
-- **Images** are drawn by an `ImageRenderer` you provide (see `composdown-coil`); without one,
-  images show their description. Composdown has no image-loading dependency of its own.
-- **Raw HTML** is never interpreted; its source is shown as code.
-- **Code highlighting** is pluggable with a `CodeHighlighter` (see `composdown-highlight`).
-- **Math** (`MarkdownExtension.MATH`: `$...$`, `$$...$$`, `\(...\)`, `\[...\]` and math blocks)
-  is shown as TeX source by default; replace the `mathBlock` component to render formulas.
-- **Text selection** works across blocks (`selectable = true` by default).
-- **Right-to-left text**: each block is laid out in the direction of its own text, so Hebrew or
-  Arabic paragraphs, lists and quotes put their markers on the right.
-- **Accessibility**: headings are exposed as headings, links as links, task items with their
-  checked state, and tables with their rows and columns.
+## Feature coverage
+
+| Feature | Syntax | Default |
+|---|---|---|
+| CommonMark 0.31.2 | Headings, paragraphs, emphasis, links, images, lists, quotes, code, HTML, ... | Always on |
+| Tables | `\| a \| b \|` with `:---:` alignment | On |
+| Task lists | `- [ ]`, `- [x]` | On |
+| Strikethrough | `~text~`, `~~text~~` | On |
+| Extended autolinks | `www.example.com`, `https://...`, `ftp://...`, emails | On |
+| Footnotes | `text[^1]` with `[^1]: note` | On |
+| Alerts | `> [!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]`, `[!CAUTION]` | On in `composdown-compose`, opt-in in the parser |
+| Math | `$...$`, `$$...$$`, `\(...\)`, `\[...\]`, ```` ```math ```` | Opt-in |
+
+Extensions are selected with `MarkdownExtension`; each can be enabled or disabled independently.
+Math is shown as TeX source by default; supply a `mathBlock` component to render formulas. See
+[compatibility](docs/compatibility.md) for the exact behavior of every construct.
+
+## Quality and verification
+
+- **Specification suites.** 652 CommonMark examples and 50 GFM extension examples are generated into
+  common tests and run on the JVM, on Android, and on Kotlin/Native.
+- **Streaming equivalence.** Every specification example and a realistic corpus are streamed
+  character by character, in random chunks and through random edits, and must finish identical to a
+  one-shot parse. 400 generated documents, built from a fixed seed so any failure is reproducible, are
+  checked the same way.
+- **Adversarial input.** Pathological cases modeled on the reference implementation's suite (deep
+  nesting, unclosed delimiters, long runs) must parse in linear time without stack overflow.
+- **UI.** Compose UI tests cover semantics, link handling, extension points, streaming and
+  recomposition behavior; screenshot tests cover every element in light and dark themes.
+- **API stability.** Explicit API mode and binary-compatibility dumps (JVM and Kotlin/Native) make
+  every public API change visible in review.
+- **Static analysis.** ktlint (with Compose rules), detekt and Android Lint run on every change.
+
+## Performance
+
+Measured on the JVM with JMH (OpenJDK 21, 4 vCPUs). See [`benchmarks/BASELINE.md`](benchmarks/BASELINE.md).
+
+| Scenario | Time |
+|---|---|
+| Parse a 73 KB document | 1.9 ms |
+| Stream 2,000 tokens, document produced after every token | 6.3 ms total (about 3 µs per token) |
+| The same stream, re-parsing the whole text each time | 110 ms |
+
+The cost of a streaming update depends on the size of the unfinished block, not on the length of the
+document, so it stays constant as a conversation grows.
+
+## Documentation
+
+| Guide | |
+|---|---|
+| [Getting started](docs/getting-started.md) | Installation, first render, platform notes |
+| [Rendering](docs/rendering.md) | Static documents, lazy lists, selection, links, images, code, math |
+| [Live content](docs/streaming.md) | `ComposdownState`, view models, streaming policies, guarantees |
+| [Customization](docs/customization.md) | Theme, components, image renderers, code highlighters |
+| [Parser and document model](docs/parser.md) | Using `composdown-core` directly |
+| [Accessibility](docs/accessibility.md) | Semantics, right-to-left text, manual verification |
+| [Compatibility](docs/compatibility.md) | Specification coverage, extensions, known differences |
+| [Architecture](docs/architecture.md) | How parsing, incremental updates and rendering work |
+
+A runnable [sample](sample) for Android, iOS and Desktop demonstrates every feature, including a
+simulated chat that streams responses at a realistic pace.
 
 ## Comparison with other libraries
 
-[multiplatform-markdown-renderer](https://github.com/mikepenz/multiplatform-markdown-renderer) is a
-mature, widely used Compose Multiplatform Markdown renderer with a rich feature set, and is an
-excellent choice for rendering complete documents. Composdown has a narrower focus: content that is
-still being written. Its parser is designed for incremental re-parsing, and its rendering model keeps
-completed content stable while new text arrives. Measured benchmark comparisons will be published with
-the first release.
+Several Markdown renderers exist for Compose. The most established,
+[multiplatform-markdown-renderer](https://github.com/mikepenz/multiplatform-markdown-renderer), is
+mature and feature-rich and is a good choice for many applications. Composdown differs in these
+respects:
 
-## Sample
+| | Composdown |
+|---|---|
+| Parser | Written for Composdown in pure Kotlin, verified against the full CommonMark and GFM example suites on every platform |
+| Incremental updates | Only the unfinished end of a document is re-parsed; completed blocks keep their instances |
+| Partial syntax | Unfinished emphasis, code, links and block markers are presented without flicker |
+| Extension points | Replaceable rendering per block type, pluggable images, highlighting and math |
+| Untrusted content | Safe defaults for links, images and HTML; linear-time parsing |
 
-[`sample`](sample) contains a Compose Multiplatform app for Android, iOS and Desktop with a simulated
-language-model chat that streams responses token by token, and a showcase of every element:
+Measured comparisons will be published with the first release.
 
-```bash
-./gradlew :sample:desktop:run
-```
+## Roadmap
+
+| Milestone | Scope |
+|---|---|
+| 0.1.0 | First release: everything described above, published for Android, iOS and Desktop |
+| Next | Web (`wasmJs`) target, native TeX formula rendering, inline images inside text, Android Macrobenchmark and Baseline Profiles |
 
 ## Contributing
 
-Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) and the
-[Code of Conduct](CODE_OF_CONDUCT.md). To report a security issue, see [SECURITY.md](SECURITY.md).
+Contributions are welcome. [CONTRIBUTING.md](CONTRIBUTING.md) describes the development setup, the
+quality gates every change must pass, and how to propose API changes. Please follow the
+[Code of Conduct](CODE_OF_CONDUCT.md).
+
+## Security
+
+Composdown is designed to render untrusted Markdown. See [SECURITY.md](SECURITY.md) for the security
+model and how to report a vulnerability privately.
 
 ## License
 

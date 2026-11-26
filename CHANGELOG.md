@@ -22,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `MarkdownExtension`: tables, task lists, strikethrough, extended autolinks (`www.`, `http(s)://`,
   `ftp://`, email, `mailto:` and `xmpp:`) and footnotes. The GFM specification's extension examples
   and cmark-gfm's extension tests run on every platform.
-- `IncrementalMarkdownParser` for streamed text: completed top-level blocks are parsed once and keep
+- `IncrementalMarkdownParser` for text that grows over time (streamed responses, live editing): completed top-level blocks are parsed once and keep
   their instances; only the open end of the document is parsed again on each update, so the cost
   per update does not grow with the document. The finished document is always identical to a
   one-shot parse, verified by streaming every specification example character by character, in
@@ -50,5 +50,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Protection against hostile input: parsing runs in linear time on known pathological inputs, and
   block quotes, lists and inline elements nested deeper than 100 levels are flattened instead of
   exhausting the stack.
+
+- Documentation: user guides in `docs/` (getting started, rendering, live content, customization,
+  parser, accessibility, compatibility, architecture), a security model, and contribution guidelines.
 
 [Unreleased]: https://github.com/springmusk026/Composdown/commits/main

@@ -1,81 +1,161 @@
 # Contributing to Composdown
 
-Thanks for your interest in improving Composdown. This document explains how to build the project,
-the standards every change is held to, and how to submit your work.
+Thank you for your interest in improving Composdown. This guide explains how the project is organized,
+how to build and test it, the standards every change is held to, and how changes are reviewed and
+released.
 
-By participating, you agree to follow the [Code of Conduct](CODE_OF_CONDUCT.md).
+By participating, you agree to follow the [Code of Conduct](CODE_OF_CONDUCT.md). To report a security
+issue, follow [SECURITY.md](SECURITY.md) instead of opening an issue.
 
-## Prerequisites
+- [Ways to contribute](#ways-to-contribute)
+- [Development setup](#development-setup)
+- [Project layout](#project-layout)
+- [Building and testing](#building-and-testing)
+- [Quality gates](#quality-gates)
+- [Making changes](#making-changes)
+- [Commits and pull requests](#commits-and-pull-requests)
+- [Releases](#releases)
 
-- JDK 17 or newer (CI uses JDK 21).
-- The Android SDK, with `ANDROID_HOME` set or `sdk.dir` in `local.properties`.
-- macOS with Xcode to build and test the iOS targets. On Linux and Windows the iOS tasks are skipped
-  automatically. CI runs them on a macOS runner for every pull request.
+## Ways to contribute
+
+- **Report a bug** with the [bug report form](https://github.com/springmusk026/Composdown/issues/new/choose).
+  The most useful reports include the Markdown input, the expected and actual rendering, and the
+  platform. For parsing bugs, compare with the [CommonMark dingus](https://spec.commonmark.org/dingus/)
+  or GitHub's rendering.
+- **Propose a feature** with the feature request form. Describe the use case before the solution.
+  Features that add public API are discussed in an issue before a pull request.
+- **Improve documentation.** Corrections and clarifications to the guides in [`docs/`](docs) and to
+  KDoc are always welcome, and need no prior discussion.
+- **Fix an issue.** Issues labelled `good first issue` are a good starting point. Comment on the issue
+  to avoid duplicate work.
+
+## Development setup
+
+| Requirement | Notes |
+|---|---|
+| JDK 17 or newer | CI uses JDK 21 |
+| Android SDK | `ANDROID_HOME` set, or `sdk.dir` in `local.properties` |
+| macOS with Xcode | Only for the iOS targets. On Linux and Windows, iOS tasks are skipped; CI runs them on macOS |
+| XcodeGen | Only to run the iOS sample (`brew install xcodegen`) |
+
+Open the project in Android Studio or IntelliJ IDEA with the Kotlin Multiplatform plugin. No other
+setup is required: Gradle downloads every dependency.
 
 ## Project layout
 
-| Module | Purpose |
+| Path | Contents |
 |---|---|
-| `composdown-core` | Pure Kotlin Multiplatform: Markdown AST, incremental parser, CommonMark/GFM spec tests. No UI dependencies. |
-| `composdown-compose` | Compose Multiplatform renderer, theme, streaming state holder and lazy list integration. |
-| `benchmarks` | JVM parser benchmarks (kotlinx-benchmark). Run `./gradlew :benchmarks:benchmark`; baseline in `benchmarks/BASELINE.md`. |
-| `build-logic` | Gradle convention plugins shared by all modules. |
+| `composdown-core` | Parser and document model: pure Kotlin, no UI dependencies |
+| `composdown-core/spec` | CommonMark and GFM specification examples, from which tests are generated |
+| `composdown-compose` | Compose Multiplatform renderer |
+| `composdown-coil` | Coil-based image renderer |
+| `composdown-highlight` | Highlights-based code highlighter |
+| `benchmarks` | JMH parser benchmarks and the recorded [baseline](benchmarks/BASELINE.md) |
+| `sample` | Demonstration app: `shared` UI, `desktop`, `android` and `ios` hosts |
+| `build-logic` | Gradle convention plugins and code generation tasks |
+| `config` | detekt configuration |
+| `docs` | User guides |
+| `scripts` | Scripts that regenerate checked-in data (Unicode tables, GFM examples) |
 
-Library dependency versions live in `gradle/libs.versions.toml`. Shared build configuration lives in
-the convention plugins under `build-logic/convention`, not in individual module build files.
+Dependency versions are declared only in [`gradle/libs.versions.toml`](gradle/libs.versions.toml).
+Build configuration shared by modules lives in the convention plugins, not in module build files.
+[docs/architecture.md](docs/architecture.md) explains how the code is structured internally.
 
 ## Building and testing
 
 ```bash
-./gradlew check          # everything: compile, tests, Spotless, detekt, API check
-./gradlew desktopTest    # Desktop (JVM) tests
-./gradlew testAndroidHostTest   # Android host (JVM) tests
-./gradlew iosSimulatorArm64Test # iOS simulator tests (macOS only)
+./gradlew check
 ```
 
-## Code standards
+runs everything that CI runs on your platform: compilation, all tests, formatting, static analysis,
+Android Lint and the API check. Narrower tasks for faster iteration:
 
-- **Formatting:** ktlint (`ktlint_official` style) with the Compose rules ruleset, applied through
-  Spotless. Run `./gradlew spotlessApply` before committing.
-- **Static analysis:** detekt, configured in `config/detekt/detekt.yml`. Any rule override must carry a
-  comment explaining why.
-- **Warnings are errors.** Do not suppress a warning without a comment that justifies it.
-- **Explicit API mode** is enabled in every library module. Every public declaration needs an explicit
-  visibility modifier, an explicit return type, and KDoc.
-- **Keep code in `commonMain`.** Use `expect`/`actual` only when a capability truly differs per
-  platform, and document the reason on the `expect` declaration.
-- **No placeholder code or TODOs** in merged code. Open an issue instead.
+| Task | Runs |
+|---|---|
+| `./gradlew :composdown-core:desktopTest` | Parser tests on the JVM (fastest feedback for parser work) |
+| `./gradlew desktopTest` | All JVM tests, including Compose UI tests |
+| `./gradlew testAndroidHostTest` | Android host tests |
+| `./gradlew iosSimulatorArm64Test` | iOS simulator tests (macOS) |
+| `./gradlew verifyRoborazziDesktop` | Screenshot tests |
+| `./gradlew spotlessApply` | Formats the code |
+| `./gradlew detekt` | Static analysis |
+| `./gradlew apiCheck` / `apiDump` | Checks or records the public API |
+| `./gradlew :benchmarks:benchmark` | Parser benchmarks |
+| `./gradlew :sample:desktop:run` | Runs the sample app on Desktop |
 
-## Public API changes
+## Quality gates
 
-The public ABI of every module is recorded in `api/` dumps (JVM and KLib) and checked by `apiCheck`.
-If you change public API on purpose, run `./gradlew apiDump` and commit the updated dumps, so the change
-is visible in review. KLib dumps are only exact when generated on macOS; if you are on Linux and the
-CI `apiCheck` job disagrees with your dump, use the dump produced by CI.
+Every pull request must pass these checks in CI, on Linux and macOS:
 
-## Tests
+| Gate | Standard |
+|---|---|
+| Formatting | ktlint (`ktlint_official`) with Compose rules, through Spotless |
+| Static analysis | detekt with the configuration in `config/detekt`; Android Lint |
+| Compiler | Warnings are errors |
+| Public API | Explicit API mode: explicit visibility, explicit return types and KDoc on every public declaration |
+| Binary compatibility | `apiCheck` against the committed dumps |
+| Conformance | 100% of the CommonMark and GFM examples |
+| Streaming | All streaming-equivalence tests |
+| Rendering | Compose UI tests and screenshot tests |
 
-- Parser logic: `kotlin.test` in `commonTest`, so it runs on every platform.
-- Parser changes must keep the CommonMark and GFM spec suites at 100% and must not break the
-  streaming-equivalence tests: feeding a document in arbitrary chunks must produce the same result as
-  parsing it in one go.
-- Parser performance changes should be measured with `./gradlew :benchmarks:benchmark` on the same
-  machine before and after the change.
-- Rendering changes: Compose UI tests and, where visual, updated screenshot goldens. Screenshot tests
-  run on Desktop with fonts bundled in the test resources: record new goldens with
-  `./gradlew :composdown-compose:recordRoborazziDesktop`, check them with `verifyRoborazziDesktop`,
-  and review the changed images in `composdown-compose/src/desktopTest/snapshots` before committing.
+A rule may be suppressed only with a comment explaining why the code is correct as written.
+
+## Making changes
+
+### General
+
+- Keep code in `commonMain`. Use `expect`/`actual` only for capabilities that truly differ between
+  platforms, and document the reason on the `expect` declaration.
+- Prefer small, focused changes. A refactoring and a behavior change belong in separate commits.
+- No placeholder code or `TODO` comments in merged code; open an issue instead.
+- Update the relevant guide in `docs/` when you change behavior users rely on.
+
+### Parser changes
+
+- Write tests in `commonTest` with `kotlin.test`, so they run on every platform.
+- Keep the specification suites at 100%. If a change alters which document is produced for some input,
+  call it out in the pull request and in the changelog.
+- The incremental engine must produce, after `finish()`, exactly the one-shot result for every way of
+  splitting the input. Add the input that motivated your change to the streaming corpus.
+- Avoid algorithms whose cost can grow faster than linearly with the input; add a case to
+  `PathologicalInputTest` if a construct could be abused.
+- Measure performance-sensitive changes with `./gradlew :benchmarks:benchmark` before and after, on
+  the same machine, and include the numbers in the pull request.
+
+### Rendering changes
+
+- Cover behavior with Compose UI tests in `composdown-compose/src/desktopTest`.
+- For visual changes, record new screenshots with `./gradlew :composdown-compose:recordRoborazziDesktop`,
+  review every changed image in `composdown-compose/src/desktopTest/snapshots`, and commit them.
+- Preserve accessibility semantics, and go through the relevant items of the
+  [manual checklist](docs/accessibility.md#manual-verification-checklist).
+- Check that completed blocks are still skipped during streaming
+  (`completedBlocksAreNotRecomposedWhileTextIsAppended`).
+
+### Public API changes
+
+Public API is a long-term commitment. Before adding or changing it:
+
+1. Open an issue describing the use case and the proposed API.
+2. Follow the existing conventions: Compose API guidelines for composables, `ComposdownDefaults` for
+   defaults, classes with value equality (not data classes) for configuration, internal constructors for
+   model types.
+3. Run `./gradlew apiDump` and commit the updated dumps, so the change is visible in review. Kotlin/Native
+   dumps are exact only when generated on macOS; if CI's `apiCheck` disagrees with a dump made on Linux,
+   use the dump CI reports.
 
 ## Commits and pull requests
 
-- Commits follow [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`,
-  `docs:`, `test:`, `build:`, `ci:`, `refactor:`, `perf:`, `chore:`). Use a `!` or a
-  `BREAKING CHANGE:` footer for breaking changes.
-- Keep commits small and focused; each one should build and pass tests.
+- Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/): `feat:`, `fix:`,
+  `perf:`, `refactor:`, `test:`, `docs:`, `build:`, `ci:`, `chore:`, optionally with a scope
+  (`fix(core): ...`). Mark breaking changes with `!` or a `BREAKING CHANGE:` footer.
+- Every commit should build and pass the tests.
 - Add an entry under **Unreleased** in [CHANGELOG.md](CHANGELOG.md) for any user-visible change.
 - Fill in the pull request template, including how you verified the change.
+- A maintainer reviews every pull request. Expect questions; they are about the code, not about you.
 
-## Versioning
+## Releases
 
-Composdown follows [Semantic Versioning](https://semver.org/). Before 1.0.0, minor releases may contain
-breaking changes; these are always called out in the changelog.
+Composdown follows [Semantic Versioning](https://semver.org/). Before 1.0, minor releases may contain
+breaking changes, which are always listed in the changelog. Releases are made from `main` by a
+maintainer: the changelog is finalized, the version is tagged, and CI publishes the artifacts.

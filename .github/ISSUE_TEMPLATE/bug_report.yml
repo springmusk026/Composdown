@@ -1,0 +1,65 @@
+name: Bug report
+description: Something renders incorrectly, crashes, or behaves differently from the documentation.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. Please search existing issues first.
+        For security vulnerabilities, do not open an issue; follow SECURITY.md instead.
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened?
+      description: A clear description of the bug and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: markdown
+    attributes:
+      label: Markdown input
+      description: The smallest Markdown input that reproduces the problem.
+      render: markdown
+    validations:
+      required: true
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Rendering mode
+      options:
+        - Static (Composdown(markdown = ...))
+        - Streaming (ComposdownState.append / setText)
+        - Both
+        - Not applicable (parser only)
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps or code to reproduce
+      description: For streaming bugs, include how the text was split into chunks if you know it.
+      render: kotlin
+  - type: checkboxes
+    id: platforms
+    attributes:
+      label: Affected platforms
+      options:
+        - label: Android
+        - label: iOS
+        - label: Desktop (JVM)
+  - type: input
+    id: version
+    attributes:
+      label: Composdown version
+      placeholder: 0.1.0
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Kotlin and Compose Multiplatform versions
+      placeholder: Kotlin 2.4.21, Compose Multiplatform 1.12.2
+  - type: textarea
+    id: extra
+    attributes:
+      label: Screenshots, logs or additional context

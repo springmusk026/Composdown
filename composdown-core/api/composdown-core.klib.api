@@ -205,4 +205,10 @@ final class io.github.springmusk026.composdown.core.ast/MarkdownDocument { // io
     final fun toString(): kotlin/String // io.github.springmusk026.composdown.core.ast/MarkdownDocument.toString|toString(){}[0]
 }
 
+final class io.github.springmusk026.composdown.core/MarkdownParser { // io.github.springmusk026.composdown.core/MarkdownParser|null[0]
+    constructor <init>() // io.github.springmusk026.composdown.core/MarkdownParser.<init>|<init>(){}[0]
+
+    final fun parse(kotlin/String): io.github.springmusk026.composdown.core.ast/MarkdownDocument // io.github.springmusk026.composdown.core/MarkdownParser.parse|parse(kotlin.String){}[0]
+}
+
 final fun (kotlin.collections/Iterable<io.github.springmusk026.composdown.core.ast/Inline>).io.github.springmusk026.composdown.core.ast/plainText(): kotlin/String // io.github.springmusk026.composdown.core.ast/plainText|plainText@kotlin.collections.Iterable<io.github.springmusk026.composdown.core.ast.Inline>(){}[0]

@@ -1,3 +1,8 @@
+public final class io/github/springmusk026/composdown/core/MarkdownParser {
+	public fun <init> ()V
+	public final fun parse (Ljava/lang/String;)Lio/github/springmusk026/composdown/core/ast/MarkdownDocument;
+}
+
 public abstract interface class io/github/springmusk026/composdown/core/ast/Block {
 }
 

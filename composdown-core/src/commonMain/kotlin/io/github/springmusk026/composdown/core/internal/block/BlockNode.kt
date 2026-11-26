@@ -1,0 +1,183 @@
+package io.github.springmusk026.composdown.core.internal.block
+
+import io.github.springmusk026.composdown.core.internal.text.unescapeString
+
+/**
+ * Mutable block tree used while parsing. Blocks are open while lines can still be added to them and
+ * closed (finalized) once a line cannot continue them; closed blocks never reopen.
+ */
+internal sealed class BlockNode {
+    var parent: BlockNode? = null
+        private set
+    val children: MutableList<BlockNode> = ArrayList(0)
+    var isOpen: Boolean = true
+
+    /** Nesting depth: 0 for the document, 1 for top-level blocks, and so on. */
+    var depth: Int = 0
+        private set
+
+    /** 1-based number of the first source line of this block. */
+    var startLine: Int = 0
+
+    /** 1-based number of the last source line of this block, set when it is finalized. */
+    var endLine: Int = 0
+
+    /** Whether this block holds lines of text (rather than child blocks). */
+    open val acceptsLines: Boolean get() = false
+
+    abstract fun canContain(child: BlockNode): Boolean
+
+    fun appendChild(child: BlockNode) {
+        child.parent = this
+        child.depth = depth + 1
+        children.add(child)
+    }
+
+    /** Replaces this block, which must be its parent's last child, with [replacement]. */
+    fun replaceWith(replacement: BlockNode) {
+        val parent = checkNotNull(parent) { "Cannot replace a detached block" }
+        check(parent.children.last() === this) { "Only the last child of a block can be replaced" }
+        parent.children[parent.children.lastIndex] = replacement
+        replacement.parent = parent
+        replacement.depth = depth
+        this.parent = null
+    }
+
+    /** Removes this block, which must be its parent's last child. */
+    fun unlink() {
+        val parent = checkNotNull(parent) { "Cannot unlink a detached block" }
+        check(parent.children.last() === this) { "Only the last child of a block can be unlinked" }
+        parent.children.removeAt(parent.children.lastIndex)
+        this.parent = null
+    }
+}
+
+/** A block that collects raw lines of text, which become its content when it is finalized. */
+internal sealed class LeafBlockNode : BlockNode() {
+    val content: StringBuilder = StringBuilder()
+
+    override fun canContain(child: BlockNode): Boolean = false
+}
+
+internal class DocumentNode : BlockNode() {
+    override fun canContain(child: BlockNode): Boolean = child !is ItemNode
+}
+
+internal class BlockQuoteNode : BlockNode() {
+    override fun canContain(child: BlockNode): Boolean = child !is ItemNode
+}
+
+/** Details of a list marker, shared by a list and its items. */
+internal class ListData(
+    val isOrdered: Boolean,
+    /** `-`, `+` or `*` for bullet lists. */
+    val bulletChar: Char,
+    /** The start number for ordered lists. */
+    val start: Int,
+    /** `.` or `)` for ordered lists. */
+    val delimiter: Char,
+    /** Column of the marker relative to the container's content. */
+    val markerOffset: Int,
+    /** Number of characters in the marker, such as 1 for `-` or 3 for `10.`. */
+    val markerWidth: Int,
+) {
+    /** Width of the marker plus the spaces after it: content columns of the item. */
+    var padding: Int = 0
+
+    fun matches(other: ListData): Boolean =
+        isOrdered == other.isOrdered && delimiter == other.delimiter && bulletChar == other.bulletChar
+}
+
+internal class ListNode(
+    val data: ListData,
+) : BlockNode() {
+    var isTight: Boolean = true
+
+    override fun canContain(child: BlockNode): Boolean = child is ItemNode
+
+    /**
+     * Computes [isTight] and [endLine] from the finalized items. A list is loose if any of its items
+     * are separated by blank lines, or if any item directly contains two blocks with a blank line
+     * between them.
+     */
+    fun finalizeList() {
+        endLine = children.last().endLine
+        isTight =
+            children.zipWithNext().none { (item, next) -> hasBlankLineBetween(item, next) } &&
+            children.none { item ->
+                item.children.zipWithNext().any { (first, second) -> hasBlankLineBetween(first, second) }
+            }
+    }
+
+    private fun hasBlankLineBetween(
+        first: BlockNode,
+        second: BlockNode,
+    ): Boolean = first.endLine != second.startLine - 1
+}
+
+internal class ItemNode(
+    val data: ListData,
+) : BlockNode() {
+    override fun canContain(child: BlockNode): Boolean = child !is ItemNode
+
+    /** An item ends with its last child, not with any blank lines after it. */
+    fun finalizeItem() {
+        endLine = children.lastOrNull()?.endLine ?: startLine
+    }
+}
+
+internal class ParagraphNode : LeafBlockNode() {
+    override val acceptsLines: Boolean get() = true
+}
+
+internal class HeadingNode(
+    val level: Int,
+) : LeafBlockNode()
+
+internal class ThematicBreakNode : LeafBlockNode()
+
+internal class CodeBlockNode(
+    val isFenced: Boolean,
+    val fenceChar: Char = ' ',
+    val fenceLength: Int = 0,
+    /** Indentation of the opening fence, removed from content lines where present. */
+    val fenceOffset: Int = 0,
+) : LeafBlockNode() {
+    override val acceptsLines: Boolean get() = true
+
+    var info: String? = null
+    var literal: String = ""
+
+    /** Splits the collected lines into the info string and the literal code. */
+    fun finalizeCode() {
+        if (isFenced) {
+            // The first line holds the info string.
+            val firstLineEnd = content.indexOf('\n')
+            val rawInfo = content.substring(0, firstLineEnd).trim(' ', '\t')
+            info = if (rawInfo.isEmpty()) null else unescapeString(rawInfo)
+            literal = content.substring(firstLineEnd + 1)
+        } else {
+            // Trailing blank lines are not part of an indented code block.
+            var end = content.length
+            while (end > 0) {
+                val lineStart = content.lastIndexOf('\n', end - 2) + 1
+                if ((lineStart until end).any {
+                        content[it] != ' ' && content[it] != '\t' && content[it] != '\n'
+                    }
+                ) {
+                    break
+                }
+                end = lineStart
+            }
+            literal = content.substring(0, end)
+        }
+    }
+}
+
+internal class HtmlBlockNode(
+    val type: HtmlBlockType,
+) : LeafBlockNode() {
+    override val acceptsLines: Boolean get() = true
+
+    var literal: String = ""
+}

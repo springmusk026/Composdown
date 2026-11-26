@@ -14,6 +14,7 @@ import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isHeading
 import androidx.compose.ui.test.onNodeWithTag
@@ -148,6 +149,23 @@ class ComposdownUiTest {
                 }
             onNode(table).assertExists()
             onNodeWithText("4").assertExists()
+        }
+
+    @Test
+    fun tableCellsFollowTheirColumnAlignment() =
+        runComposeUiTest {
+            setContent { Composdown("| a long header | another long header |\n| -: | :- |\n| 7 | 8 |\n") }
+            val header = onNodeWithText("a long header").getUnclippedBoundsInRoot()
+            val right = onNodeWithText("7").getUnclippedBoundsInRoot()
+            val left = onNodeWithText("8").getUnclippedBoundsInRoot()
+            val otherHeader = onNodeWithText("another long header").getUnclippedBoundsInRoot()
+            // Cell text fills its column, and is aligned within it.
+            assertEquals(header.right, right.right)
+            assertEquals(otherHeader.left, left.left)
+            assertTrue(
+                right.right - right.left > (right.bottom - right.top) * 2,
+                "The right-aligned cell should span its column",
+            )
         }
 
     @Test

@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.Composable
@@ -82,7 +83,8 @@ private fun TableCellContent(
                 .semantics { collectionItemInfo = CollectionItemInfo(rowIndex, 1, columnIndex, 1) },
     ) {
         val style = if (isHeader) theme.typography.tableHeader else theme.typography.tableCell
-        InlineContent(cell.content, style.merge(textAlign = alignment.textAlign()))
+        // The text fills the cell, so that its alignment applies when the column is wider than the text.
+        InlineContent(cell.content, style.merge(textAlign = alignment.textAlign()), Modifier.fillMaxWidth())
     }
 }
 

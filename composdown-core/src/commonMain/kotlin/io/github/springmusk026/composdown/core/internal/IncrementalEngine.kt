@@ -14,6 +14,7 @@ import io.github.springmusk026.composdown.core.internal.inline.InlineParser
 import io.github.springmusk026.composdown.core.internal.inline.LinkReferenceMap
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.PersistentList
+import kotlinx.collections.immutable.mutate
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toPersistentList
@@ -42,7 +43,7 @@ internal class IncrementalEngine(
     private val extensions: Set<MarkdownExtension>,
     private val optimistic: Boolean,
 ) {
-    private val source = StringBuilder()
+    private val source = TextBuffer()
     private var live = LiveParse()
     private var finished = false
 
@@ -56,7 +57,8 @@ internal class IncrementalEngine(
     private var committedVersion = 0L
 
     /** What is derived from committed blocks, rebuilt only when they change. */
-    private var committedView = CommittedView(version = -1L, persistentListOf(), emptyMap(), emptyList())
+    private var committedView =
+        CommittedView(version = -1L, ViewSource(null, 0, 0L), persistentListOf(), emptyMap(), emptyList())
 
     var document: MarkdownDocument = MarkdownDocument(persistentListOf(), persistentListOf())
         private set
@@ -66,6 +68,8 @@ internal class IncrementalEngine(
     val isFinished: Boolean get() = finished
 
     fun append(chunk: String): MarkdownDocument {
+        // Nothing was added, so a finished document stays finished.
+        if (chunk.isEmpty()) return document
         if (finished) {
             // A finished parse has closed every block; start over to continue the document.
             finished = false
@@ -77,10 +81,11 @@ internal class IncrementalEngine(
     }
 
     fun setText(text: String): MarkdownDocument {
+        if (text.length == source.length && text.contentEquals(source)) return document
         if (!finished && text.length >= source.length && text.startsWith(source)) {
             return append(text.substring(source.length))
         }
-        source.setLength(0)
+        source.clear()
         source.append(text)
         finished = false
         restartLiveParse()
@@ -90,7 +95,7 @@ internal class IncrementalEngine(
 
     fun finish(): MarkdownDocument {
         if (finished) return document
-        if (live.fedEnd < source.length) live.addLine(source.substring(live.fedEnd).trimEnd('\r', '\n'), live.fedEnd)
+        if (live.fedEnd < source.length) live.addLine(source.copyRange(live.fedEnd).trimEnd('\r', '\n'), live.fedEnd)
         live.parser.finish()
         live.commitClosedBlocks()
         finished = true
@@ -99,7 +104,7 @@ internal class IncrementalEngine(
 
     /** Parses [markdown] as a complete document in one pass. */
     fun parseComplete(markdown: String): MarkdownDocument {
-        source.setLength(0)
+        source.clear()
         source.append(markdown)
         restartLiveParse()
         forEachLine(markdown) { live.parser.addLine(it) }
@@ -124,7 +129,7 @@ internal class IncrementalEngine(
             // followed by `\n`.
             val complete = end < source.length && (source[end] == '\n' || end + 1 < source.length)
             if (!complete) break
-            live.addLine(source.substring(lineStart, end), lineStart)
+            live.addLine(source.copyRange(lineStart, end), lineStart)
             lineStart = afterLineBreak(source, end)
             live.fedEnd = lineStart
         }
@@ -137,7 +142,7 @@ internal class IncrementalEngine(
         val start = if (startLine != null) live.lineStarts[startLine - 1] else live.fedEnd
         val end = source.length - heldBackLength(start)
         if (end <= start) return null
-        val text = source.substring(start, end)
+        val text = source.copyRange(start, end)
         val tail = TailParse(text)
         // A paragraph line that looks like a table header is held back until the next line shows
         // whether it starts a table, so that the header does not flash as paragraph text.
@@ -154,7 +159,7 @@ internal class IncrementalEngine(
         if (!optimistic) return 0
         var lineStart = source.length
         while (lineStart > tailStart && source[lineStart - 1] != '\n' && source[lineStart - 1] != '\r') lineStart--
-        val partial = source.subSequence(lineStart, source.length)
+        val partial = source.copyRange(lineStart)
         return if (mayBecomeBlockMarker(partial)) partial.length else 0
     }
 
@@ -183,30 +188,68 @@ internal class IncrementalEngine(
         return document
     }
 
+    /**
+     * The committed blocks and footnotes. When blocks were only added since the last view, which is
+     * the common case while text streams in, the view is extended rather than rebuilt, so the cost of
+     * an update does not grow with the number of committed blocks.
+     */
     private fun committedView(): CommittedView {
         val previous = committedView
         if (previous.version == committedVersion) return previous
-        // A block that was in the tail of the last document keeps that instance once committed.
-        val published = document.blocks
-        val blocks =
-            live.committed.mapNotNull { it.block }.mapIndexed { index, block ->
-                published.getOrNull(index)?.takeIf { it === block || it == block } ?: block
+        val extend = previous.source.live === live && live.changedFrom >= previous.source.entryCount
+        val newEntries = live.committed.subList(if (extend) previous.source.entryCount else 0, live.committed.size)
+        val blocks = committedBlocks(if (extend) previous.blocks else persistentListOf(), newEntries)
+        val sameDefinitions = extend && newEntries.none { it.footnotes.isNotEmpty() }
+        val definitions =
+            if (sameDefinitions) {
+                previous.definitions
+            } else {
+                footnoteDefinitions(if (extend) previous.definitions else emptyMap(), newEntries)
             }
-        val definitions = LinkedHashMap<String, ConvertedFootnote>()
-        for (committed in live.committed) {
-            for ((key, definition) in committed.footnotes) {
-                if (key !in definitions) definitions[key] = definition
-            }
-        }
         val footnotes =
-            numberedFootnotes(definitions) { key -> live.footnotes?.numberOfKey(key) }.mapIndexed { index, footnote ->
-                previous.footnotes.getOrNull(index)?.takeIf { it == footnote } ?: footnote
+            if (sameDefinitions && previous.source.numbersVersion == live.footnoteNumbersVersion) {
+                previous.footnotes
+            } else {
+                committedFootnotes(definitions, previous.footnotes)
             }
-        return CommittedView(committedVersion, blocks.toPersistentList(), definitions, footnotes).also {
-            committedView =
-                it
+        live.changedFrom = Int.MAX_VALUE
+        val source = ViewSource(live, live.committed.size, live.footnoteNumbersVersion)
+        return CommittedView(committedVersion, source, blocks, definitions, footnotes).also { committedView = it }
+    }
+
+    /** [blocks] followed by the blocks of [entries]. A block published last time keeps that instance. */
+    private fun committedBlocks(
+        blocks: PersistentList<Block>,
+        entries: List<CommittedBlock>,
+    ): PersistentList<Block> {
+        val published = document.blocks
+        return blocks.mutate { list ->
+            for (entry in entries) {
+                val block = entry.block ?: continue
+                list += published.getOrNull(list.size)?.takeIf { it === block || it == block } ?: block
+            }
         }
     }
+
+    /** [definitions] followed by the footnote definitions of [entries]; the first definition of a key wins. */
+    private fun footnoteDefinitions(
+        definitions: Map<String, ConvertedFootnote>,
+        entries: List<CommittedBlock>,
+    ): Map<String, ConvertedFootnote> =
+        LinkedHashMap(definitions).also { map ->
+            for (entry in entries) {
+                for ((key, definition) in entry.footnotes) if (key !in map) map[key] = definition
+            }
+        }
+
+    /** The numbered committed footnotes, keeping the instances of [previous] that are equal. */
+    private fun committedFootnotes(
+        definitions: Map<String, ConvertedFootnote>,
+        previous: List<FootnoteDefinition>,
+    ): List<FootnoteDefinition> =
+        numberedFootnotes(definitions) { key -> live.footnotes?.numberOfKey(key) }.mapIndexed { index, footnote ->
+            previous.getOrNull(index)?.takeIf { it == footnote } ?: footnote
+        }
 
     /** Footnotes when the tail defines or references any: committed and tail definitions together. */
     private fun mergeFootnotes(
@@ -265,9 +308,20 @@ internal class IncrementalEngine(
         var trace: ConversionTrace,
     )
 
+    /**
+     * What a [CommittedView] was built from: the live parse, how many of its committed blocks, and the
+     * footnote numbering, so that the view can be extended when blocks are only added.
+     */
+    private class ViewSource(
+        val live: LiveParse?,
+        val entryCount: Int,
+        val numbersVersion: Long,
+    )
+
     /** Committed blocks and footnotes, valid while [committedVersion] equals [version]. */
     private class CommittedView(
         val version: Long,
+        val source: ViewSource,
         val blocks: PersistentList<Block>,
         val definitions: Map<String, ConvertedFootnote>,
         val footnotes: List<FootnoteDefinition>,
@@ -286,6 +340,16 @@ internal class IncrementalEngine(
         var fedEnd = 0
 
         val committed = ArrayList<CommittedBlock>()
+
+        /** The first index of [committed] converted again since the last [CommittedView]. */
+        var changedFrom = Int.MAX_VALUE
+
+        /** Incremented whenever footnotes are renumbered. */
+        var footnoteNumbersVersion = 0L
+
+        /** Footnote numbers by key, in order of first reference in the first [numberedThrough] blocks. */
+        private val footnoteNumbers = LinkedHashMap<String, Int>()
+        private var numberedThrough = 0
         private var seenLinkDefinitions = 0
         private var seenFootnoteDefinitions = 0
 
@@ -325,11 +389,11 @@ internal class IncrementalEngine(
             // appear without any new block.
             val newDefinitions =
                 references.size > seenLinkDefinitions || (footnotes?.definedCount ?: 0) > seenFootnoteDefinitions
-            if (committed.size > firstNew || newDefinitions) resolveRetroactively()
+            if (committed.size > firstNew || newDefinitions) resolveRetroactively(firstNew)
         }
 
         /** Converts committed blocks again whose unresolved labels are now defined, and renumbers footnotes. */
-        private fun resolveRetroactively() {
+        private fun resolveRetroactively(firstNew: Int) {
             val newLinks = (seenLinkDefinitions until references.size).mapTo(HashSet(), references::labelAt)
             seenLinkDefinitions = references.size
             val newFootnotes =
@@ -339,36 +403,56 @@ internal class IncrementalEngine(
                     ?.toHashSet()
                     .orEmpty()
             seenFootnoteDefinitions = footnotes?.definedCount ?: 0
+            var reconverted = false
             if (newLinks.isNotEmpty() || newFootnotes.isNotEmpty()) {
-                for (block in committed) {
-                    val missed =
-                        block.trace.linkMisses.any { it in newLinks } ||
-                            block.trace.footnoteMisses.any { it in newFootnotes }
-                    if (missed) reconvert(block)
+                for (index in committed.indices) {
+                    val trace = committed[index].trace
+                    if (trace.linkMisses.any { it in newLinks } || trace.footnoteMisses.any { it in newFootnotes }) {
+                        reconvert(index)
+                        reconverted = true
+                    }
                 }
             }
-            renumberFootnotes()
+            // Earlier blocks that were converted again may reference footnotes differently; otherwise
+            // only the new blocks can add footnote numbers.
+            renumberFootnotes(if (reconverted) 0 else firstNew)
         }
 
-        /** Footnotes are numbered in order of first reference across all committed blocks. */
-        private fun renumberFootnotes() {
+        /**
+         * Footnotes are numbered in order of first reference across all committed blocks. Blocks
+         * before [from] are unchanged since the last numbering, so their numbers are kept.
+         */
+        private fun renumberFootnotes(from: Int) {
             val registry = footnotes ?: return
-            val numbers = LinkedHashMap<String, Int>()
-            for (block in committed) {
-                for (key in block.trace.footnoteKeys) numbers.getOrPut(key) { numbers.size + 1 }
+            if (from == 0 || from < numberedThrough) {
+                footnoteNumbers.clear()
+                numberedThrough = 0
             }
-            if (numbers == registry.ownNumbers()) return
-            registry.setNumbers(numbers)
-            for (block in committed) {
-                if (block.trace.footnoteKeys.map { numbers[it] } != block.trace.footnoteNumbers) reconvert(block)
+            for (index in numberedThrough until committed.size) {
+                for (key in committed[index].trace.footnoteKeys) {
+                    footnoteNumbers.getOrPut(key) {
+                        footnoteNumbers.size +
+                            1
+                    }
+                }
+            }
+            numberedThrough = committed.size
+            if (footnoteNumbers == registry.ownNumbers()) return
+            registry.setNumbers(LinkedHashMap(footnoteNumbers))
+            footnoteNumbersVersion++
+            for (index in from until committed.size) {
+                val trace = committed[index].trace
+                if (trace.footnoteKeys.map { footnoteNumbers[it] } != trace.footnoteNumbers) reconvert(index)
             }
         }
 
-        private fun reconvert(block: CommittedBlock) {
+        private fun reconvert(index: Int) {
+            val block = committed[index]
             val converted = convert(block.node, references, footnotes)
             block.block = converted.block
             block.footnotes = converted.footnotes
             block.trace = converted.trace
+            changedFrom = minOf(changedFrom, index)
             committedVersion++
         }
     }

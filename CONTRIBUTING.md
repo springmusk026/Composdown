@@ -52,6 +52,7 @@ setup is required: Gradle downloads every dependency.
 | `composdown-highlight` | Highlights-based code highlighter |
 | `benchmarks` | JMH parser benchmarks and the recorded [baseline](benchmarks/BASELINE.md) |
 | `sample` | Demonstration app: `shared` UI, `desktop`, `android` and `ios` hosts |
+| `tools/screenshots` | Generates the documentation images in `docs/images` |
 | `build-logic` | Gradle convention plugins and code generation tasks |
 | `config` | detekt configuration |
 | `docs` | User guides |
@@ -127,6 +128,8 @@ A rule may be suppressed only with a comment explaining why the code is correct 
 - Cover behavior with Compose UI tests in `composdown-compose/src/desktopTest`.
 - For visual changes, record new screenshots with `./gradlew :composdown-compose:recordRoborazziDesktop`,
   review every changed image in `composdown-compose/src/desktopTest/snapshots`, and commit them.
+- If the change is visible in the documentation images, regenerate them as described in
+  [`tools/screenshots`](tools/screenshots/README.md).
 - Preserve accessibility semantics, and go through the relevant items of the
   [manual checklist](docs/accessibility.md#manual-verification-checklist).
 - Check that completed blocks are still skipped during streaming

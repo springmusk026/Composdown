@@ -54,4 +54,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Documentation: user guides in `docs/` (getting started, rendering, live content, customization,
   parser, accessibility, compatibility, architecture), a security model, and contribution guidelines.
 
+- README images (overview, streaming animation, customization, right-to-left), rendered by Composdown
+  itself with `tools/screenshots`, and a project logo.
+
+### Fixed
+
+- Right-aligned and centered table columns rendered their cells left-aligned when the column was wider
+  than the cell's text.
+
+### Changed
+
+- The title of an alert sits closer to its content.
+
 [Unreleased]: https://github.com/springmusk026/Composdown/commits/main

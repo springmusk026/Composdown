@@ -1,17 +1,39 @@
-# Composdown
+<p align="center">
+  <img src="docs/images/logo.svg" width="112" height="112" alt="Composdown logo">
+</p>
 
-**Complete, spec-compliant Markdown rendering for Compose Multiplatform.**
+<h1 align="center">Composdown</h1>
+
+<p align="center">
+  <strong>Complete, spec-compliant Markdown rendering for Compose Multiplatform.</strong><br>
+  Native on Android, iOS and Desktop. Themeable, accessible, and fast enough for live content.
+</p>
+
+<p align="center">
+  <a href="https://github.com/springmusk026/Composdown/actions/workflows/ci.yml"><img src="https://github.com/springmusk026/Composdown/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-blue.svg" alt="License: Apache 2.0"></a>
+  <img src="https://img.shields.io/badge/kotlin-2.4-7F52FF.svg?logo=kotlin&amp;logoColor=white" alt="Kotlin 2.4">
+  <img src="https://img.shields.io/badge/Compose%20Multiplatform-1.12-4285F4.svg" alt="Compose Multiplatform 1.12">
+  <img src="https://img.shields.io/badge/platforms-Android%20%7C%20iOS%20%7C%20Desktop-555.svg" alt="Platforms: Android, iOS, Desktop">
+  <img src="https://img.shields.io/badge/CommonMark-0.31.2%20%E2%9C%93-2ea44f.svg" alt="CommonMark 0.31.2 compliant">
+</p>
+
+<p align="center">
+  <a href="docs/getting-started.md">Getting started</a> ·
+  <a href="#documentation">Documentation</a> ·
+  <a href="sample">Sample app</a> ·
+  <a href="CHANGELOG.md">Changelog</a>
+</p>
+
+<p align="center">
+  <img src="docs/images/overview.png" width="860" alt="The same Markdown document rendered by Composdown in a light and a dark Material 3 theme, with a heading, emphasis, a task list, a table, a syntax-highlighted Kotlin code block, a tip alert and a footnote">
+</p>
 
 Composdown parses and renders Markdown natively on Android, iOS and Desktop, from a single shared
 codebase. It covers the full CommonMark specification and GitHub Flavored Markdown, renders with
 Material 3, can be themed and customized down to individual elements, and stays fast and stable
 whether the content is a static document, a long scrolling feed, or text that is still arriving
 from a language model.
-
-[![CI](https://github.com/springmusk026/Composdown/actions/workflows/ci.yml/badge.svg)](https://github.com/springmusk026/Composdown/actions/workflows/ci.yml)
-[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
-![Kotlin](https://img.shields.io/badge/kotlin-2.4-7F52FF.svg?logo=kotlin)
-![Platforms](https://img.shields.io/badge/platforms-Android%20%7C%20iOS%20%7C%20Desktop-555.svg)
 
 > **Status:** pre-release. The first public version will be `0.1.0`. Until then, the API may change
 > between commits; breaking changes are recorded in the [changelog](CHANGELOG.md).
@@ -21,6 +43,7 @@ from a language model.
 ## Contents
 
 - [Highlights](#highlights)
+- [See it in action](#see-it-in-action)
 - [Platform support](#platform-support)
 - [Installation](#installation)
 - [Usage](#usage)
@@ -53,6 +76,39 @@ from a language model.
   adversarial input.
 - **Lean.** The parser is pure Kotlin with no dependencies beyond the standard library and
   kotlinx-collections-immutable. Image loading and highlighting live in optional modules.
+
+## See it in action
+
+<table>
+  <tr>
+    <td width="50%" valign="top">
+      <img src="docs/images/streaming.gif" alt="A chat reply streaming into view token by token: a paragraph, a Kotlin code block, a numbered list, a table and a note appear progressively without flicker">
+    </td>
+    <td width="50%" valign="top">
+      <h4>Live content without flicker</h4>
+      <p>Text that is still arriving is parsed incrementally on a background thread. Completed blocks
+      are never re-parsed or recomposed, and half-written syntax such as <code>**bold</code> or an
+      unfinished code fence is shown in its final form instead of flashing as raw characters.</p>
+      <p>Streaming 2,000 tokens costs 6.3 ms in total, compared with 110 ms for re-parsing on every token.</p>
+      <p><a href="docs/streaming.md">Live content guide →</a></p>
+      <h4>Right-to-left aware</h4>
+      <img src="docs/images/rtl.png" alt="Hebrew list items and an Arabic quote laid out right to left, with bullets and the quote bar on the right, next to left-to-right English paragraphs">
+      <p>Every block takes the direction of its own text. <a href="docs/accessibility.md">Accessibility guide →</a></p>
+    </td>
+  </tr>
+</table>
+
+### Make it yours
+
+Every color, text style and spacing value derives from your Material theme and can be overridden.
+Any kind of block can be replaced with your own composable, such as a code block with a copy button
+or alerts drawn as cards.
+
+<p align="center">
+  <img src="docs/images/customization.png" width="860" alt="Two renderings of the same runbook: on the left Composdown's default style, on the right a custom theme with a teal link color, a dark code block with a language label and a Copy action, and the warning alert drawn as a tinted card">
+</p>
+
+<p align="center"><a href="docs/customization.md">Customization guide →</a></p>
 
 ## Platform support
 
@@ -231,6 +287,9 @@ document, so it stays constant as a conversation grows.
 
 A runnable [sample](sample) for Android, iOS and Desktop demonstrates every feature, including a
 simulated chat that streams responses at a realistic pace.
+
+The images in this README are rendered by Composdown itself, from
+[`tools/screenshots`](tools/screenshots), and regenerated when rendering changes.
 
 ## Comparison with other libraries
 

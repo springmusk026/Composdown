@@ -26,6 +26,14 @@ val generateCommonMarkSpecTests by tasks.registering(GenerateSpecTestsTask::clas
     outputDirectory.set(layout.buildDirectory.dir("generated/commonMarkSpecTests/commonTest/kotlin"))
 }
 
+val generateGfmSpecTests by tasks.registering(GenerateSpecTestsTask::class) {
+    specJson.set(layout.projectDirectory.file("spec/gfm-0.29.0.gfm.14.json"))
+    className.set("GfmSpecTest")
+    packageName.set("io.github.springmusk026.composdown.core.spec")
+    assertion.set("assertGfmExample")
+    outputDirectory.set(layout.buildDirectory.dir("generated/gfmSpecTests/commonTest/kotlin"))
+}
+
 kotlin {
     sourceSets {
         commonMain {
@@ -36,6 +44,7 @@ kotlin {
         }
         commonTest {
             kotlin.srcDir(generateCommonMarkSpecTests)
+            kotlin.srcDir(generateGfmSpecTests)
         }
     }
 }
